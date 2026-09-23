@@ -182,3 +182,115 @@ PY
 The `data/raw/` tree and `.env` are already ignored by Git. Authorization headers
 and credentials are never included in manifests; do not add them to debug logs,
 filenames, or tracked files.
+
+## Normalized Game Outputs (Normalization Schema Version 1)
+
+Run locally, without API requests, using explicit saved manifests:
+
+```bash
+.venv/bin/python -B -m src.features.games --manifest \
+  data/raw/cfbd/games/season=2025/1657e1334c044ff0957e8e246f712d82.manifest.json \
+  data/raw/cfbd/games/season=2026/3b59d327dcb94e818b911b94902e0bd9.manifest.json
+```
+
+One manifest is sufficient. Multiple paths or repeated `--manifest` options are
+processed independently; the CLI never discovers/selects the newest snapshot.
+An optional `--output-root data/interim/cfbd/games-review` changes the root but
+preserves the per-snapshot directories. Relative custom paths use the current
+working directory; the default root is anchored to the repository. Keep custom
+outputs under ignored `data/interim/` or outside the repository.
+
+Each output directory contains exactly:
+
+- `games.csv`: validated regular-season FBS-versus-FBS rows in source order, with
+  UTC timestamps, retained outcome data, and row-level provenance. Headers are
+  written even if there are no retained rows.
+- `exclusions.json`: separate `excluded` and `quarantined` arrays containing source
+  row indices, game IDs when available, and specific reasons. Invalid rows take
+  precedence over non-FBS exclusions; duplicates are never silently selected.
+- `quality_report.json`: normalization version, source provenance, reason counts,
+  and mutually exclusive input/retained/excluded/quarantined counts.
+
+Existing files must match recomputed bytes to allow a rerun. Matching partial
+outputs can be resumed; conflicting or unrelated files cause an error without
+overwriting them. Publication uses atomic per-file writes with the report last;
+consumers require all three artifacts. A new normalization version or altered
+input metadata should use a separate output root for comparison.
+
+### Offline Verification Results
+
+| Source snapshot | Input | Retained | Excluded non-FBS | Quarantined |
+| --- | --- | --- | --- | --- |
+| 2025: `1657e1334c044ff0957e8e246f712d82` | 888 | 762 | 126 | 0 |
+| 2026 Week 4: `3b59d327dcb94e818b911b94902e0bd9` | 71 | 58 | 13 | 0 |
+
+Outputs are in:
+
+```text
+data/interim/cfbd/games/1657e1334c044ff0957e8e246f712d82/
+data/interim/cfbd/games/3b59d327dcb94e818b911b94902e0bd9/
+```
+
+All exclusions were valid FBS-home/FCS-away matchups. No additional validation
+quarantines reduced the previously observed FBS–FBS counts of 762 and 58.
+The 2026 retained rows preserve null scores; completed-game zero scores remain
+zero. Both raw hashes remain the values recorded above. Repeated normalization
+produces byte-identical outputs. These are structural/consistency checks, not
+independent confirmation of source completeness or historical availability.
+
+To verify the two explicit normalized outputs and unchanged source bytes:
+
+```bash
+.venv/bin/python -B - <<'PY'
+import csv
+import hashlib
+import json
+from pathlib import Path
+from src.ingestion.storage import parse_games, coverage_report
+
+cases = [
+    (2025, "1657e1334c044ff0957e8e246f712d82", 762, 126),
+    (2026, "3b59d327dcb94e818b911b94902e0bd9", 58, 13),
+]
+for season, snapshot_id, expected_retained, expected_excluded in cases:
+    raw_dir = Path(f"data/raw/cfbd/games/season={season}")
+    manifest_path = raw_dir / f"{snapshot_id}.manifest.json"
+    manifest = json.loads(manifest_path.read_bytes())
+    raw = (raw_dir / manifest["response_file"]).read_bytes()
+    records = parse_games(raw)
+    assert hashlib.sha256(raw).hexdigest() == manifest["sha256"]
+    assert len(records) == manifest["record_count"]
+    assert coverage_report(records) == manifest["coverage"]
+    output = Path("data/interim/cfbd/games") / snapshot_id
+    with (output / "games.csv").open(newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    dispositions = json.loads((output / "exclusions.json").read_bytes())
+    report = json.loads((output / "quality_report.json").read_bytes())
+    counts = report["counts"]
+    assert counts == {"input": len(records), "retained": expected_retained,
+                      "excluded": expected_excluded, "quarantined": 0}
+    assert counts["input"] == sum(counts[k] for k in ("retained", "excluded", "quarantined"))
+    assert len(rows) == counts["retained"]
+    assert len(dispositions["excluded"]) == counts["excluded"]
+    assert len(dispositions["quarantined"]) == counts["quarantined"]
+    assert report["source"]["raw_sha256"] == manifest["sha256"]
+    assert report["source"]["manifest_sha256"] == hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+    indices = [int(row["source_row_index"]) for row in rows]
+    indices += [item["source_row_index"] for item in dispositions["excluded"]]
+    indices += [item["source_row_index"] for item in dispositions["quarantined"]]
+    assert sorted(indices) == list(range(len(records)))
+    for row in rows:
+        assert row["source_snapshot_id"] == snapshot_id
+        assert row["source_raw_sha256"] == manifest["sha256"]
+        assert row["historical_availability_status"] == "unknown"
+        assert row["historical_available_at"] == ""
+        assert row["approved_for_predictor_use"] == "false"
+    print(season, counts, "raw integrity, output counts, dispositions, and provenance verified")
+PY
+```
+
+See [the data dictionary](../docs/data-dictionary.md) for all column meanings,
+null handling, validation rules, and provenance fields. See
+[the leakage policy](../docs/data-leakage-policy.md) for why normalization is not
+historical availability verification. Both raw and interim trees remain ignored
+by Git; shared code references their IDs without committing datasets.

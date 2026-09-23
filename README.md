@@ -1,7 +1,7 @@
 # fbs-win-probability-pipeline
 Semester project building toward a serverless machine learning pipeline for weekly FBS win-probability forecasts with drift monitoring, sportsbook benchmarking, and strict pre-kickoff data controls.
 
-Current implementation: CFBD games ingestion and local raw snapshot storage, with offline tests. Feature engineering, model training/prediction, evaluation, monitoring, and serverless orchestration remain planned.
+Current implementation: CFBD games ingestion, local raw snapshot storage, and validated per-snapshot game normalization, with offline tests. Feature aggregates, model training/prediction, evaluation, monitoring, and serverless orchestration remain planned.
 
 ## Environment Setup
 
@@ -134,8 +134,51 @@ across football and basketball. These are point-in-time observations, not a
 guarantee of future quota or source completeness. See [data/README.md](data/README.md)
 for exact commands, snapshot IDs, classification counts, and the quota reset time.
 
+## Initial Demo: Game Normalization
+
+Normalization runs entirely offline against explicitly selected ingestion
+manifests. It verifies the raw hash, count, recomputed coverage, and metadata;
+validates the 16 tracked game fields; and keeps regular-season FBS-versus-FBS
+games. Invalid rows are quarantined separately from valid non-FBS exclusions.
+
+From the repository root, process the two saved snapshots separately:
+
+```bash
+.venv/bin/python -B -m src.features.games --manifest \
+  data/raw/cfbd/games/season=2025/1657e1334c044ff0957e8e246f712d82.manifest.json \
+  data/raw/cfbd/games/season=2026/3b59d327dcb94e818b911b94902e0bd9.manifest.json
+```
+
+The CLI accepts one or more paths after `--manifest`, or repeated `--manifest`
+options. `--output-root data/interim/cfbd/games-review` selects an alternate root;
+each snapshot still receives its own subdirectory. No snapshot is automatically
+selected or merged. No API key or network is needed.
+
+Each `data/interim/cfbd/games/<snapshot_id>/` directory contains `games.csv`,
+`exclusions.json` (separate excluded/quarantined lists), and `quality_report.json`.
+Identical reruns preserve output bytes and existing files; conflicting output
+is rejected without overwriting it. Empty outputs still include CSV headers.
+CLI exit code 1 means at least one input failed; other explicit inputs are still
+processed. Exit code 0 can include quarantined rows or an empty table, so inspect
+the quality report rather than treating the exit code as data-quality approval.
+
+Offline verification retained 762 of 888 games for 2025 and 58 of 71 games for
+2026 Week 4. The remaining 126 and 13 games were valid FBS–FCS exclusions, with
+zero quarantines. These match the earlier raw FBS–FBS counts. Normalization
+preserves unknown historical availability and does not approve predictor use.
+
+Run both ingestion and normalization tests:
+
+```bash
+.venv/bin/python -B -m unittest discover -s tests -v
+```
+
+See [the data dictionary](docs/data-dictionary.md) for column types and validation,
+[the leakage policy](docs/data-leakage-policy.md) for time and outcome boundaries,
+and [data/README.md](data/README.md) for output verification and exact paths.
+
 ## Development Notes
 
 - Keep credentials and machine-specific settings in `.env`; never commit that file.
-- Use only data available before kickoff when developing or evaluating forecasts. See `docs/data-leakage-policy.md` for the project policy as it is developed.
+- Use only data demonstrably available before the defined forecast cutoff when developing or evaluating forecasts. See `docs/data-leakage-policy.md` for current boundaries and remaining work.
 - Add or update tests in `tests/` when changing pipeline behavior.
