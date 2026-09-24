@@ -6,7 +6,7 @@ Raw and generated datasets should not be committed to GitHub. Local data should 
 
 - `raw/` — unmodified API responses or source extracts
 - `interim/` — intermediate transformation outputs
-- `processed/` — model-ready datasets
+- `processed/` — derived datasets, including explicitly unapproved retrospective demo inputs
 
 These directories are excluded from version control.
 
@@ -84,9 +84,10 @@ Unexpected additional source timestamps remain raw, unverified fields.
 Scores, completion status, postgame probabilities, ratings, and other postgame
 fields are stored for provenance. They are **not approved predictor inputs**.
 Even fields named "pregame" require a historical-availability audit before use.
-No leakage-safe training dataset or feature approval is produced here. The
-prediction cutoff and feature availability policy must be specified in the later
-feature task, including updates to `docs/data-leakage-policy.md`.
+No leakage-safe training dataset or feature approval is produced by ingestion.
+The retrospective dataset slice below defines a reconstruction cutoff and
+explicit limitations in `docs/data-leakage-policy.md`; it does not establish
+historical availability.
 
 ## Request Behavior and Verification
 
@@ -294,3 +295,149 @@ null handling, validation rules, and provenance fields. See
 [the leakage policy](../docs/data-leakage-policy.md) for why normalization is not
 historical availability verification. Both raw and interim trees remain ignored
 by Git; shared code references their IDs without committing datasets.
+
+## Retrospective Demo Datasets (Schema Version 1)
+
+Run from the repository root against the six existing snapshots and their
+existing normalized outputs. This command needs no credentials or network and
+does not fetch or renormalize missing inputs:
+
+```bash
+.venv/bin/python -B -m src.features.dataset --manifest \
+  data/raw/cfbd/games/season=2021/16cba29e664a496fb9ca9c7f6d23cb88.manifest.json \
+  data/raw/cfbd/games/season=2022/bbd6dd3559074ab1ad2b291859dd37c0.manifest.json \
+  data/raw/cfbd/games/season=2023/087a3002111c4a97abaad886ea5f760a.manifest.json \
+  data/raw/cfbd/games/season=2024/cb45f74c1ad14f8ea7f19323bb034866.manifest.json \
+  data/raw/cfbd/games/season=2025/1657e1334c044ff0957e8e246f712d82.manifest.json \
+  data/raw/cfbd/games/season=2026/3b59d327dcb94e818b911b94902e0bd9.manifest.json \
+  --output-dir data/processed/demo-features-v1 \
+  --allow-retrospective-demo
+```
+
+Exactly one explicit snapshot for each season 2021–2026 is required; duplicate
+seasons are rejected even if a path is repeated. Historical requests (2021–2025)
+must be full regular seasons; only 2026 may be week-limited. Repeated
+`--manifest` options are also accepted. `--normalized-root` can select another
+existing normalization root; the default is repository-anchored
+`data/interim/cfbd/games/`. Relative custom paths use the current directory.
+Keep derived outputs under ignored `data/processed/` or outside the repository.
+
+The builder verifies the raw manifest/hash/count/coverage and compares all three
+normalized artifacts against the existing normalization logic before reading
+rows. It does not repair inconsistent inputs. Missing normalization artifacts
+must first be prepared with the normalization CLI. Exit code 1 reports invalid
+inputs, absent demo permission, or output conflicts; exit code 0 means publication
+succeeded and does not imply data suitability or nonempty splits.
+
+The command creates exactly these files:
+
+```text
+data/processed/demo-features-v1/train.csv
+data/processed/demo-features-v1/holdout.csv
+data/processed/demo-features-v1/prediction.csv
+data/processed/demo-features-v1/exclusions.json
+data/processed/demo-features-v1/dataset_report.json
+data/processed/demo-features-v1/team_season_aggregates.csv
+```
+
+Only `prior_win_pct_diff`, `prior_avg_margin_diff`, and `home_field`, in that
+order, are predictors. Use the report's explicit `predictor_columns` when
+selecting model inputs. Labels, scores, completion status, IDs, sample counts,
+and provenance are not predictors. `prediction.csv` has no `home_win` column.
+See the [data dictionary](../docs/data-dictionary.md) for definitions and schemas.
+
+Identical reruns preserve output bytes and modification times. Differing files,
+symlinks, or unexpected entries cause an error without overwriting existing data;
+use a separate directory for a changed selection/version. Each file is atomically
+published; the report is last as the completion marker. Publication is not one
+transaction. Matching partial output may resume, but consumers must require all
+six artifacts and verify the report's five artifact hashes.
+
+### Saved-Snapshot Build Results: September 23, 2026
+
+| Split | Target seasons | Normalized input | Output | Excluded |
+| --- | --- | ---: | ---: | ---: |
+| Train | 2022–2024 | 2,237 | 2,194 | 43 |
+| Holdout | 2025 | 762 | 740 | 22 |
+| Prediction | 2026 Week 4 | 58 | 57 | 1 |
+
+Train reason counts are 20 missing home histories, 23 missing away histories,
+and 1 uncompleted target. One target has both missing-history reasons, so 44
+reason occurrences describe 43 excluded rows. Missing histories involve James
+Madison (2022), Jacksonville State and Sam Houston (2023), and Kennesaw State
+(2024). Uncompleted 2024 App State–Liberty game `401640992` is excluded from both
+training labels and 2024 aggregates. Holdout has 10 missing home histories and
+12 missing away histories, involving Delaware and Missouri State. Prediction
+has one missing home history for Sacramento State. The complete game IDs and
+reasons are in `exclusions.json`; no team history is invented.
+
+The aggregate table has 664 team-season rows from 732, 734, 750, 752, and 762
+completed retained games in 2021–2025 respectively. These are FBS–FBS regular-season
+counts, not all games played. Upstream normalization counts/quarantines remain
+separate in `dataset_report.json`.
+
+| Split | Win-percentage difference range | Mean-margin difference range (points) | Home-field range |
+| --- | --- | --- | --- |
+| Train | −0.916667 to 0.923077 | −48.348485 to 48.715385 | 0 to 1 |
+| Holdout | −0.909091 to 0.916667 | −55.401515 to 57.068182 | 0 to 1 |
+| Prediction | −0.742424 to 0.750000 | −40.234848 to 49.250000 | 1 to 1 |
+
+These are rounded descriptive ranges from the saved inputs, not model results.
+All 30 raw/manifest/normalized files remained byte-identical. An identical rerun
+preserved all six dataset files and modification times. The complete offline
+suite passed 70 tests on Python 3.14.2:
+
+```bash
+.venv/bin/python -B -m unittest discover -s tests -v
+git diff --check
+```
+
+To reload the derived files and verify hashes, counts, and feature ranges:
+
+```bash
+.venv/bin/python -B - <<'PY'
+import csv
+import hashlib
+import json
+from collections import Counter
+from pathlib import Path
+
+root = Path("data/processed/demo-features-v1")
+report = json.loads((root / "dataset_report.json").read_bytes())
+assert report["dataset_mode"] == "retrospective_demo"
+assert report["historical_availability_verified"] is False
+assert report["approved_for_point_in_time_forecasting"] is False
+for name, expected in report["artifact_sha256"].items():
+    assert hashlib.sha256((root / name).read_bytes()).hexdigest() == expected, name
+excluded = json.loads((root / "exclusions.json").read_bytes())["rows"]
+for split, counts in report["splits"].items():
+    with (root / f"{split}.csv").open(newline="") as handle:
+        reader = csv.DictReader(handle)
+        assert ("home_win" in reader.fieldnames) == (split != "prediction")
+        rows = list(reader)
+    rejected = [row for row in excluded if row["split"] == split]
+    assert len(rows) == counts["output"]
+    assert len(rejected) == counts["excluded"]
+    assert counts["input"] == len(rows) + len(rejected)
+    assert dict(Counter(reason for row in rejected for reason in row["reasons"])) == counts["exclusion_reason_counts"]
+    for column in report["predictor_columns"]:
+        values = [float(row[column]) for row in rows]
+        assert counts["feature_ranges"][column] == {
+            "min": min(values) if values else None,
+            "max": max(values) if values else None,
+        }
+    print(split, len(rows), "rows; hashes/counts/ranges verified")
+with (root / "team_season_aggregates.csv").open(newline="") as handle:
+    assert len(list(csv.DictReader(handle))) == report["aggregate_row_count"]
+PY
+```
+
+Without the demo flag, construction is blocked because historical availability
+is unverified. With it, all outputs stay `retrospective_demo` and unapproved for
+point-in-time forecasting. The assumption is that prior-season results and
+target matchup metadata could have been known before the target game, while
+revisions and historical versions remain unverified. Scheduled kickoff is the
+demo cutoff, not proof of actual kickoff, completion, or publication time.
+Source availability remains unknown and no timestamp is invented. These outputs
+do not demonstrate leakage-safe backtesting or predictive performance. No API
+requests or model training were performed for this dataset slice.

@@ -1,7 +1,7 @@
 # fbs-win-probability-pipeline
 Semester project building toward a serverless machine learning pipeline for weekly FBS win-probability forecasts with drift monitoring, sportsbook benchmarking, and strict pre-kickoff data controls.
 
-Current implementation: CFBD games ingestion, local raw snapshot storage, and validated per-snapshot game normalization, with offline tests. Feature aggregates, model training/prediction, evaluation, monitoring, and serverless orchestration remain planned.
+Current implementation: CFBD games ingestion, local raw snapshot storage, validated per-snapshot game normalization, and explicitly permitted retrospective demo feature datasets, with offline tests. Model training, win-probability prediction, evaluation, monitoring, and serverless orchestration remain planned. Historical predictor availability is unverified.
 
 ## Environment Setup
 
@@ -167,7 +167,7 @@ Offline verification retained 762 of 888 games for 2025 and 58 of 71 games for
 zero quarantines. These match the earlier raw FBS–FBS counts. Normalization
 preserves unknown historical availability and does not approve predictor use.
 
-Run both ingestion and normalization tests:
+Run the complete offline suite:
 
 ```bash
 .venv/bin/python -B -m unittest discover -s tests -v
@@ -176,6 +176,39 @@ Run both ingestion and normalization tests:
 See [the data dictionary](docs/data-dictionary.md) for column types and validation,
 [the leakage policy](docs/data-leakage-policy.md) for time and outcome boundaries,
 and [data/README.md](data/README.md) for output verification and exact paths.
+
+## Initial Demo: Retrospective Feature Datasets
+
+`src.features.dataset` connects the six selected 2021–2026 snapshots to three
+predictors, using each team's completed regular-season FBS–FBS games from exactly
+the previous season. Joins use team IDs. The explicit predictor order is
+`prior_win_pct_diff`, `prior_avg_margin_diff`, `home_field`; scores, labels,
+sample counts, and provenance are audit fields, not additional predictors.
+
+The builder requires one explicit manifest per season, existing verified
+normalization outputs, an output directory, and `--allow-retrospective-demo`.
+Use the [exact six-snapshot command](data/README.md#retrospective-demo-datasets-schema-version-1)
+from the repository root. It runs offline and writes six artifacts under ignored
+`data/processed/demo-features-v1/`. Identical reruns preserve existing files;
+conflicting output is rejected.
+
+The saved snapshots produced 2,194 labeled training rows (2022–2024), 740 labeled
+holdout rows (2025), and 57 unlabeled prediction-input rows (2026 Week 4), plus
+664 team-season aggregate audit rows. Dataset eligibility excluded 43, 22, and
+1 target rows respectively. These counts follow normalization exclusions and
+quarantines; see the dataset report for both stages.
+
+All outputs are marked `retrospective_demo`, historical availability unverified,
+and not approved for point-in-time forecasting. The cutoff is the selected
+snapshot's scheduled kickoff. Earlier scheduled starts prove chronology only;
+historical schedule versions, result publication/completion times, and revisions
+remain unverified. The flag permits this documented reconstruction assumption;
+it does not grant predictor approval or establish leakage-safe backtesting.
+
+Verification on September 23, 2026: 70 offline tests passed on Python 3.14.2.
+Tests include prior-season aggregation, missing histories, outcome isolation,
+split boundaries, chronology, provenance, and repeatable publication. No model
+has been trained and no performance claim is made.
 
 ## Development Notes
 
