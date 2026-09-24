@@ -54,6 +54,8 @@ Run this command after setup to confirm that Python 3.14 is active and the requi
 python -c "import sys, numpy, pandas, scipy, sklearn, matplotlib, requests, dotenv, boto3; print(sys.version)"
 ```
 
+For teammates starting from a fresh clone, see [Teammate setup and private data handoff](docs/teammate-setup.md) for verified extraction, offline validation, local model training, and daily Git collaboration. The private data archive is shared separately from GitHub.
+
 ## Repository Structure
 
 ```text
