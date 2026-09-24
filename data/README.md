@@ -587,3 +587,269 @@ omit current-season changes; missing histories exclude teams; historical
 availability remains unverified. All outputs stay unapproved for point-in-time
 forecasting, and these metrics are not evidence of live predictive performance
 or leakage-safe backtesting.
+
+## S3 Demo Storage (Explicit Transfers)
+
+`src.ingestion.s3_storage` adds cloud storage for one selected raw snapshot pair
+and one selected feature dataset. Computation remains local. It does not upload
+models, recursively synchronize directories, discover buckets, create resources,
+change access policies, or change historical-availability metadata.
+
+### Configuration and Permissions
+
+Select an **existing private project bucket**, its actual region, and a dedicated
+project prefix. Put only these nonsecret settings in the ignored project `.env`
+or environment; `.env.example` includes empty entries:
+
+```text
+FBS_S3_BUCKET=<selected-existing-project-bucket>
+FBS_S3_REGION=<selected-bucket-region>
+FBS_S3_PREFIX=<selected-project-prefix>
+FBS_AWS_PROFILE=<optional-selected-profile>
+```
+
+Replace placeholders before running commands. A prefix may contain slash-separated
+letters, digits, underscores, and hyphens, such as `fbs-win-probability/initial-demo`;
+this is an example, not an automatically selected destination. Do not use leading
+or trailing slashes. The CLI also accepts `--bucket`, `--region`, `--prefix`, and
+`--profile` after each subcommand. Explicit CLI settings override project settings;
+an environment value overrides `.env`, including an explicitly empty value.
+When region/profile are omitted, boto3 uses its normal SDK configuration.
+
+Authentication uses boto3's standard credential chain, including configured
+profiles, SSO/role sessions, and temporary environment credentials with
+`AWS_SESSION_TOKEN`. AWS credentials are not loaded from the project's `.env` by
+this module. Use the existing AWS/course-lab authentication setup; never place
+keys in command arguments, examples, logs, or tracked files. Do not enable SDK
+HTTP debug logging. Refresh an expired course/SSO session through the usual AWS
+login workflow. The code neither creates identities/keys nor alters security.
+
+The selected bucket must already have all four **bucket-level Block Public
+Access** flags enabled. The module reads that configuration before transfers and
+fails closed if it is unavailable or any flag is false. Account-level blocking
+alone is not sufficient for this narrow implementation. No ACL or encryption
+setting is sent with uploads; the bucket's encryption configuration applies.
+
+The current identity needs permission to read bucket Block Public Access, read
+and conditionally write the selected objects, and receive missing-key responses
+for the selected prefix (`s3:GetBucketPublicAccessBlock`, `s3:GetObject`,
+`s3:PutObject`, and appropriately scoped `s3:ListBucket`). SSE-KMS buckets also
+require applicable KMS permissions. Access failures are reported; this module
+never modifies policies to resolve them. No delete permission is used.
+
+### Upload and Download Commands
+
+After selecting/configuring the destination, run from the repository root:
+
+```bash
+.venv/bin/python -B -m src.ingestion.s3_storage upload-raw \
+  --manifest data/raw/cfbd/games/season=2025/1657e1334c044ff0957e8e246f712d82.manifest.json
+
+.venv/bin/python -B -m src.ingestion.s3_storage upload-dataset \
+  --dataset-dir data/processed/demo-features-v1 \
+  --allow-retrospective-demo
+
+.venv/bin/python -B -m src.ingestion.s3_storage download-dataset \
+  --dataset-id 8ecf7cf50b5f4ae68bde2ad902370b7528d327ed0919b5fed7a1211447c7e5c5 \
+  --output-dir data/processed/demo-features-from-s3-v1 \
+  --allow-retrospective-demo
+```
+
+Uploads print each actual S3 URI and `uploaded` or `reused`. The download prints
+its actual source URI, local directory, dataset ID/report hash, six verified
+files, and retrospective limitations. No CFBD request is made by these commands.
+
+Object keys preserve identity, under the explicitly configured bucket/prefix:
+
+```text
+s3://<bucket>/<prefix>/raw/cfbd/games/season=2025/1657e1334c044ff0957e8e246f712d82.json
+s3://<bucket>/<prefix>/raw/cfbd/games/season=2025/1657e1334c044ff0957e8e246f712d82.manifest.json
+s3://<bucket>/<prefix>/datasets/8ecf7cf50b5f4ae68bde2ad902370b7528d327ed0919b5fed7a1211447c7e5c5/train.csv
+```
+
+The dataset directory also contains `holdout.csv`, `prediction.csv`,
+`team_season_aggregates.csv`, `exclusions.json`, and `dataset_report.json`.
+These are generic location templates; the verified destination is recorded below.
+No serialized model is transferred.
+
+### Integrity and Publication Rules
+
+Raw uploads use existing snapshot validation (manifest versions, raw SHA-256,
+count, recomputed coverage, and provenance). Dataset uploads use the existing
+baseline dataset loader; they do not modify, reconstruct, or relabel the data.
+Only the two raw files or six allowlisted dataset files are considered, even if
+other files exist beside them. Each artifact is limited to 64 MiB for this demo.
+
+Before writing, the module downloads any existing objects and compares actual
+bytes. Conflicts stop without replacement. Every new `PutObject` also uses
+`IfNoneMatch="*"` so a concurrent upload cannot bypass the no-overwrite rule.
+A 412 response permits reuse only after reading and matching actual bytes.
+A 409 concurrent conflict stops safely and can be retried by rerunning the
+command. Uploaded objects are read back and checked. ETags are never treated as
+SHA-256 hashes; uploads also supply the base64 SHA-256 checksum to S3.
+
+Data files are published and verified before the raw manifest or dataset report,
+which acts as the completion marker. The group is not one S3 transaction. A
+failed partial upload has no new completion marker and can resume with identical
+files. An existing marker with missing or conflicting data fails rather than
+being silently repaired. Consumers must validate every referenced hash, not just
+check that a marker exists. Other writers/deletions outside this client can still
+invalidate a bundle; this client changes no bucket policy to prevent them.
+
+Downloads require an explicit 64-character dataset ID, fetch the report first,
+and accept only the exact five artifact filenames and SHA-256 hashes in the
+versioned contract. Paths such as `../...`, absolute paths, nested paths, and
+extra artifact names are rejected before becoming local paths. SHA-256 is
+computed from downloaded bytes. All six files are validated in a temporary
+staging directory using the existing dataset loader before local publication.
+Temporary staging is separate from the final destination.
+
+The existing atomic no-overwrite publisher places the local report last.
+Identical local files retain bytes and modification times; conflicting files,
+symlinks, or unrelated entries fail without replacement. A local disk failure
+can leave verified partial output without a completion marker; an identical
+rerun can finish it. Keep downloads under ignored `data/processed/` and use a
+separate directory from the fixed original dataset.
+
+SDK retries use standard mode with at most three total attempts per API call,
+a five-second connect timeout, and a 30-second read inactivity timeout. There
+is no unbounded application retry loop. Streaming-body failures stop the run;
+rerun to retry. These limits are not an overall transfer deadline. Errors are
+sanitized, omitting credential values, response messages, headers, and tokens.
+
+### Local Model Verification After a Real Download
+
+Only after a successful real S3 download, first compare all six files:
+
+```bash
+.venv/bin/python -B - <<'PY'
+from pathlib import Path
+from src.models.baseline import load_dataset
+original = Path("data/processed/demo-features-v1")
+downloaded = Path("data/processed/demo-features-from-s3-v1")
+data = load_dataset(downloaded, allow_retrospective_demo=True)
+names = sorted(data["artifacts"]) + ["dataset_report.json"]
+assert {p.name for p in downloaded.iterdir()} == set(names)
+for name in names:
+    assert (downloaded / name).read_bytes() == (original / name).read_bytes(), name
+print("Six downloaded files match the originals byte for byte.")
+PY
+
+.venv/bin/python -B -m src.models.baseline \
+  --dataset-dir data/processed/demo-features-from-s3-v1 \
+  --output-dir data/processed/demo-baseline-from-s3-v1 \
+  --allow-retrospective-demo
+
+.venv/bin/python -B -m src.models.predict \
+  --model-dir data/processed/demo-baseline-from-s3-v1 \
+  --prior-win-pct-diff 0.2 --prior-avg-margin-diff 7 --home-field 1 \
+  --allow-retrospective-demo
+```
+
+Compare the new **local** run to the original without uploading either model:
+
+```bash
+.venv/bin/python -B - <<'PY'
+import csv, json
+from pathlib import Path
+import numpy as np
+from src.models.baseline import load_trusted_model
+from src.models.predict import predict_vector
+old = Path("data/processed/demo-baseline-v1")
+new = Path("data/processed/demo-baseline-from-s3-v1")
+old_model, old_meta = load_trusted_model(old, allow_retrospective_demo=True)
+new_model, new_meta = load_trusted_model(new, allow_retrospective_demo=True)
+assert old_meta["dataset_report_sha256"] == new_meta["dataset_report_sha256"]
+assert old_meta["counts"] == new_meta["counts"]
+a = json.loads((old / "evaluation.json").read_bytes())
+b = json.loads((new / "evaluation.json").read_bytes())
+for group in ("model", "constant_baseline"):
+    for metric in ("brier_score", "log_loss", "accuracy"):
+        np.testing.assert_allclose(a[group][metric], b[group][metric], rtol=0, atol=1e-12)
+for filename in ("holdout_predictions.csv", "sample_predictions.csv"):
+    with (old / filename).open(newline="") as handle:
+        before = list(csv.DictReader(handle))
+    with (new / filename).open(newline="") as handle:
+        after = list(csv.DictReader(handle))
+    assert [r["game_id"] for r in before] == [r["game_id"] for r in after]
+    for column in ("home_win_probability", "away_win_probability"):
+        np.testing.assert_allclose([float(r[column]) for r in before],
+                                   [float(r[column]) for r in after], rtol=0, atol=1e-12)
+vector = {"prior_win_pct_diff": 0.2, "prior_avg_margin_diff": 7, "home_field": 1}
+p = predict_vector(old_model, vector)["home_win_probability"]
+q = predict_vector(new_model, vector)["home_win_probability"]
+np.testing.assert_allclose(p, q, rtol=0, atol=1e-12)
+print("Metrics and probabilities match; hypothetical home probability:", q)
+PY
+```
+
+Verified on September 24: train/holdout/prediction counts 2,194/740/57;
+model Brier 0.21061287148858282, log loss 0.6096025525960278,
+accuracy 0.6648648648648648. The constant comparison remains Brier
+0.24163577488303326, log loss 0.6763272181260667, accuracy
+0.5918918918918918. All six metrics equal the original run exactly.
+Both probabilities for all 740 holdout and 57 sample rows matched exactly
+(maximum absolute difference 0.0; tolerance 1e-12). Reloaded hypothetical
+home probability is 0.662422294285731; away is 0.33757770571426904.
+These are verified results from local training on the actual S3 download.
+All retrospective-demo and unknown-availability limitations remain unchanged.
+
+### Verification Status and Official API References
+
+On September 24, 2026, boto3/botocore **1.43.86** were installed and supported
+`PutObject.IfNoneMatch`, `ChecksumSHA256`, `GetObject`, and
+`GetPublicAccessBlock`; no dependencies changed. The official documentation was
+checked against the installed SDK service model before selecting calls:
+[PutObject](https://docs.aws.amazon.com/boto3/latest/reference/services/s3/client/put_object.html),
+[conditional writes](https://docs.aws.amazon.com/AmazonS3/latest/userguide/conditional-writes.html),
+[GetObject](https://docs.aws.amazon.com/boto3/latest/reference/services/s3/client/get_object.html),
+[Block Public Access lookup](https://docs.aws.amazon.com/boto3/latest/reference/services/s3/client/get_public_access_block.html),
+[SDK retries](https://docs.aws.amazon.com/boto3/latest/guide/retries.html), and
+[credential chain](https://docs.aws.amazon.com/boto3/latest/guide/credentials.html).
+
+Offline tests use synthetic local data, mocked clients, and botocore Stubber.
+Run the complete suite with:
+
+```bash
+.venv/bin/python -B -m unittest discover -s tests -v
+git diff --check
+```
+
+Offline verification: **105 tests passed**, including 21 S3 storage tests.
+
+Live S3 status: **verified September 24, 2026**. The user's selected bucket is
+`fbs-win-probability-habbott-demo-2026-706016980237-us-east-1-an`, region
+`us-east-1`, prefix `initial-demo`. These nonsecret settings are stored in ignored
+`.env`; the existing CFBD key was preserved. Existing AWS credentials were used.
+All four bucket-level Block Public Access flags passed before every transfer.
+No IAM, ACL, bucket policy, encryption configuration, or other security setting
+was changed. The initial sandbox network restriction was resolved with approved
+network access; the live operations then succeeded without access/credential errors.
+
+The two raw objects and all six dataset objects reported `uploaded`; each was
+read back and compared with its source bytes. Completion markers were uploaded
+last. Verified locations:
+
+```text
+s3://fbs-win-probability-habbott-demo-2026-706016980237-us-east-1-an/initial-demo/raw/cfbd/games/season=2025/1657e1334c044ff0957e8e246f712d82.json
+s3://fbs-win-probability-habbott-demo-2026-706016980237-us-east-1-an/initial-demo/raw/cfbd/games/season=2025/1657e1334c044ff0957e8e246f712d82.manifest.json
+s3://fbs-win-probability-habbott-demo-2026-706016980237-us-east-1-an/initial-demo/datasets/8ecf7cf50b5f4ae68bde2ad902370b7528d327ed0919b5fed7a1211447c7e5c5/
+```
+
+The download is `data/processed/demo-features-from-s3-v1/`. It passed the existing
+dataset loader and all six files matched the original bytes and SHA-256 hashes:
+
+| File | Verified SHA-256 |
+| --- | --- |
+| `exclusions.json` | `c8a3c47830e7ca338e1264c160df3b88c2f867e5b99c9e52e67103b311b9ea62` |
+| `holdout.csv` | `c382cf336c72e64de8e2bb5fed00f8014af8e5bd69da90548d8194926cef8a44` |
+| `prediction.csv` | `5c026210c0768d320cc9b7236095336027da71c4f52ae608c486e081ed9f3747` |
+| `team_season_aggregates.csv` | `54c89b604609b8c0f3134a36c478ab6de1fc32473ea2a98b3f85e4875fe61dad` |
+| `train.csv` | `216eac480b78ef3417dda64a4cb652eeeac63458198d4795808b43e7cffcaa21` |
+| `dataset_report.json` | `b4bb20873d36d6c526ec7ba045a1a82438498d21c581e920316eed95bb54c01f` |
+
+The separate local training output is `data/processed/demo-baseline-from-s3-v1/`;
+its evaluation, saved predictions, and reloaded hypothetical result matched as
+reported above. No serialized model was transferred. Both new directories remain
+Git-ignored. Existing source code and dataset/model bytes were preserved; no new
+CFBD requests were made. There are no remaining blockers for this verification.

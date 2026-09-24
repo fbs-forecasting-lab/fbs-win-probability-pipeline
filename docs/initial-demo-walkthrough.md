@@ -1,6 +1,7 @@
 # Initial Demo Walkthrough — September 29, 2026
 
-Allow about 6–8 minutes. Run commands from the repository root:
+Allow about 6–8 minutes for the verified local sequence, plus 2–3 minutes for
+the verified S3 segment. Run commands from the repository root:
 
 ```bash
 cd /Users/hampton/Development/Projects/fbs-win-probability-pipeline
@@ -8,15 +9,18 @@ cd /Users/hampton/Development/Projects/fbs-win-probability-pipeline
 
 Prepared against `feature/demo-baseline` at
 `b3d10524159f9dcff11944090d834f6548357971`, using the existing Python 3.14.x
-`.venv` and local artifacts. Only the explicitly marked recording command below
-needs network access. All other commands are read-only and offline. Open the
+`.venv` and local artifacts. The original seven steps are read-only/offline except
+for the marked recording ingestion command. The added S3 segment below requires
+AWS access and includes a separate local training run. It was live-verified on
+September 24, 2026 on `feature/demo-s3`. Open the
 listed files in your editor; paths below are relative to the repository root.
 Keep `.env` and credentials off screen. Load only this project's trusted local
 model artifacts; joblib deserialization can execute code.
 
 Opening note: “This demo connects CFBD ingestion, raw storage, normalized games,
 three historical predictors, a baseline model, evaluation, and probabilities.
-It is a local retrospective demonstration. Historical availability is unverified,
+Training and inference run locally; the S3 extension stores and retrieves data.
+It is a retrospective demonstration. Historical availability is unverified,
 so it is not yet an approved point-in-time forecasting system.”
 
 ## 1. Ingest and Show Raw Provenance (~1 minute)
@@ -75,6 +79,126 @@ Expected: **888 records**, HTTP 200, `year=2025`, `seasonType=regular`,
 Say: “We retain the response fields unchanged and record retrieval time, request
 parameters, count, and hash. Retrieval time is not historical publication time.
 Scores and completion status are stored evidence, not same-game predictors.”
+
+## 1a. S3 Storage and Verified Download (Verified September 24)
+
+**Prerequisite:** explicitly select an existing private project bucket, its
+region, and a project prefix. Set `FBS_S3_BUCKET`, `FBS_S3_REGION`, and
+`FBS_S3_PREFIX` in the environment or ignored `.env`; optionally set
+`FBS_AWS_PROFILE`. Authentication uses the existing AWS profile/SSO/temporary
+credential chain, never keys shown on screen. All four bucket-level Block Public
+Access settings must already be enabled. See [data/README.md](../data/README.md#s3-demo-storage-explicit-transfers)
+for permissions and setup. The user created and selected this bucket; these
+nonsecret settings are saved in the ignored local `.env`:
+
+```text
+FBS_S3_BUCKET=fbs-win-probability-habbott-demo-2026-706016980237-us-east-1-an
+FBS_S3_REGION=us-east-1
+FBS_S3_PREFIX=initial-demo
+```
+
+The existing CFBD key was preserved. All four Block Public Access flags were
+verified enabled. No IAM or bucket policy/security settings were changed.
+
+Use the fixed 2025 snapshot below, not a fresh recording snapshot. These are
+**live AWS commands that passed verification** with the configuration above:
+
+```bash
+.venv/bin/python -B -m src.ingestion.s3_storage upload-raw \
+  --manifest data/raw/cfbd/games/season=2025/1657e1334c044ff0957e8e246f712d82.manifest.json
+
+.venv/bin/python -B -m src.ingestion.s3_storage upload-dataset \
+  --dataset-dir data/processed/demo-features-v1 --allow-retrospective-demo
+
+.venv/bin/python -B -m src.ingestion.s3_storage download-dataset \
+  --dataset-id 8ecf7cf50b5f4ae68bde2ad902370b7528d327ed0919b5fed7a1211447c7e5c5 \
+  --output-dir data/processed/demo-features-from-s3-v1 --allow-retrospective-demo
+```
+
+Observed: both raw files and all six dataset files reported `uploaded`, with
+successful byte readback. The download reported `verified_files: 6` and
+`data/processed/demo-features-from-s3-v1`. In the S3 console, open
+`fbs-win-probability-habbott-demo-2026-706016980237-us-east-1-an`,
+confirm Block Public Access, then open:
+
+```text
+initial-demo/raw/cfbd/games/season=2025/
+initial-demo/datasets/8ecf7cf50b5f4ae68bde2ad902370b7528d327ed0919b5fed7a1211447c7e5c5/
+```
+
+Show the raw `.json` and `.manifest.json` objects. Then show `train.csv`,
+`holdout.csv`, `prediction.csv`, `team_season_aggregates.csv`, `exclusions.json`,
+and `dataset_report.json` in the dataset prefix. Verified S3 locations:
+
+```text
+s3://fbs-win-probability-habbott-demo-2026-706016980237-us-east-1-an/initial-demo/raw/cfbd/games/season=2025/1657e1334c044ff0957e8e246f712d82.json
+s3://fbs-win-probability-habbott-demo-2026-706016980237-us-east-1-an/initial-demo/raw/cfbd/games/season=2025/1657e1334c044ff0957e8e246f712d82.manifest.json
+s3://fbs-win-probability-habbott-demo-2026-706016980237-us-east-1-an/initial-demo/datasets/8ecf7cf50b5f4ae68bde2ad902370b7528d327ed0919b5fed7a1211447c7e5c5/
+```
+
+Say: “S3 provides private object storage. We preserve source identity and upload
+data before its completion marker. Conditional writes prevent replacement.
+Downloads are verified from actual bytes against SHA-256, not ETags. Cloud
+storage does not establish historical availability.”
+
+After the download, compare all six files without changing the originals:
+
+```bash
+.venv/bin/python -B - <<'PY'
+from pathlib import Path
+from hashlib import sha256
+from src.models.baseline import load_dataset
+old = Path("data/processed/demo-features-v1")
+new = Path("data/processed/demo-features-from-s3-v1")
+verified = load_dataset(new, allow_retrospective_demo=True)
+names = sorted(verified["artifacts"]) + ["dataset_report.json"]
+for name in names:
+    original = (old / name).read_bytes()
+    downloaded = (new / name).read_bytes()
+    assert original == downloaded, name
+    assert sha256(original).hexdigest() == sha256(downloaded).hexdigest(), name
+print("All six downloaded files match the originals byte for byte and by SHA-256.")
+PY
+
+.venv/bin/python -B -m src.models.baseline \
+  --dataset-dir data/processed/demo-features-from-s3-v1 \
+  --output-dir data/processed/demo-baseline-from-s3-v1 --allow-retrospective-demo
+
+.venv/bin/python -B -m src.models.predict \
+  --model-dir data/processed/demo-baseline-from-s3-v1 \
+  --prior-win-pct-diff 0.2 --prior-avg-margin-diff 7 --home-field 1 \
+  --allow-retrospective-demo
+```
+
+Verified results from the S3 download: 2,194 training / 740 holdout / 57 sample
+rows. The six downloaded SHA-256 hashes equal the originals; the existing loader
+also validated the downloaded dataset. Its report SHA-256 is
+`b4bb20873d36d6c526ec7ba045a1a82438498d21c581e920316eed95bb54c01f`.
+
+| 2025 holdout metric | Local model trained from S3 download | Constant baseline |
+| --- | ---: | ---: |
+| Brier score | 0.21061287148858282 | 0.24163577488303326 |
+| Log loss | 0.6096025525960278 | 0.6763272181260667 |
+| Accuracy | 0.6648648648648648 | 0.5918918918918918 |
+
+All six metrics matched the original local run exactly. Both probabilities for
+all 740 holdout games and all 57 sample games matched with maximum absolute
+difference **0.0** (tolerance `1e-12`). The reloaded model's hypothetical vector
+`(0.2, 7, 1)` returned home **0.662422294285731** and away
+**0.33757770571426904**, also equal to the original. This is not an actual matchup.
+The exact comparison command is in
+[data/README.md](../data/README.md#local-model-verification-after-a-real-download).
+
+**Files to open:** `data/processed/demo-baseline-from-s3-v1/evaluation.json`,
+`model_metadata.json`, `holdout_predictions.csv`, and `sample_predictions.csv`
+in the same directory. The downloaded dataset and new local model outputs are
+Git-ignored; original datasets and model artifacts were preserved.
+
+Say: “The downloaded dataset feeds the same local training and prediction code.
+S3 stores the data; it does not train or host this model. We use a separate model
+output directory and preserve the original evaluation.” If cloud access is
+blocked, report the blocker and continue the local sequence; do not describe
+mocked tests or original local results as a successful S3 demonstration.
 
 ## 2. Show Normalization and Exclusions (~45 seconds)
 
@@ -269,5 +393,13 @@ passed with the stated outputs. The single-vector CLI and saved-sample reload
 ran against existing trusted artifacts. All 46 existing data/model artifact
 files retained their bytes and modification times. No API request, training,
 dataset regeneration, dependency change, or production-code edit was performed.
-Only this walkthrough was added. The recording-only ingestion request remains
-unexecuted; current credential/network/quota access is therefore unverified.
+Only the walkthrough was added during that preparation. The recording-only
+ingestion request remains unexecuted; current CFBD credential/network/quota
+access is therefore unverified.
+
+S3 extension status, September 24: live upload, readback, download, integrity
+validation, local retraining, and reloaded prediction passed on `feature/demo-s3`.
+The selected bucket's four Block Public Access flags were enabled. All 105 offline
+tests passed. Existing source/data files were preserved; no CFBD request, policy
+change, commit, or push was made during this verification. Historical availability
+remains unknown and predictor approval remains false.

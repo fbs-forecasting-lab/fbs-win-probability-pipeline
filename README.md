@@ -1,7 +1,7 @@
 # fbs-win-probability-pipeline
 Semester project building toward a serverless machine learning pipeline for weekly FBS win-probability forecasts with drift monitoring, sportsbook benchmarking, and strict pre-kickoff data controls.
 
-Current implementation: CFBD games ingestion, local raw snapshot storage, validated per-snapshot normalization, retrospective demo feature datasets, and a fixed logistic baseline with holdout evaluation and reloaded-model inference. Monitoring and serverless orchestration remain planned. Historical predictor availability is unverified; this local demo is not approved for point-in-time forecasting.
+Current implementation: CFBD games ingestion, local raw snapshot storage, validated per-snapshot normalization, retrospective demo feature datasets, and a fixed logistic baseline with holdout evaluation and reloaded-model inference. Explicit S3 upload/download support is implemented, offline-tested, and live-verified with the selected private project bucket. Training remains local. Monitoring and serverless orchestration remain planned. Historical predictor availability is unverified; this demo is not approved for point-in-time forecasting.
 
 ## Environment Setup
 
@@ -264,6 +264,54 @@ claim follows from these holdout scores. See the [model card](docs/model-card.md
 for settings, calibration, sample predictions, and limitations, and
 [data/README.md](data/README.md#baseline-model-and-prediction-artifacts-version-1)
 for output contracts and verification.
+
+## Initial Demo: S3 Storage
+
+The S3 slice transfers only an explicitly selected raw snapshot/manifest pair or
+the six files in a verified feature dataset. It uses conditional no-overwrite
+writes, publishes completion markers last, and verifies downloaded SHA-256
+hashes before passing the dataset to the existing local loader. It neither
+uploads serialized models nor changes bucket policies, ACLs, or encryption.
+
+First select an existing private project bucket, its region, and a dedicated
+prefix using `FBS_S3_BUCKET`, `FBS_S3_REGION`, and `FBS_S3_PREFIX` in the local
+environment or ignored `.env`; `FBS_AWS_PROFILE` is optional. Credentials use
+boto3's standard chain, including session tokens for temporary credentials.
+The module requires all four bucket-level Block Public Access settings enabled.
+No bucket is automatically selected or created.
+
+```bash
+.venv/bin/python -B -m src.ingestion.s3_storage upload-raw \
+  --manifest data/raw/cfbd/games/season=2025/1657e1334c044ff0957e8e246f712d82.manifest.json
+
+.venv/bin/python -B -m src.ingestion.s3_storage upload-dataset \
+  --dataset-dir data/processed/demo-features-v1 --allow-retrospective-demo
+
+.venv/bin/python -B -m src.ingestion.s3_storage download-dataset \
+  --dataset-id 8ecf7cf50b5f4ae68bde2ad902370b7528d327ed0919b5fed7a1211447c7e5c5 \
+  --output-dir data/processed/demo-features-from-s3-v1 --allow-retrospective-demo
+```
+
+After an actual download, train/evaluate locally in a separate directory:
+
+```bash
+.venv/bin/python -B -m src.models.baseline \
+  --dataset-dir data/processed/demo-features-from-s3-v1 \
+  --output-dir data/processed/demo-baseline-from-s3-v1 --allow-retrospective-demo
+```
+
+Live S3 verification passed on September 24, 2026 using the selected private
+bucket in `us-east-1` under `initial-demo`. The 2025 raw pair and six dataset
+artifacts were uploaded and read back successfully. All six downloaded files
+match the originals byte for byte and by SHA-256. Local retraining reproduced
+all evaluation metrics and all 740 holdout / 57 sample probability pairs exactly;
+the hypothetical home-win probability remains 0.662422294285731.
+All four bucket-level Block Public Access flags were enabled; no policies or
+security settings were changed.
+See [data/README.md](data/README.md#s3-demo-storage-explicit-transfers) for exact
+configuration, required permissions, object keys, integrity/model comparisons,
+and SDK references. The [walkthrough](docs/initial-demo-walkthrough.md) separates
+the verified cloud-storage steps from local training and prediction.
 
 ## Development Notes
 
