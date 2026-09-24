@@ -441,3 +441,149 @@ demo cutoff, not proof of actual kickoff, completion, or publication time.
 Source availability remains unknown and no timestamp is invented. These outputs
 do not demonstrate leakage-safe backtesting or predictive performance. No API
 requests or model training were performed for this dataset slice.
+
+## Baseline Model and Prediction Artifacts (Version 1)
+
+The baseline uses the existing dataset directory above, with no API requests or
+new data retrieval. Both scaler and logistic regression fit only 2022–2024;
+2025 is used only for evaluation. The saved model is not refitted before
+predicting the saved 2026 sample. Exact repository-root commands:
+
+```bash
+.venv/bin/python -B -m src.models.baseline \
+  --dataset-dir data/processed/demo-features-v1 \
+  --output-dir data/processed/demo-baseline-v1 \
+  --allow-retrospective-demo
+
+.venv/bin/python -B -m src.models.predict \
+  --model-dir data/processed/demo-baseline-v1 \
+  --dataset-dir data/processed/demo-features-v1 \
+  --output-dir data/processed/demo-baseline-reloaded-v1 \
+  --allow-retrospective-demo
+
+.venv/bin/python -B -m src.models.predict \
+  --model-dir data/processed/demo-baseline-v1 \
+  --prior-win-pct-diff 0.2 --prior-avg-margin-diff 7 --home-field 1 \
+  --allow-retrospective-demo
+```
+
+All commands require explicit retrospective permission. The loader verifies
+schema version 1, demo/approval flags, dataset identity, exactly the three
+predictors in order, all five reported artifact hashes, and split counts and
+seasons. Train/holdout must be nonempty with binary labels; training must have
+both classes. Game IDs must be unique within and disjoint across splits. Missing,
+nonfinite, or out-of-domain features fail rather than being imputed or dropped.
+Prediction may be empty, in which case its CSV contains only the header.
+
+`data/processed/demo-baseline-v1/` contains exactly:
+
+| File | Contents |
+| --- | --- |
+| `model.joblib` | Fitted StandardScaler/LogisticRegression pipeline, using installed joblib with compression |
+| `model_metadata.json` | Schema version, dataset ID/report hash and artifact hashes, predictor order, target, seasons/counts, model/scaler settings, class order, library versions, source availability, limitations, and hashes of all six companion files |
+| `evaluation.json` | Actual 2025 count, model and constant-baseline Brier/log-loss/accuracy, training-only constant probability, threshold rule, and demo flags |
+| `calibration.json` | Ten fixed equal-width bins for model and constant baseline; count, mean probability, observed home-win rate, explicit interval edges; empty-bin means/rates are null |
+| `holdout_predictions.csv` | Game/team identifiers, cutoff, source snapshot/row, unknown availability, home/away probabilities, demo flags, and `saved_2025_holdout` context |
+| `sample_predictions.csv` | The same prediction schema with `saved_2026_sample_not_live` context; no invented labels |
+| `exclusions.json` | Byte-for-byte copy of the dataset exclusions; excluded games receive no predictions |
+
+Prediction CSVs use UTF-8, lowercase boolean flags, and blank null timestamps,
+consistent with dataset CSVs. They record `game_id`, `season`, `week`, `home_id`,
+`home_team`, `away_id`, `away_team`, `cutoff`, `source_snapshot_id`,
+`source_row_index`, `historical_availability_status`, `historical_available_at`,
+`home_win_probability`, `away_win_probability`, `prediction_context`, and the
+four dataset mode/availability/approval fields. The model metadata links each
+run to the complete source dataset and hashes; labels remain in train/holdout
+input files. Class label 1 identifies home-win probability. Away probability is
+exactly 1 minus home probability; accuracy uses home probability >= 0.5.
+
+The second command reloads the complete trusted model directory, requires the
+exact dataset ID and report hash used during training, and reads its verified
+`prediction.csv`. It writes three files in
+`data/processed/demo-baseline-reloaded-v1/`:
+
+- `predictions.csv`: predictions after file-based model reload.
+- `exclusions.json`: unchanged dataset exclusions.
+- `prediction_report.json`: count, model hash, dataset identity/report hash,
+  feature order, source availability, limitations, flags, and two output hashes.
+
+The third command prints a hypothetical vector's probabilities to stdout and
+writes no artifact. For the stated vector, observed home probability is
+0.662422294285731 and away probability is 0.33757770571426904. It represents no
+real matchup. Single-vector and batch modes are mutually exclusive.
+
+Only load trusted artifacts generated locally by this project. Joblib can
+execute code during deserialization. The reload path verifies companion hashes
+before loading, validates the pipeline types and feature/class/settings contract,
+and requires matching recorded Python/library versions. Hashes are integrity
+checks, not authenticity or trust guarantees. The environment and pinned
+requirements were unchanged; joblib was already installed with scikit-learn.
+
+All output directories should stay inside ignored `data/processed/` or outside
+the repository. Safe publication reuses the existing dataset publisher:
+atomic no-overwrite writes per file, matching existing files preserved, and
+conflicting files or unexpected entries rejected. `model_metadata.json` or
+`prediction_report.json` is published last as the completion marker. This is
+not a multi-file transaction. Matching partial runs can resume, but consumers
+require every artifact and matching hashes. Changed inputs, environments, or
+results need a separate output directory. No timestamp is added merely for a
+rerun; serialization bytes may differ across environments. CLI errors return
+exit code 1; invalid CLI argument combinations use argparse's exit code 2.
+
+### Actual Baseline Verification: September 23, 2026
+
+Input counts verified from artifacts were 2,194 train, 740 holdout, and 57 saved
+prediction rows. Logistic regression converged in 10 iterations with no warning.
+The constant predictor used training home-win rate 0.5829535095715588.
+
+| Holdout metric | Logistic model | Constant |
+| --- | ---: | ---: |
+| Brier score | 0.2106128715 | 0.2416357749 |
+| Log loss | 0.6096025526 | 0.6763272181 |
+| Accuracy | 0.6648648649 | 0.5918918919 |
+
+Full offline suite: 84 tests passed using
+`.venv/bin/python -B -m unittest discover -s tests -v` on Python 3.14.2.
+The reloaded model matched saved probabilities with maximum absolute difference
+0.0 across all 740 holdout and 57 prediction rows (tolerance 1e-12). The reloaded
+batch file was byte-identical to the original sample prediction file. All 36
+source/dataset files remained unchanged; all 10 new output files are Git-ignored.
+
+To verify the saved results offline without fitting again:
+
+```bash
+.venv/bin/python -B - <<'PY'
+import csv
+import json
+from pathlib import Path
+import numpy as np
+from src.models.baseline import load_dataset, load_trusted_model, home_probabilities
+
+root = Path("data/processed/demo-baseline-v1")
+model, metadata = load_trusted_model(root, allow_retrospective_demo=True)
+data = load_dataset("data/processed/demo-features-v1", allow_retrospective_demo=True)
+assert metadata["dataset_report_sha256"] == data["report_sha256"]
+for split, filename in [("holdout", "holdout_predictions.csv"),
+                        ("prediction", "sample_predictions.csv")]:
+    with (root / filename).open(newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    saved = np.array([float(row["home_win_probability"]) for row in rows])
+    actual = home_probabilities(model, data["splits"][split]["x"])
+    assert len(rows) == metadata["counts"][split]
+    np.testing.assert_allclose(saved, actual, rtol=0, atol=1e-12)
+    for row in rows:
+        assert 0 <= float(row["home_win_probability"]) <= 1
+        assert float(row["away_win_probability"]) == 1 - float(row["home_win_probability"])
+    print(split, len(rows), "hashes/counts/reloaded predictions verified")
+assert (root / "sample_predictions.csv").read_bytes() == Path(
+    "data/processed/demo-baseline-reloaded-v1/predictions.csv").read_bytes()
+PY
+```
+
+See the [model card](../docs/model-card.md) for the complete descriptive
+calibration table, actual sample predictions, feature rationale, and limitations.
+No calibration fitting or holdout tuning was performed. Previous-season inputs
+omit current-season changes; missing histories exclude teams; historical
+availability remains unverified. All outputs stay unapproved for point-in-time
+forecasting, and these metrics are not evidence of live predictive performance
+or leakage-safe backtesting.

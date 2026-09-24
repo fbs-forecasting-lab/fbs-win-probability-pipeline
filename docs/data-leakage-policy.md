@@ -4,9 +4,10 @@
 
 The ingestion and normalization slices preserve evidence and validate game tables.
 The dataset slice produces explicitly permitted retrospective demo predictors
-and labels under the limited reconstruction assumption below. No slice trains a
-model, approves predictor inputs, or establishes that historical values were
-available before kickoff. Source and normalized records retain
+and labels under the limited reconstruction assumption below. The baseline
+fits only on 2022–2024, evaluates on 2025 without tuning/refitting, and uses the
+same fitted model for saved 2026 inputs. No slice approves predictor inputs or
+establishes that historical values were available before kickoff. Source and normalized records retain
 `approved_for_predictor_use=false`.
 
 ## Four Different Times
@@ -87,7 +88,7 @@ Dataset controls:
 - Use exactly `prior_win_pct_diff`, `prior_avg_margin_diff`, and `home_field`,
   in that order. Same-game scores, completion status, game/team IDs, prior-game
   counts, and provenance are not predictors. Outcome data stays only for audit
-  and labels; future model code must select the explicit predictor list.
+  and labels; baseline training and inference select the explicit predictor list.
 - Train targets are completed 2022–2024 games; holdout targets are completed
   2025 games. Uncompleted 2026 sample games receive no label. Earlier-season
   predictors never depend on later-season outcomes. Completed 2025 games may

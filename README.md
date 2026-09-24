@@ -1,7 +1,7 @@
 # fbs-win-probability-pipeline
 Semester project building toward a serverless machine learning pipeline for weekly FBS win-probability forecasts with drift monitoring, sportsbook benchmarking, and strict pre-kickoff data controls.
 
-Current implementation: CFBD games ingestion, local raw snapshot storage, validated per-snapshot game normalization, and explicitly permitted retrospective demo feature datasets, with offline tests. Model training, win-probability prediction, evaluation, monitoring, and serverless orchestration remain planned. Historical predictor availability is unverified.
+Current implementation: CFBD games ingestion, local raw snapshot storage, validated per-snapshot normalization, retrospective demo feature datasets, and a fixed logistic baseline with holdout evaluation and reloaded-model inference. Monitoring and serverless orchestration remain planned. Historical predictor availability is unverified; this local demo is not approved for point-in-time forecasting.
 
 ## Environment Setup
 
@@ -207,8 +207,63 @@ it does not grant predictor approval or establish leakage-safe backtesting.
 
 Verification on September 23, 2026: 70 offline tests passed on Python 3.14.2.
 Tests include prior-season aggregation, missing histories, outcome isolation,
-split boundaries, chronology, provenance, and repeatable publication. No model
-has been trained and no performance claim is made.
+split boundaries, chronology, provenance, and repeatable publication. This
+dataset stage itself performs no training; the separate baseline stage follows.
+
+## Initial Demo: Baseline, Evaluation, and Prediction
+
+The baseline verifies dataset schema, hashes, counts, predictor domains, labels,
+and disjoint season/game-ID splits. It fits `StandardScaler` and a fixed
+`LogisticRegression` exclusively on 2,194 training games from 2022–2024. The
+2025 holdout remains evaluation-only; there is no tuning or refit on it.
+
+From the repository root:
+
+```bash
+.venv/bin/python -B -m src.models.baseline \
+  --dataset-dir data/processed/demo-features-v1 \
+  --output-dir data/processed/demo-baseline-v1 \
+  --allow-retrospective-demo
+
+.venv/bin/python -B -m src.models.predict \
+  --model-dir data/processed/demo-baseline-v1 \
+  --dataset-dir data/processed/demo-features-v1 \
+  --output-dir data/processed/demo-baseline-reloaded-v1 \
+  --allow-retrospective-demo
+
+.venv/bin/python -B -m src.models.predict \
+  --model-dir data/processed/demo-baseline-v1 \
+  --prior-win-pct-diff 0.2 --prior-avg-margin-diff 7 --home-field 1 \
+  --allow-retrospective-demo
+```
+
+The second command reloads the model and predicts the 57 rows of the saved 2026
+Week 4 `prediction.csv`; these are not refreshed live forecasts. The third
+uses a hypothetical vector, not a real matchup, and prints home probability
+0.6624222943 and complementary away probability 0.3375777057.
+
+Observed evaluation on 740 saved 2025 holdout games:
+
+| Metric | Logistic model | Constant training home-win rate |
+| --- | ---: | ---: |
+| Brier score | 0.210613 | 0.241636 |
+| Log loss | 0.609603 | 0.676327 |
+| Accuracy (home if probability >= 0.5) | 66.4865% | 59.1892% |
+
+The constant probability is 0.5829535096, calculated from training labels only.
+Ten fixed probability bins provide descriptive calibration counts and observed
+rates; no calibration model is fitted. All 84 offline tests passed on Python
+3.14.2. Saved/reloaded probabilities matched exactly in this run. All output
+files live under ignored `data/processed/`; conflicting results are rejected.
+
+Only load trusted, locally generated model artifacts: joblib deserialization can
+execute code, and hashes do not establish trust. Historical availability remains
+unknown, previous-season features omit current-season changes, and missing
+history excludes some teams. No live-performance or leakage-safe-backtesting
+claim follows from these holdout scores. See the [model card](docs/model-card.md)
+for settings, calibration, sample predictions, and limitations, and
+[data/README.md](data/README.md#baseline-model-and-prediction-artifacts-version-1)
+for output contracts and verification.
 
 ## Development Notes
 
