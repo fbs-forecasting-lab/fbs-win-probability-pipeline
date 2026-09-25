@@ -302,6 +302,10 @@ After an actual download, train/evaluate locally in a separate directory:
   --output-dir data/processed/demo-baseline-from-s3-v1 --allow-retrospective-demo
 ```
 
+For the recording, `.venv/bin/python -B -m src.pipeline.s3_demo --dataset-id <id>
+--run-dir <new dir> --allow-retrospective-demo` chains the verified download,
+local training, and prediction in one command; see walkthrough section 1a.
+
 Live S3 verification passed on September 24, 2026 using the selected private
 bucket in `us-east-1` under `initial-demo`. The 2025 raw pair and six dataset
 artifacts were uploaded and read back successfully. All six downloaded files
