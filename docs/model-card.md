@@ -40,6 +40,15 @@ Upcoming prediction inputs have no invented label.
 | Fit scaler and model | 2022–2024 | 2,194 |
 | Holdout evaluation only | 2025 | 740 |
 | Saved-sample inference | 2026 Week 4 | 57 |
+| Recording inference (Week 5 rehearsal dataset `b6b7c545…5e65`) | 2026 Week 5 | 51 |
+
+The Week 5 dataset, built by `src.pipeline.week_refresh` on September 24, has
+byte-identical train, holdout, and aggregate files, so a model trained on it has
+the same coefficients and holdout results. Only its prediction split differs:
+51 upcoming Week 5 games, with North Dakota State–Wyoming (`401864515`) excluded
+for missing 2025 FBS history and four games with TBD kickoffs quarantined during
+normalization. Dataset `8ecf7cf5…c5c5` remains available as the Week 4 reference
+described below.
 
 Dataset eligibility excluded 43 train, 22 holdout, and 1 prediction targets.
 The uncompleted 2024 App State–Liberty game `401640992` has neither a training

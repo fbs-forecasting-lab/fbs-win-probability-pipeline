@@ -302,9 +302,16 @@ After an actual download, train/evaluate locally in a separate directory:
   --output-dir data/processed/demo-baseline-from-s3-v1 --allow-retrospective-demo
 ```
 
-For the recording, `.venv/bin/python -B -m src.pipeline.s3_demo --dataset-id <id>
---run-dir <new dir> --allow-retrospective-demo` chains the verified download,
-local training, and prediction in one command; see walkthrough section 1a.
+For the recording, `.venv/bin/python -B -m src.pipeline.week_refresh --week 5
+--run-tag <new tag> --allow-retrospective-demo` fetches the 2026 Week 5 schedule
+from CFBD, uploads the raw pair, rebuilds the dataset with the same 2021–2025
+history, uploads it, and prints the `src.pipeline.s3_demo` command. That command
+chains the verified download, local training, and prediction; see walkthrough
+Step 1 and section 1a. The September 24 Week 5 rehearsal dataset is
+`b6b7c54503439ecc0ecad5b9d255281d6d6943c9da4013db2dff9eb8ab305e65` (51 upcoming
+games, identical train/holdout and holdout metrics). Dataset
+`8ecf7cf50b5f4ae68bde2ad902370b7528d327ed0919b5fed7a1211447c7e5c5` remains
+available as the Week 4 reference.
 
 Live S3 verification passed on September 24, 2026 using the selected private
 bucket in `us-east-1` under `initial-demo`. The 2025 raw pair and six dataset
