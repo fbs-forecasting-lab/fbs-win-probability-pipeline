@@ -1,70 +1,134 @@
 # Initial Demo Walkthrough — September 29, 2026
 
-Allow about 6–8 minutes for the verified local sequence, plus 2–3 minutes for
-the verified S3 segment.
+Allow about 6–8 minutes for the verified local sequence, plus about 5 minutes
+for Step 1 and Section 1a.
 
 Open a terminal in your local clone of the repository (the folder containing
 README.md), then run every command from there.
 
-Current for `main` (base `024eab7`) plus the uncommitted `src.pipeline.s3_demo`
-changes, using the existing Python 3.14.x `.venv` and local artifacts. The
-original seven steps are read-only/offline except for the marked recording
-ingestion command. The added S3 segment below requires AWS access and includes a
-separate local training run. It was live-verified on September 24, 2026 on
-`feature/demo-s3`. The single recording-core command in section 1a was
-live-verified on September 24, 2026 on `main` (base `024eab7`). Open the listed
-files in your editor; paths below are relative to the repository root. Keep
-`.env` and credentials off screen. Load only this project's trusted local model
-artifacts; joblib deserialization can execute code.
+Current for `feature/week-refresh` (base `caa362b`) plus its uncommitted
+`src.pipeline.week_refresh` changes, using the existing Python 3.14.x `.venv` and
+local artifacts. Step 1 makes one live CFBD request and new S3 uploads; Section 1a
+reads from S3 and trains locally. Steps 2–7 are read-only and offline. Both live
+commands were rehearsed on September 24, 2026. Open the listed files in your
+editor; paths below are relative to the repository root. Keep `.env` and
+credentials off screen. Load only this project's trusted local model artifacts;
+joblib deserialization can execute code.
 
 Opening note: “This demo connects CFBD ingestion, raw storage, normalized games,
 three historical predictors, a baseline model, evaluation, and probabilities.
-The dataset is stored in S3; during this recording we download and verify it,
-train the model locally on that copy, and generate predictions from it.
-It is a retrospective demonstration. Historical availability is unverified,
-so it is not yet an approved point-in-time forecasting system.”
+During this recording we pull the upcoming Week 5 schedule from the API, store it
+in S3, download and verify the dataset, train the model locally on that copy, and
+predict games that have not been played yet, using prior-season features only.
+In-season features are planned next. It is a retrospective demonstration.
+Historical availability is unverified, so it is not yet an approved
+point-in-time forecasting system.”
 
 ## Recording Checklist
 
 | Assignment requirement | Where it is shown |
 | --- | --- |
-| Show how data is ingested | Step 1 (live CFBD request) |
-| Show where data is stored | Step 1 raw files + Section 1a S3 console |
+| Show how data is ingested | Step 1 (`week_refresh`: live CFBD request for 2026 Week 5) |
+| Show where data is stored | Step 1 raw files and S3 uploads + Section 1a S3 console |
 | Explain which features are stored and why | Step 3 |
 | Show how data is used to train a model | Section 1a (training on the S3 download) + Step 4 |
-| Show predictions on ideal data | Section 1a output (saved Week 4 matchups + hypothetical vector) + Steps 6–7 |
+| Show predictions on ideal data | Section 1a output (upcoming Week 5 matchups + hypothetical vector) + Steps 6–7 |
 
-Present the predictions of the model trained live in Section 1a. Steps 5–7 read
+Present the predictions of the model trained live in Section 1a. Steps 5–6 read
 saved artifacts in `data/processed/demo-baseline-v1` for explanation only; its
-results are byte-identical to the model trained in 1a.
+holdout results are byte-identical to the model trained in 1a. Steps 3 and 7 use
+the September 24 Week 5 rehearsal outputs, which may differ slightly from the
+real take.
 
-## 1. Ingest and Show Raw Provenance (~1 minute)
+## 1. Ingest from the API and Store in S3 (~2 minutes)
 
-**Recording command — rehearsed once into a separate directory on September 24, 2026.** With the locally configured
-CFBD key, run one regular-season request into a separate recording directory:
+**Off screen, before recording:**
+
+- Keep `.env`, `~/.aws`, and every credential window off screen. The commands
+  read only the nonsecret `FBS_S3_BUCKET`, `FBS_S3_REGION`, and `FBS_S3_PREFIX`
+  settings from the ignored `.env` and check that `CFBD_API_KEY` is present;
+  no key value is ever printed. AWS credentials come from boto3's standard chain
+  and are never typed or shown.
+- Before recording, confirm off screen that your AWS access keys work (for
+  example, run `aws sts get-caller-identity` off screen). Never show
+  `~/.aws/credentials`, `.env`, or key values on screen. If your keys are
+  temporary (they include a session token), refresh them before recording.
+- Use a fresh `--run-tag` for every take (`week5-take-1`, `week5-take-2`, …;
+  `week5-rehearsal-1` is already used). Each take makes exactly one CFBD request
+  and writes new S3 objects. The command refuses a run tag whose output
+  directories already exist and never overwrites a local file or S3 object.
+
+**Run on screen** (change `take-1` for each take):
 
 ```bash
-.venv/bin/python -B -m src.ingestion.cfbd --season 2025 \
-  --output-dir data/raw/cfbd/recording/games
+.venv/bin/python -B -m src.pipeline.week_refresh --week 5 \
+  --run-tag week5-take-1 --allow-retrospective-demo
 ```
 
-Expected on success: `Raw snapshot: ...`, `Manifest: ...`, `Stored N records`,
-and coverage JSON. Open the two exact paths printed by the CLI:
+It runs these stages in order. Each stage appears in the output, and any error
+names its stage and exits with code 1:
+
+1. `aws_preflight`: a read-only check that AWS access works and all four Block
+   Public Access settings are on, before the CFBD request is spent.
+2. `cfbd_fetch`: one College Football Data API request for the 2026
+   regular-season Week 5 schedule. The unchanged response and its manifest are
+   saved under `data/raw/cfbd/week5-take-1/games/season=2026/`.
+3. `s3_upload_raw`: the raw pair is uploaded to
+   `initial-demo/raw/cfbd/games/season=2026/` with no-overwrite writes and byte
+   readback.
+4. `normalize`: the new week and the five fixed 2021–2025 history snapshots are
+   normalized under `data/interim/cfbd/week5-take-1/games/`.
+5. `build_dataset`: the feature dataset is built in
+   `data/processed/week5-take-1-features/` (train 2022–2024, holdout 2025,
+   prediction = the Week 5 games).
+6. `s3_upload_dataset`: the six dataset files are uploaded to
+   `initial-demo/datasets/<dataset_id>/`.
+
+The output ends with the new `dataset_id` and `next_command`, the exact command
+for Section 1a.
+
+**Expected output** (September 24 rehearsal, `week5-rehearsal-1`, about 4 seconds;
+the real take may differ slightly):
+
+| Output field | Rehearsal value |
+| --- | --- |
+| `1_cfbd_fetch` | HTTP 200, 59 records, 56 FBS vs. FBS |
+| `2_s3_upload_raw.objects` | 2 objects, `uploaded` |
+| `3_normalize.new_week_counts` | input 59 / retained 52 / excluded 3 (FBS–FCS) / quarantined 4 (kickoff time TBD) |
+| `4_build_dataset.counts` | train 2,194 / holdout 740 / prediction 51 |
+| `4_build_dataset.prediction_exclusion_reasons` | `missing_home_history`: 1 (North Dakota State–Wyoming) |
+| `5_s3_upload_dataset.objects` | 6 objects, `uploaded` |
+| Status flags | `dataset_mode: retrospective_demo`; the other three flags `false` |
+
+Counts can change between takes: if CFBD publishes the four TBD kickoff times
+(Mississippi State–Alabama, North Carolina–Notre Dame, Georgia–Vanderbilt, and
+Clemson–Miami), those games are retained, up to 55 prediction rows. The snapshot
+ID, retrieval time, and dataset ID are new on every pull. Train and holdout rows
+never change.
+
+**Files to open** (the command prints the exact paths):
 
 ```text
-data/raw/cfbd/recording/games/season=2025/<new_snapshot_id>.json
-data/raw/cfbd/recording/games/season=2025/<new_snapshot_id>.manifest.json
+data/raw/cfbd/week5-take-1/games/season=2026/<snapshot_id>.json
+data/raw/cfbd/week5-take-1/games/season=2026/<snapshot_id>.manifest.json
+data/interim/cfbd/week5-take-1/games/<snapshot_id>/quality_report.json
+data/interim/cfbd/week5-take-1/games/<snapshot_id>/exclusions.json
+data/processed/week5-take-1-features/prediction.csv
+data/processed/week5-take-1-features/dataset_report.json
 ```
 
-`N`, retrieval time, hash, and snapshot ID come from that actual request; do not
-promise they match the older snapshot. If access fails, report the failure and
-continue with the stored reference below, clearly identifying it as previously
-retrieved. A rehearsal of this command on September 24, 2026 (ET; into a separate
-`data/raw/cfbd/rehearsal-1/games` directory) succeeded with HTTP 200 and 888
-records; expect different values in the real recording. Do not pass its new manifest into normalization, dataset building,
-or training for this walkthrough. The fixed inputs and saved model remain intact.
+Say: “This is a live request to the College Football Data API for the upcoming
+Week 5 schedule. We keep the raw response unchanged, with its retrieval time,
+request parameters, and hash, and store it both locally and in our private S3
+bucket. Then we build the model dataset and upload it as well. Games without an
+announced kickoff time are quarantined rather than guessed, and FBS–FCS games are
+excluded. Retrieval time is not historical publication time.”
 
-**Offline reference files to open:**
+If the command fails, it names the failing stage. Report the failure and use the
+fallback plan in Section 1a; do not describe a failed pull as successful.
+
+**Optional: a stored history snapshot.** The five history seasons are fixed,
+previously retrieved snapshots. To show one, open:
 
 ```text
 data/raw/cfbd/games/season=2025/1657e1334c044ff0957e8e246f712d82.json
@@ -92,72 +156,62 @@ Expected: **888 records**, HTTP 200, `year=2025`, `seasonType=regular`,
 `classification=fbs`; retrieval `2026-09-23T04:43:15.581843Z`; availability
 `unknown`, `available_at=null`, predictor approval false.
 
-Say: “We retain the response fields unchanged and record retrieval time, request
-parameters, count, and hash. Retrieval time is not historical publication time.
-Scores and completion status are stored evidence, not same-game predictors.”
-
 ## 1a. Recording Core: S3 Download → Local Training → Prediction (~3 minutes)
 
-One command reads the saved dataset from S3, trains the fixed model on the
-downloaded copy, reloads that new model, and generates predictions on camera.
-
-**Off screen, before recording:**
-
-- Keep `.env`, `~/.aws`, and every credential window off screen.
-  The command reads only the nonsecret `FBS_S3_BUCKET`, `FBS_S3_REGION`, and
-  `FBS_S3_PREFIX` settings from the ignored `.env`; credentials come from boto3's
-  standard chain and are never typed or shown.
-- Before recording, confirm off screen that your AWS access keys work (for
-  example, run `aws sts get-caller-identity` off screen). Never show
-  `~/.aws/credentials`, `.env`, or key values on screen. If your keys are
-  temporary (they include a session token), refresh them before recording.
-- Use a fresh `--run-dir` for every take (`recording-take-1`, `recording-take-2`,
-  …). The command refuses a non-empty directory, an existing file, or a symbolic
-  link before contacting AWS and never overwrites anything.
+Run the `next_command` printed by `week_refresh`. It downloads the dataset that
+Step 1 just uploaded, trains the fixed model on the downloaded copy, reloads that
+new model, and generates predictions for the upcoming Week 5 games on camera.
 
 **S3 console to show:** open the project bucket (`<FBS_S3_BUCKET>`), show the
 Permissions tab with all four Block Public Access settings on, then open:
 
 ```text
-initial-demo/raw/cfbd/games/season=2025/
-initial-demo/datasets/8ecf7cf50b5f4ae68bde2ad902370b7528d327ed0919b5fed7a1211447c7e5c5/
+initial-demo/raw/cfbd/games/season=2026/
+initial-demo/datasets/<dataset_id printed by week_refresh>/
 ```
 
-Show the raw `.json` and `.manifest.json` pair, then the six dataset objects:
-`train.csv`, `holdout.csv`, `prediction.csv`, `team_season_aggregates.csv`,
-`exclusions.json`, and `dataset_report.json`. The bucket name contains the AWS
-account ID; crop or blur it in the recording if you prefer not to show it.
+Show the new raw `.json` and `.manifest.json` pair (the snapshot ID printed in
+`1_cfbd_fetch`), then the six dataset objects: `train.csv`, `holdout.csv`,
+`prediction.csv`, `team_season_aggregates.csv`, `exclusions.json`, and
+`dataset_report.json`. The bucket name contains the AWS account ID; crop or blur
+it in the recording if you prefer not to show it.
 
-**Run on screen** (change `take-1` for each take):
+**Run on screen:** copy `next_command` from the `week_refresh` output. For take 1
+it has this form:
 
 ```bash
 .venv/bin/python -B -m src.pipeline.s3_demo \
-  --dataset-id 8ecf7cf50b5f4ae68bde2ad902370b7528d327ed0919b5fed7a1211447c7e5c5 \
-  --run-dir data/processed/recording-take-1 \
+  --dataset-id <dataset_id printed by week_refresh> \
+  --run-dir data/processed/week5-take-1-run \
   --prior-win-pct-diff 0.2 --prior-avg-margin-diff 7 --home-field 1 \
   --allow-retrospective-demo
 ```
 
 **Expected output:** one JSON summary with three stages and the status flags.
-These values were observed in the live verification run on September 24, 2026:
+These values come from the September 24 rehearsal (dataset
+`b6b7c54503439ecc0ecad5b9d255281d6d6943c9da4013db2dff9eb8ab305e65`, about 2
+seconds). Counts and matchups may vary slightly by take; the holdout metrics must
+match exactly on every take.
 
 | Output field | Expected |
 | --- | --- |
-| `1_s3_download.s3_location` | `s3://<FBS_S3_BUCKET>/initial-demo/datasets/8ecf…c5c5/` |
+| `1_s3_download.s3_location` | `s3://<FBS_S3_BUCKET>/initial-demo/datasets/<dataset_id>/` |
 | `1_s3_download.verified_files` | 6 |
-| `1_s3_download.dataset_report_sha256` | `b4bb20873d36d6c526ec7ba045a1a82438498d21c581e920316eed95bb54c01f` |
+| `1_s3_download.dataset_report_sha256` | New on every pull (rehearsal: `f4246f308f062e870ec6f0aa2e4be4ccb415a882cbb1e4bc564736746538b61a`) |
 | `1_s3_download.method` | `downloaded and SHA-256 verified before use; not streamed` |
-| `2_local_training.counts` | train 2,194 / holdout 740 / prediction 57 |
-| `2_local_training.trained_on` | `data/processed/recording-take-1/dataset` |
+| `2_local_training.counts` | train 2,194 / holdout 740 / prediction 51 (prediction may vary by take) |
+| `2_local_training.trained_on` | `data/processed/week5-take-1-run/dataset` |
 | Holdout model Brier / log loss / accuracy | 0.21061287148858282 / 0.6096025525960278 / 0.6648648648648648 |
 | Constant baseline Brier / log loss / accuracy | 0.24163577488303326 / 0.6763272181260667 / 0.5918918918918918 |
-| `3_prediction.count` / `context` | 57 / `saved_2026_sample_not_live` |
-| First saved matchups (home probability) | Coastal Carolina–Liberty 0.44423110419960504; Temple–Army 0.4977009154009066; UAB–Navy 0.40075237466918495 |
+| `3_prediction.count` / `context` | 51 / `saved_2026_sample_not_live` |
+| First Week 5 matchups (home probability) | New Mexico State–Western Kentucky 0.4580831843000378; Tulsa–North Texas 0.2777652902323672; Virginia Tech–Pittsburgh 0.35628483220960383 |
 | Hypothetical `(0.2, 7, 1)` | home 0.662422294285731 / away 0.33757770571426904 |
 | Status flags | `dataset_mode: retrospective_demo`; the other three flags `false` |
 
-Afterward, open `data/processed/recording-take-1/model/evaluation.json` and
-`data/processed/recording-take-1/predictions/predictions.csv`.
+The `saved_2026_sample_not_live` context marks predictions made from a saved
+snapshot; it does not mean the games have been played. Afterward, open
+`data/processed/week5-take-1-run/model/evaluation.json` and
+`data/processed/week5-take-1-run/predictions/predictions.csv`.
 
 **What the command does:** the six dataset files are downloaded from S3 and each
 one's actual bytes are checked against its SHA-256 before anything uses them. The
@@ -170,17 +224,49 @@ locally. If a download fails its integrity check, the run stops before training
 and no model directory is created. Any failure names its stage (AWS client, S3
 download, local training, or prediction) and exits with code 1.
 
-Say: “This dataset was built from CFBD API data and stored in our private S3
-bucket. The command downloads it, verifies every file against SHA-256, trains the
-baseline locally on that verified copy, and generates predictions from the newly
-trained model. These are retrospective-demo results on a saved sample, not live
-forecasts. Cloud storage does not establish historical availability.”
+Say: “The dataset we just built from the API is downloaded from our private S3
+bucket, and every file is verified against SHA-256. The baseline is trained
+locally on that verified copy, and the newly trained model predicts the Week 5
+games. These games have not been played yet; Week 5 starts October 1. The model
+uses prior-season features only; in-season features are planned next. These are
+retrospective-demo results from a saved snapshot: historical availability is
+unverified, and they are not approved forecasts.”
 
-**Fallback: the three separate existing commands** (use a fresh directory):
+**Fallback plan:**
+
+- **The CFBD pull fails** (`week_refresh` stops at `cfbd_fetch`): use the
+  rehearsal dataset that is already in S3, and say it was pulled on September 24:
+
+  ```bash
+  .venv/bin/python -B -m src.pipeline.s3_demo \
+    --dataset-id b6b7c54503439ecc0ecad5b9d255281d6d6943c9da4013db2dff9eb8ab305e65 \
+    --run-dir data/processed/week5-fallback-take-1 \
+    --prior-win-pct-diff 0.2 --prior-avg-margin-diff 7 --home-field 1 \
+    --allow-retrospective-demo
+  ```
+
+- **AWS fails** (`week_refresh` stops at `aws_preflight` or an S3 upload stage):
+  use the Week 4 chain below. Describe it as a saved Week 4 sample; its games
+  have already been played. It expects 57 predictions, starting with Coastal
+  Carolina–Liberty 0.44423110419960504, and the same holdout metrics. This chain
+  also reads from S3. If S3 cannot be reached at all, report the blocker and
+  continue with the local steps. Do not present local results as a successful S3
+  demonstration.
+
+  ```bash
+  .venv/bin/python -B -m src.pipeline.s3_demo \
+    --dataset-id 8ecf7cf50b5f4ae68bde2ad902370b7528d327ed0919b5fed7a1211447c7e5c5 \
+    --run-dir data/processed/week4-fallback-take-1 \
+    --prior-win-pct-diff 0.2 --prior-avg-margin-diff 7 --home-field 1 \
+    --allow-retrospective-demo
+  ```
+
+- **`s3_demo` fails after a successful upload:** run the three separate existing
+  commands with the same dataset ID, in a fresh directory:
 
 ```bash
 .venv/bin/python -B -m src.ingestion.s3_storage download-dataset \
-  --dataset-id 8ecf7cf50b5f4ae68bde2ad902370b7528d327ed0919b5fed7a1211447c7e5c5 \
+  --dataset-id <dataset_id printed by week_refresh> \
   --output-dir data/processed/fallback-take-1/dataset --allow-retrospective-demo
 
 .venv/bin/python -B -m src.models.baseline \
@@ -202,18 +288,20 @@ For the hypothetical vector:
   --allow-retrospective-demo
 ```
 
-If cloud access is blocked, report the blocker and continue the local sequence. Do not
-present mocked tests or original local results as a successful S3 demonstration.
+**Record of the S3 uploads (do not re-run during recording):**
 
-**Record of the September 24 upload (do not re-run during recording):** the fixed
-2025 raw snapshot pair and the six `data/processed/demo-features-v1` files were
-uploaded with `src.ingestion.s3_storage upload-raw` and `upload-dataset` to
-`s3://<FBS_S3_BUCKET>/initial-demo/` in `us-east-1`. Every object reported
-`uploaded` and passed byte readback, and completion markers were written last.
-All four Block Public Access flags were enabled. No IAM, bucket policy, or
-security setting was changed. See
-[data/README.md](../data/README.md#s3-demo-storage-explicit-transfers) for keys,
-permissions, and the byte-level comparison.
+- **September 24, Week 4 reference:** the fixed 2025 raw snapshot pair and the six
+  `data/processed/demo-features-v1` files were uploaded with
+  `src.ingestion.s3_storage upload-raw` and `upload-dataset` to
+  `s3://<FBS_S3_BUCKET>/initial-demo/` in `us-east-1`. Every object reported
+  `uploaded` and passed byte readback, and completion markers were written last.
+  All four Block Public Access flags were enabled. No IAM, bucket policy, or
+  security setting was changed. See
+  [data/README.md](../data/README.md#s3-demo-storage-explicit-transfers) for keys,
+  permissions, and the byte-level comparison.
+- **September 24, Week 5 rehearsal:** `week_refresh` uploaded one new raw pair
+  under `initial-demo/raw/cfbd/games/season=2026/` and the six files of dataset
+  `b6b7c545…5e65`. Both remain available.
 
 ## 2. Show Normalization and Exclusions (~45 seconds)
 
@@ -248,33 +336,37 @@ with reasons and raw-row references; nothing is silently repaired.”
 
 ## 3. Show Exactly Three Predictors and an Actual Row (~1 minute)
 
-**Files to open:** `data/processed/demo-features-v1/prediction.csv` and
-`data/processed/demo-features-v1/team_season_aggregates.csv`.
+**Files to open** (September 24 rehearsal outputs; the real take's
+`data/processed/week5-take-1-features/` files may differ slightly):
+`data/processed/week5-rehearsal-1-features/prediction.csv` and
+`data/processed/week5-rehearsal-1-features/team_season_aggregates.csv`.
 
 ```bash
 .venv/bin/python -B - <<'PY'
 import csv
 from pathlib import Path
 from src.models.baseline import PREDICTORS
-with Path("data/processed/demo-features-v1/prediction.csv").open(newline="") as handle:
-    row = next(r for r in csv.DictReader(handle) if r["game_id"] == "401869941")
-print("Actual saved matchup:", row["game_id"], row["home_team"], "vs", row["away_team"])
+with Path("data/processed/week5-rehearsal-1-features/prediction.csv").open(newline="") as handle:
+    row = next(r for r in csv.DictReader(handle) if r["game_id"] == "401871049")
+print("Upcoming Week 5 matchup:", row["game_id"], row["home_team"], "vs", row["away_team"])
 print("Predictors in model order:", {name: float(row[name]) for name in PREDICTORS})
 print("Audit only: prior season/counts/cutoff:", row["feature_source_season"],
       row["home_prior_game_count"], row["away_prior_game_count"], row["cutoff"])
 PY
 ```
 
-Expected: actual saved **Coastal Carolina–Liberty**, game **401869941**:
+Expected (rehearsal values): upcoming **New Mexico State–Western Kentucky**, game
+**401871049**:
 
 | Predictor, in model order | Value | Rationale |
 | --- | ---: | --- |
-| `prior_win_pct_diff` | 0.1818181818 | Home minus away previous-season win percentage: coarse relative strength |
-| `prior_avg_margin_diff` | −10.3636363636 | Home minus away previous-season average point margin |
+| `prior_win_pct_diff` | −0.3636363636 | Home minus away previous-season win percentage: coarse relative strength |
+| `prior_avg_margin_diff` | −10.4545454545 | Home minus away previous-season average point margin |
 | `home_field` | 1 | 0 for neutral sites, otherwise 1 |
 
 Audit fields: source season **2025**, **11 games per team**, cutoff
-`2026-09-24T23:30:00Z`. This is the scheduled kickoff in the saved snapshot.
+`2026-10-02T00:00:00Z` (Thursday, October 1, 8:00 p.m. ET). This is the scheduled
+kickoff in the saved snapshot; the game has not been played yet.
 
 Say: “Only these three columns enter the model. We join teams by ID and use
 completed regular-season FBS–FBS games from exactly Y−1. IDs, scores, completion
@@ -297,8 +389,10 @@ PY
 ```
 
 Expected: **train 2,194 / 2022–2024; holdout 740 / 2025;
-prediction 57 / 2026**. This command also validates dataset hashes, schema,
-counts, feature domains, labels, and disjoint game IDs.
+prediction 57 / 2026** (the Week 4 reference dataset). This command also
+validates dataset hashes, schema, counts, feature domains, labels, and disjoint
+game IDs. The Week 5 dataset has byte-identical `train.csv` and `holdout.csv`;
+only its prediction split differs (51 rows in the rehearsal).
 
 Say: “Both StandardScaler and the fixed logistic regression fit only on
 2022–2024. We evaluate on 2025 without tuning or refitting. The same fitted model
@@ -356,12 +450,15 @@ Say: “This is an invented feature vector, not a real matchup: a 0.20 prior win
 percentage advantage, a 7-point mean-margin advantage, and a home site. The
 model gives approximately 66.24% home and 33.76% away; they sum to one.”
 
-## 7. Show Saved-Sample Predictions and Limits (~1 minute)
+## 7. Show Week 5 Predictions and Limits (~1 minute)
 
-**Files to open:** `data/processed/demo-baseline-v1/sample_predictions.csv` and
-`data/processed/demo-baseline-v1/exclusions.json`.
+**Files to open** (September 24 rehearsal outputs; the real take's
+`data/processed/week5-take-1-run/` files may differ slightly):
+`data/processed/week5-rehearsal-1-run/predictions/predictions.csv` and
+`data/processed/week5-rehearsal-1-features/exclusions.json`.
 
-Read saved predictions and recompute them after model reload, without rewriting:
+Read the saved Week 5 predictions and recompute them after model reload, without
+rewriting:
 
 ```bash
 .venv/bin/python -B - <<'PY'
@@ -369,36 +466,39 @@ import csv
 from pathlib import Path
 import numpy as np
 from src.models.baseline import load_dataset, load_trusted_model, home_probabilities
-model, metadata = load_trusted_model("data/processed/demo-baseline-v1", allow_retrospective_demo=True)
-data = load_dataset("data/processed/demo-features-v1", allow_retrospective_demo=True)
+run = Path("data/processed/week5-rehearsal-1-run")
+model, metadata = load_trusted_model(run / "model", allow_retrospective_demo=True)
+data = load_dataset(run / "dataset", allow_retrospective_demo=True)
 assert data["report_sha256"] == metadata["dataset_report_sha256"]
-with Path("data/processed/demo-baseline-v1/sample_predictions.csv").open(newline="") as handle:
+with (run / "predictions" / "predictions.csv").open(newline="") as handle:
     rows = list(csv.DictReader(handle))
 saved = np.array([float(r["home_win_probability"]) for r in rows])
 reloaded = home_probabilities(model, data["splits"]["prediction"]["x"])
 np.testing.assert_allclose(saved, reloaded, rtol=0, atol=1e-12)
-print("Saved 2026 sample rows:", len(rows), "reload max difference:", float(np.max(abs(saved - reloaded))))
+print("Week 5 rows:", len(rows), "reload max difference:", float(np.max(abs(saved - reloaded))))
 for row in rows[:3]:
-    print(row["game_id"], row["home_team"], "vs", row["away_team"],
+    print(row["game_id"], row["home_team"], "vs", row["away_team"], row["cutoff"],
           "home:", row["home_win_probability"], "away:", row["away_win_probability"])
 PY
 ```
 
-Expected: **57 rows**, reload maximum difference **0.0**:
+Expected (rehearsal values): **51 rows**, reload maximum difference **0.0**:
 
-| Game ID | Actual saved matchup (home vs. away) | Home | Away |
+| Game ID | Upcoming Week 5 matchup (home vs. away) | Home | Away |
 | --- | --- | ---: | ---: |
-| 401869941 | Coastal Carolina vs. Liberty | 44.4231% | 55.5769% |
-| 401862779 | Temple vs. Army | 49.7701% | 50.2299% |
-| 401862778 | UAB vs. Navy | 40.0752% | 59.9248% |
+| 401871049 | New Mexico State vs. Western Kentucky | 45.8083% | 54.1917% |
+| 401862786 | Tulsa vs. North Texas | 27.7765% | 72.2235% |
+| 401858245 | Virginia Tech vs. Pittsburgh | 35.6285% | 64.3715% |
 
-Say: “These identify actual matchups in the saved September 23 Week 4 snapshot;
-they are not refreshed live forecasts, even if the recording date is later.
-Sacramento State–Massachusetts, game 401866429, has no qualifying prior history
-and receives no invented probability. Previous-season summaries omit current
-form and roster changes. Historical versions and availability remain unverified,
-so these results do not demonstrate leakage-safe backtesting. Serverless
-orchestration and monitoring remain future work.”
+Say: “These are upcoming games that have not been played yet; the earliest
+kicks off Thursday, October 1. The model uses prior-season 2025 features only,
+and in-season features are planned next. North Dakota State–Wyoming, game
+401864515, has no qualifying 2025 FBS history for North Dakota State and receives
+no invented probability. Four games without announced kickoff times were
+quarantined. Previous-season summaries omit current form and roster changes.
+Historical versions and availability remain unverified, so these are
+retrospective-demo results, not approved forecasts. Serverless orchestration and
+monitoring remain future work.”
 
 ## Preparation Verification
 
@@ -437,3 +537,26 @@ succeeded with HTTP 200 and 888 records, `retrieved_at`
 `2026-09-25T01:24:11.491865Z` (the evening of September 24 in ET). That snapshot
 was not normalized or used in any dataset, training, or S3 step. No S3 write or
 AWS setting change was made.
+
+Week 5 refresh rehearsal, September 24, on `feature/week-refresh` (base
+`caa362b`): all 128 offline tests passed, including the new `aws_preflight`
+check.
+- `src.pipeline.week_refresh --week 5 --run-tag week5-rehearsal-1` ran in 3.9
+  seconds with one CFBD request (HTTP 200, 59 records, `retrieved_at`
+  `2026-09-25T02:59:44.466329Z`).
+- Normalization retained 52 games, excluded 3 FBS–FCS games, and quarantined 4
+  with TBD kickoffs. The build gave train 2,194 / holdout 740 / prediction 51
+  (North Dakota State–Wyoming excluded for missing history).
+- It uploaded 2 new raw objects and the 6 files of dataset
+  `b6b7c54503439ecc0ecad5b9d255281d6d6943c9da4013db2dff9eb8ab305e65`; every
+  object reported `uploaded`, and nothing was overwritten.
+- The printed `next_command` then ran in 1.8 seconds. It verified 6 downloaded
+  files and reproduced all six holdout metrics and the hypothetical probabilities
+  exactly.
+- `train.csv`, `holdout.csv`, and `team_season_aggregates.csv` are byte-identical
+  to `demo-features-v1`, and `holdout_predictions.csv` is byte-identical to
+  `demo-baseline-v1`.
+- All 59 fetched games were still upcoming at run time; the earliest kicks off
+  October 1 at 8:00 p.m. ET.
+- No existing local file or S3 object was modified, and no AWS setting was
+  changed.

@@ -332,6 +332,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
     print(f"Output: {args.output_dir.resolve()}")
+    print(f"Dataset ID: {report['dataset_id']}")
     print("retrospective_demo: historical availability unverified; not approved for point-in-time forecasting.")
     print(json.dumps(report["splits"], indent=2, sort_keys=True))
     return 0

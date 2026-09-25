@@ -144,6 +144,24 @@ class DatasetTests(unittest.TestCase):
         self.assertEqual(prediction[0]["home_points"], "")
         self.assertEqual(report["splits"]["prediction"]["exclusion_reason_counts"], {"prediction_target_completed": 1})
 
+    def test_week5_prediction_source_leaves_train_holdout_and_aggregates_unchanged(self):
+        paths = self.fixtures()
+        week4, week4_report = self.build(paths)
+        rows = [game(2026, week=5, startDate="2026-10-03T16:00:00Z"),
+                game(2026, 2, week=5, startDate="2026-10-03T19:30:00Z")]
+        params = {"year": 2026, "seasonType": "regular", "classification": "fbs", "week": 5}
+        week5_manifest = save_snapshot(GamesResponse(json.dumps(rows).encode(), params, "2026-09-25T02:00:00Z", 200),
+                                       self.root / "raw")[1]
+        games.normalize_snapshot(week5_manifest, self.normalized)
+        week5, week5_report = self.build([*paths[:5], week5_manifest])
+        for name in ("train.csv", "holdout.csv", "team_season_aggregates.csv"):
+            self.assertEqual((week5 / name).read_bytes(), (week4 / name).read_bytes(), name)
+        self.assertNotEqual(week5_report["dataset_id"], week4_report["dataset_id"])
+        prediction = self.rows(week5, "prediction.csv")
+        self.assertEqual({row["week"] for row in prediction}, {"5"})
+        self.assertEqual({row["feature_source_season"] for row in prediction}, {"2025"})
+        self.assertEqual(len(prediction), 2)
+
     def test_same_game_scores_change_label_but_not_its_predictors(self):
         first, _ = self.build(self.fixtures())
         second, _ = self.build(self.fixtures({2023: [game(2023, homePoints=70), game(2023, 2)]}))

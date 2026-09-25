@@ -853,3 +853,14 @@ its evaluation, saved predictions, and reloaded hypothetical result matched as
 reported above. No serialized model was transferred. Both new directories remain
 Git-ignored. Existing source code and dataset/model bytes were preserved; no new
 CFBD requests were made. There are no remaining blockers for this verification.
+
+Week 5 refresh rehearsal, September 24, 2026: `src.pipeline.week_refresh --week 5
+--run-tag week5-rehearsal-1` added new objects only:
+- one raw pair under `s3://<FBS_S3_BUCKET>/initial-demo/raw/cfbd/games/season=2026/`
+  (snapshot `c51845bdd8b44bc293d517ffff84bca1`)
+- dataset `b6b7c54503439ecc0ecad5b9d255281d6d6943c9da4013db2dff9eb8ab305e65`
+  (train 2,194 / holdout 740 / prediction 51)
+
+Its train, holdout, and aggregate files are byte-identical to
+`demo-features-v1`. Dataset `8ecf7cf5…c5c5` and its objects above remain
+available as the Week 4 reference.
