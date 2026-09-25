@@ -818,7 +818,7 @@ git diff --check
 Offline verification: **105 tests passed**, including 21 S3 storage tests.
 
 Live S3 status: **verified September 24, 2026**. The user's selected bucket is
-`fbs-win-probability-habbott-demo-2026-706016980237-us-east-1-an`, region
+`<FBS_S3_BUCKET>`, region
 `us-east-1`, prefix `initial-demo`. These nonsecret settings are stored in ignored
 `.env`; the existing CFBD key was preserved. Existing AWS credentials were used.
 All four bucket-level Block Public Access flags passed before every transfer.
@@ -831,9 +831,9 @@ read back and compared with its source bytes. Completion markers were uploaded
 last. Verified locations:
 
 ```text
-s3://fbs-win-probability-habbott-demo-2026-706016980237-us-east-1-an/initial-demo/raw/cfbd/games/season=2025/1657e1334c044ff0957e8e246f712d82.json
-s3://fbs-win-probability-habbott-demo-2026-706016980237-us-east-1-an/initial-demo/raw/cfbd/games/season=2025/1657e1334c044ff0957e8e246f712d82.manifest.json
-s3://fbs-win-probability-habbott-demo-2026-706016980237-us-east-1-an/initial-demo/datasets/8ecf7cf50b5f4ae68bde2ad902370b7528d327ed0919b5fed7a1211447c7e5c5/
+s3://<FBS_S3_BUCKET>/initial-demo/raw/cfbd/games/season=2025/1657e1334c044ff0957e8e246f712d82.json
+s3://<FBS_S3_BUCKET>/initial-demo/raw/cfbd/games/season=2025/1657e1334c044ff0957e8e246f712d82.manifest.json
+s3://<FBS_S3_BUCKET>/initial-demo/datasets/8ecf7cf50b5f4ae68bde2ad902370b7528d327ed0919b5fed7a1211447c7e5c5/
 ```
 
 The download is `data/processed/demo-features-from-s3-v1/`. It passed the existing

@@ -1,31 +1,46 @@
 # Initial Demo Walkthrough — September 29, 2026
 
 Allow about 6–8 minutes for the verified local sequence, plus 2–3 minutes for
-the verified S3 segment. Run commands from the repository root:
+the verified S3 segment.
 
-```bash
-cd /Users/hampton/Development/Projects/fbs-win-probability-pipeline
-```
+Open a terminal in your local clone of the repository (the folder containing
+README.md), then run every command from there.
 
-Prepared against `feature/demo-baseline` at
-`b3d10524159f9dcff11944090d834f6548357971`, using the existing Python 3.14.x
-`.venv` and local artifacts. The original seven steps are read-only/offline except
-for the marked recording ingestion command. The added S3 segment below requires
-AWS access and includes a separate local training run. It was live-verified on
-September 24, 2026 on `feature/demo-s3`. Open the
-listed files in your editor; paths below are relative to the repository root.
-Keep `.env` and credentials off screen. Load only this project's trusted local
-model artifacts; joblib deserialization can execute code.
+Current for `main` (base `024eab7`) plus the uncommitted `src.pipeline.s3_demo`
+changes, using the existing Python 3.14.x `.venv` and local artifacts. The
+original seven steps are read-only/offline except for the marked recording
+ingestion command. The added S3 segment below requires AWS access and includes a
+separate local training run. It was live-verified on September 24, 2026 on
+`feature/demo-s3`. The single recording-core command in section 1a was
+live-verified on September 24, 2026 on `main` (base `024eab7`). Open the listed
+files in your editor; paths below are relative to the repository root. Keep
+`.env` and credentials off screen. Load only this project's trusted local model
+artifacts; joblib deserialization can execute code.
 
 Opening note: “This demo connects CFBD ingestion, raw storage, normalized games,
 three historical predictors, a baseline model, evaluation, and probabilities.
-Training and inference run locally; the S3 extension stores and retrieves data.
+The dataset is stored in S3; during this recording we download and verify it,
+train the model locally on that copy, and generate predictions from it.
 It is a retrospective demonstration. Historical availability is unverified,
 so it is not yet an approved point-in-time forecasting system.”
 
+## Recording Checklist
+
+| Assignment requirement | Where it is shown |
+| --- | --- |
+| Show how data is ingested | Step 1 (live CFBD request) |
+| Show where data is stored | Step 1 raw files + Section 1a S3 console |
+| Explain which features are stored and why | Step 3 |
+| Show how data is used to train a model | Section 1a (training on the S3 download) + Step 4 |
+| Show predictions on ideal data | Section 1a output (saved Week 4 matchups + hypothetical vector) + Steps 6–7 |
+
+Present the predictions of the model trained live in Section 1a. Steps 5–7 read
+saved artifacts in `data/processed/demo-baseline-v1` for explanation only; its
+results are byte-identical to the model trained in 1a.
+
 ## 1. Ingest and Show Raw Provenance (~1 minute)
 
-**Recording only — not run during preparation.** With the locally configured
+**Recording command — rehearsed once into a separate directory on September 24, 2026.** With the locally configured
 CFBD key, run one regular-season request into a separate recording directory:
 
 ```bash
@@ -44,8 +59,9 @@ data/raw/cfbd/recording/games/season=2025/<new_snapshot_id>.manifest.json
 `N`, retrieval time, hash, and snapshot ID come from that actual request; do not
 promise they match the older snapshot. If access fails, report the failure and
 continue with the stored reference below, clearly identifying it as previously
-retrieved. The live ingestion command has not been verified during this
-preparation. Do not pass its new manifest into normalization, dataset building,
+retrieved. A rehearsal of this command on September 24, 2026 (ET; into a separate
+`data/raw/cfbd/rehearsal-1/games` directory) succeeded with HTTP 200 and 888
+records; expect different values in the real recording. Do not pass its new manifest into normalization, dataset building,
 or training for this walkthrough. The fixed inputs and saved model remain intact.
 
 **Offline reference files to open:**
@@ -80,125 +96,124 @@ Say: “We retain the response fields unchanged and record retrieval time, reque
 parameters, count, and hash. Retrieval time is not historical publication time.
 Scores and completion status are stored evidence, not same-game predictors.”
 
-## 1a. S3 Storage and Verified Download (Verified September 24)
+## 1a. Recording Core: S3 Download → Local Training → Prediction (~3 minutes)
 
-**Prerequisite:** explicitly select an existing private project bucket, its
-region, and a project prefix. Set `FBS_S3_BUCKET`, `FBS_S3_REGION`, and
-`FBS_S3_PREFIX` in the environment or ignored `.env`; optionally set
-`FBS_AWS_PROFILE`. Authentication uses the existing AWS profile/SSO/temporary
-credential chain, never keys shown on screen. All four bucket-level Block Public
-Access settings must already be enabled. See [data/README.md](../data/README.md#s3-demo-storage-explicit-transfers)
-for permissions and setup. The user created and selected this bucket; these
-nonsecret settings are saved in the ignored local `.env`:
+One command reads the saved dataset from S3, trains the fixed model on the
+downloaded copy, reloads that new model, and generates predictions on camera.
 
-```text
-FBS_S3_BUCKET=fbs-win-probability-habbott-demo-2026-706016980237-us-east-1-an
-FBS_S3_REGION=us-east-1
-FBS_S3_PREFIX=initial-demo
-```
+**Off screen, before recording:**
 
-The existing CFBD key was preserved. All four Block Public Access flags were
-verified enabled. No IAM or bucket policy/security settings were changed.
+- Keep `.env`, `~/.aws`, and every credential window off screen.
+  The command reads only the nonsecret `FBS_S3_BUCKET`, `FBS_S3_REGION`, and
+  `FBS_S3_PREFIX` settings from the ignored `.env`; credentials come from boto3's
+  standard chain and are never typed or shown.
+- Before recording, confirm off screen that your AWS access keys work (for
+  example, run `aws sts get-caller-identity` off screen). Never show
+  `~/.aws/credentials`, `.env`, or key values on screen. If your keys are
+  temporary (they include a session token), refresh them before recording.
+- Use a fresh `--run-dir` for every take (`recording-take-1`, `recording-take-2`,
+  …). The command refuses a non-empty directory, an existing file, or a symbolic
+  link before contacting AWS and never overwrites anything.
 
-Use the fixed 2025 snapshot below, not a fresh recording snapshot. These are
-**live AWS commands that passed verification** with the configuration above:
-
-```bash
-.venv/bin/python -B -m src.ingestion.s3_storage upload-raw \
-  --manifest data/raw/cfbd/games/season=2025/1657e1334c044ff0957e8e246f712d82.manifest.json
-
-.venv/bin/python -B -m src.ingestion.s3_storage upload-dataset \
-  --dataset-dir data/processed/demo-features-v1 --allow-retrospective-demo
-
-.venv/bin/python -B -m src.ingestion.s3_storage download-dataset \
-  --dataset-id 8ecf7cf50b5f4ae68bde2ad902370b7528d327ed0919b5fed7a1211447c7e5c5 \
-  --output-dir data/processed/demo-features-from-s3-v1 --allow-retrospective-demo
-```
-
-Observed: both raw files and all six dataset files reported `uploaded`, with
-successful byte readback. The download reported `verified_files: 6` and
-`data/processed/demo-features-from-s3-v1`. In the S3 console, open
-`fbs-win-probability-habbott-demo-2026-706016980237-us-east-1-an`,
-confirm Block Public Access, then open:
+**S3 console to show:** open the project bucket (`<FBS_S3_BUCKET>`), show the
+Permissions tab with all four Block Public Access settings on, then open:
 
 ```text
 initial-demo/raw/cfbd/games/season=2025/
 initial-demo/datasets/8ecf7cf50b5f4ae68bde2ad902370b7528d327ed0919b5fed7a1211447c7e5c5/
 ```
 
-Show the raw `.json` and `.manifest.json` objects. Then show `train.csv`,
-`holdout.csv`, `prediction.csv`, `team_season_aggregates.csv`, `exclusions.json`,
-and `dataset_report.json` in the dataset prefix. Verified S3 locations:
+Show the raw `.json` and `.manifest.json` pair, then the six dataset objects:
+`train.csv`, `holdout.csv`, `prediction.csv`, `team_season_aggregates.csv`,
+`exclusions.json`, and `dataset_report.json`. The bucket name contains the AWS
+account ID; crop or blur it in the recording if you prefer not to show it.
 
-```text
-s3://fbs-win-probability-habbott-demo-2026-706016980237-us-east-1-an/initial-demo/raw/cfbd/games/season=2025/1657e1334c044ff0957e8e246f712d82.json
-s3://fbs-win-probability-habbott-demo-2026-706016980237-us-east-1-an/initial-demo/raw/cfbd/games/season=2025/1657e1334c044ff0957e8e246f712d82.manifest.json
-s3://fbs-win-probability-habbott-demo-2026-706016980237-us-east-1-an/initial-demo/datasets/8ecf7cf50b5f4ae68bde2ad902370b7528d327ed0919b5fed7a1211447c7e5c5/
-```
-
-Say: “S3 provides private object storage. We preserve source identity and upload
-data before its completion marker. Conditional writes prevent replacement.
-Downloads are verified from actual bytes against SHA-256, not ETags. Cloud
-storage does not establish historical availability.”
-
-After the download, compare all six files without changing the originals:
+**Run on screen** (change `take-1` for each take):
 
 ```bash
-.venv/bin/python -B - <<'PY'
-from pathlib import Path
-from hashlib import sha256
-from src.models.baseline import load_dataset
-old = Path("data/processed/demo-features-v1")
-new = Path("data/processed/demo-features-from-s3-v1")
-verified = load_dataset(new, allow_retrospective_demo=True)
-names = sorted(verified["artifacts"]) + ["dataset_report.json"]
-for name in names:
-    original = (old / name).read_bytes()
-    downloaded = (new / name).read_bytes()
-    assert original == downloaded, name
-    assert sha256(original).hexdigest() == sha256(downloaded).hexdigest(), name
-print("All six downloaded files match the originals byte for byte and by SHA-256.")
-PY
-
-.venv/bin/python -B -m src.models.baseline \
-  --dataset-dir data/processed/demo-features-from-s3-v1 \
-  --output-dir data/processed/demo-baseline-from-s3-v1 --allow-retrospective-demo
-
-.venv/bin/python -B -m src.models.predict \
-  --model-dir data/processed/demo-baseline-from-s3-v1 \
+.venv/bin/python -B -m src.pipeline.s3_demo \
+  --dataset-id 8ecf7cf50b5f4ae68bde2ad902370b7528d327ed0919b5fed7a1211447c7e5c5 \
+  --run-dir data/processed/recording-take-1 \
   --prior-win-pct-diff 0.2 --prior-avg-margin-diff 7 --home-field 1 \
   --allow-retrospective-demo
 ```
 
-Verified results from the S3 download: 2,194 training / 740 holdout / 57 sample
-rows. The six downloaded SHA-256 hashes equal the originals; the existing loader
-also validated the downloaded dataset. Its report SHA-256 is
-`b4bb20873d36d6c526ec7ba045a1a82438498d21c581e920316eed95bb54c01f`.
+**Expected output:** one JSON summary with three stages and the status flags.
+These values were observed in the live verification run on September 24, 2026:
 
-| 2025 holdout metric | Local model trained from S3 download | Constant baseline |
-| --- | ---: | ---: |
-| Brier score | 0.21061287148858282 | 0.24163577488303326 |
-| Log loss | 0.6096025525960278 | 0.6763272181260667 |
-| Accuracy | 0.6648648648648648 | 0.5918918918918918 |
+| Output field | Expected |
+| --- | --- |
+| `1_s3_download.s3_location` | `s3://<FBS_S3_BUCKET>/initial-demo/datasets/8ecf…c5c5/` |
+| `1_s3_download.verified_files` | 6 |
+| `1_s3_download.dataset_report_sha256` | `b4bb20873d36d6c526ec7ba045a1a82438498d21c581e920316eed95bb54c01f` |
+| `1_s3_download.method` | `downloaded and SHA-256 verified before use; not streamed` |
+| `2_local_training.counts` | train 2,194 / holdout 740 / prediction 57 |
+| `2_local_training.trained_on` | `data/processed/recording-take-1/dataset` |
+| Holdout model Brier / log loss / accuracy | 0.21061287148858282 / 0.6096025525960278 / 0.6648648648648648 |
+| Constant baseline Brier / log loss / accuracy | 0.24163577488303326 / 0.6763272181260667 / 0.5918918918918918 |
+| `3_prediction.count` / `context` | 57 / `saved_2026_sample_not_live` |
+| First saved matchups (home probability) | Coastal Carolina–Liberty 0.44423110419960504; Temple–Army 0.4977009154009066; UAB–Navy 0.40075237466918495 |
+| Hypothetical `(0.2, 7, 1)` | home 0.662422294285731 / away 0.33757770571426904 |
+| Status flags | `dataset_mode: retrospective_demo`; the other three flags `false` |
 
-All six metrics matched the original local run exactly. Both probabilities for
-all 740 holdout games and all 57 sample games matched with maximum absolute
-difference **0.0** (tolerance `1e-12`). The reloaded model's hypothetical vector
-`(0.2, 7, 1)` returned home **0.662422294285731** and away
-**0.33757770571426904**, also equal to the original. This is not an actual matchup.
-The exact comparison command is in
-[data/README.md](../data/README.md#local-model-verification-after-a-real-download).
+Afterward, open `data/processed/recording-take-1/model/evaluation.json` and
+`data/processed/recording-take-1/predictions/predictions.csv`.
 
-**Files to open:** `data/processed/demo-baseline-from-s3-v1/evaluation.json`,
-`model_metadata.json`, `holdout_predictions.csv`, and `sample_predictions.csv`
-in the same directory. The downloaded dataset and new local model outputs are
-Git-ignored; original datasets and model artifacts were preserved.
+**What the command does:** the six dataset files are downloaded from S3 and each
+one's actual bytes are checked against its SHA-256 before anything uses them. The
+existing dataset loader then validates the files, and only then are they written
+to `<run-dir>/dataset`. Training reads only that local copy and writes
+`<run-dir>/model`; prediction reloads that new model and writes
+`<run-dir>/predictions`. Nothing is streamed from S3 into the model, and S3 does
+not train or host the model. S3 stores the data; training and inference run
+locally. If a download fails its integrity check, the run stops before training
+and no model directory is created. Any failure names its stage (AWS client, S3
+download, local training, or prediction) and exits with code 1.
 
-Say: “The downloaded dataset feeds the same local training and prediction code.
-S3 stores the data; it does not train or host this model. We use a separate model
-output directory and preserve the original evaluation.” If cloud access is
-blocked, report the blocker and continue the local sequence; do not describe
-mocked tests or original local results as a successful S3 demonstration.
+Say: “This dataset was built from CFBD API data and stored in our private S3
+bucket. The command downloads it, verifies every file against SHA-256, trains the
+baseline locally on that verified copy, and generates predictions from the newly
+trained model. These are retrospective-demo results on a saved sample, not live
+forecasts. Cloud storage does not establish historical availability.”
+
+**Fallback: the three separate existing commands** (use a fresh directory):
+
+```bash
+.venv/bin/python -B -m src.ingestion.s3_storage download-dataset \
+  --dataset-id 8ecf7cf50b5f4ae68bde2ad902370b7528d327ed0919b5fed7a1211447c7e5c5 \
+  --output-dir data/processed/fallback-take-1/dataset --allow-retrospective-demo
+
+.venv/bin/python -B -m src.models.baseline \
+  --dataset-dir data/processed/fallback-take-1/dataset \
+  --output-dir data/processed/fallback-take-1/model --allow-retrospective-demo
+
+.venv/bin/python -B -m src.models.predict \
+  --model-dir data/processed/fallback-take-1/model \
+  --dataset-dir data/processed/fallback-take-1/dataset \
+  --output-dir data/processed/fallback-take-1/predictions --allow-retrospective-demo
+```
+
+For the hypothetical vector:
+
+```bash
+.venv/bin/python -B -m src.models.predict \
+  --model-dir data/processed/fallback-take-1/model \
+  --prior-win-pct-diff 0.2 --prior-avg-margin-diff 7 --home-field 1 \
+  --allow-retrospective-demo
+```
+
+If cloud access is blocked, report the blocker and continue the local sequence. Do not
+present mocked tests or original local results as a successful S3 demonstration.
+
+**Record of the September 24 upload (do not re-run during recording):** the fixed
+2025 raw snapshot pair and the six `data/processed/demo-features-v1` files were
+uploaded with `src.ingestion.s3_storage upload-raw` and `upload-dataset` to
+`s3://<FBS_S3_BUCKET>/initial-demo/` in `us-east-1`. Every object reported
+`uploaded` and passed byte readback, and completion markers were written last.
+All four Block Public Access flags were enabled. No IAM, bucket policy, or
+security setting was changed. See
+[data/README.md](../data/README.md#s3-demo-storage-explicit-transfers) for keys,
+permissions, and the byte-level comparison.
 
 ## 2. Show Normalization and Exclusions (~45 seconds)
 
@@ -403,3 +418,22 @@ The selected bucket's four Block Public Access flags were enabled. All 105 offli
 tests passed. Existing source/data files were preserved; no CFBD request, policy
 change, commit, or push was made during this verification. Historical availability
 remains unknown and predictor approval remains false.
+
+Recording-core command, September 24, on `main` (base `024eab7`): all 117 offline
+tests passed (the 105 existing tests plus 12 for `src.pipeline.s3_demo`). The live,
+read-only run into the new `data/processed/recording-verify-1` downloaded and
+verified 6 files. It reproduced counts 2,194 / 740 / 57, all six holdout metrics,
+and hypothetical home 0.662422294285731 / away 0.33757770571426904 exactly. Its
+`model/sample_predictions.csv` and `model/holdout_predictions.csv` are
+byte-identical to `data/processed/demo-baseline-v1/` (maximum absolute probability
+difference 0.0). No S3 write, CFBD request, or AWS setting change was made.
+
+Follow-up, September 24: after the summary paths were made relative to the
+working directory, all 118 offline tests passed. A live, read-only re-check into
+the new `data/processed/recording-verify-2` reproduced every value above exactly,
+and every printed local path was relative. The Step 1 ingestion command was
+rehearsed once into the new `data/raw/cfbd/rehearsal-1/games` directory. It
+succeeded with HTTP 200 and 888 records, `retrieved_at`
+`2026-09-25T01:24:11.491865Z` (the evening of September 24 in ET). That snapshot
+was not normalized or used in any dataset, training, or S3 step. No S3 write or
+AWS setting change was made.
