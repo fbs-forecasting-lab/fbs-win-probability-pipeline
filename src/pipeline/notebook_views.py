@@ -2,8 +2,9 @@
 
 These functions only format values returned by the existing, tested pipeline
 functions into short tables and sentences. They never fetch, store, train, or
-predict. ``say`` and ``show`` render as Markdown and inline-styled HTML so the
-outputs use the notebook's own font, size, wrapping, and light/dark colors.
+predict. ``say`` and ``show`` render inline-styled HTML at a fixed 13px body
+size with inherited text color and no opaque backgrounds, so outputs look the
+same in VS Code and JupyterLab, in dark and light themes.
 ``step`` turns a failure into one short, sanitized message that names the
 stage, the same way ``week_refresh`` and ``s3_demo`` report errors.
 """
@@ -29,6 +30,12 @@ MINUS = "\u2212"
 LONG_TABLE_ROWS = 12
 LONG_TABLE_MAX_HEIGHT = "420px"
 NUMBER = re.compile(r"^[\u2212-]?[\d,]+(\.\d+)?%?$")
+# Fixed text size so outputs match markdown body text in both VS Code and JupyterLab.
+WRAPPER_STYLE = "font-size: 13px; line-height: 1.45; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;"
+CODE_STYLE = ('font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; '
+              "background: none; padding: 0;")
+ZEBRA = "rgba(127,127,127,0.08)"  # Neutral gray at low opacity reads on dark and light themes.
+IDENTIFIER = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)(.*)$", re.S)
 _failed_step = None
 
 
@@ -40,15 +47,34 @@ class StepFailed(Exception):
 
 
 def esc(value):
-    """Escape text so Markdown shows it literally (team names, error details, placeholders)."""
-    return re.sub(r"([\\`*_\[\]#|])", r"\\\1", html.escape(str(value), quote=False))
+    """Mark ``*`` and backticks in dynamic text (team names, error details) as literal for ``say``."""
+    return re.sub(r"([\\`*])", r"\\\1", str(value))
+
+
+def text_html(text):
+    """Convert say() text to safe HTML: escape everything, then **bold**, `code`, and line breaks."""
+    literal = {"\\\\": "\x00", "\\*": "\x01", "\\`": "\x02"}
+    for marker, placeholder in literal.items():
+        text = text.replace(marker, placeholder)
+    text = html.escape(text, quote=False)
+    text = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", text)
+    text = re.sub(r"`([^`]+)`", rf'<code style="{CODE_STYLE}">\1</code>', text)
+    for marker, placeholder in literal.items():
+        text = text.replace(placeholder, marker[1])
+    return f'<div style="{WRAPPER_STYLE}">{text.replace(chr(10), "<br>")}</div>'
+
+
+def plain_text(text):
+    """The same message without markup, for exported or text-only views."""
+    text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
+    return re.sub(r"\\([\\`*])", r"\1", re.sub(r"(?<!\\)`", "", text))
 
 
 def say(text):
-    """Show a line of Markdown in the notebook's body font; newlines become line breaks."""
-    from IPython.display import Markdown, display
-    output = Markdown(text.replace("\n", "  \n"))
-    display(output)
+    """Show a short message at a fixed body-text size; ``**bold**`` and ``code`` are supported."""
+    from IPython.display import display
+    output = {"text/html": text_html(text), "text/plain": plain_text(text)}
+    display(output, raw=True)
     return output
 
 
@@ -96,26 +122,35 @@ def live_step(number, existing_dataset_id, what="this step"):
 
 
 def table_html(frame):
-    """Compact HTML table: no index, inherited font and colors, wrapping cells, numbers right-aligned."""
+    """Compact 13px HTML table: no index, inherited text color, wrapping cells, numbers right-aligned."""
     columns = list(frame.columns)
     numeric = {column: len(frame) > 0 and all(NUMBER.match(str(value)) for value in frame[column])
                for column in columns}
-    cell = "padding: 4px 10px; white-space: normal; overflow-wrap: anywhere; vertical-align: top;"
-    header = ("position: sticky; top: 0; background: var(--jp-layout-color0, var(--vscode-editor-background, "
-              "transparent)); border-bottom: 1px solid currentColor; font-weight: 600;")
+    cell = "padding: 4px 10px; vertical-align: top;"
+    header = "font-weight: 600; color: inherit; background: transparent; border-bottom: 1px solid currentColor;"
 
     def align(column):
         return "right" if numeric[column] else "left"
-    head = "".join(f'<th style="{cell} {header} text-align: {align(column)};">{html.escape(str(column))}</th>'
-                   for column in columns)
-    body = "".join("<tr>" + "".join(f'<td style="{cell} text-align: {align(column)};">{html.escape(str(value))}</td>'
-                                    for column, value in zip(columns, row)) + "</tr>"
-                   for row in frame.itertuples(index=False, name=None))
-    table = ('<table style="font-family: inherit; font-size: inherit; color: inherit; background: transparent; '
-             'border-collapse: collapse; width: auto; max-width: 100%; margin: 0.25em 0;">'
+
+    def body_cell(column, value):
+        if column == "Feature":
+            # Feature names read as variable names and never split mid-word.
+            match = IDENTIFIER.match(str(value))
+            name, rest = match.groups() if match else ("", str(value))
+            content = (f'<code style="{CODE_STYLE}">{html.escape(name)}</code>' if name else "") + html.escape(rest)
+            return f'<td style="{cell} white-space: nowrap; text-align: left;">{content}</td>'
+        return (f'<td style="{cell} white-space: normal; overflow-wrap: break-word; text-align: {align(column)};">'
+                f"{html.escape(str(value))}</td>")
+    head = "".join(f'<th style="{cell} {header} white-space: normal; text-align: {align(column)};">'
+                   f"{html.escape(str(column))}</th>" for column in columns)
+    body = "".join(f'<tr style="background: {ZEBRA if index % 2 else "transparent"};">'
+                   + "".join(body_cell(column, value) for column, value in zip(columns, row)) + "</tr>"
+                   for index, row in enumerate(frame.itertuples(index=False, name=None)))
+    table = ('<table style="font-size: 13px; color: inherit; background: transparent; border-collapse: collapse; '
+             'width: auto; max-width: 100%; margin: 0.25em 0;">'
              f"<thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>")
     scroll = f" max-height: {LONG_TABLE_MAX_HEIGHT}; overflow-y: auto;" if len(frame) > LONG_TABLE_ROWS else ""
-    return f'<div style="max-width: 100%; overflow-x: auto;{scroll}">{table}</div>'
+    return f'<div style="{WRAPPER_STYLE} max-width: 100%; overflow-x: auto;{scroll}">{table}</div>'
 
 
 def show(frame):

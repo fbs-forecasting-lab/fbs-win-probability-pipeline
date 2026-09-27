@@ -7,7 +7,6 @@ import re
 import unittest
 from unittest.mock import patch
 
-from IPython.display import Markdown
 import nbformat
 import pandas as pd
 
@@ -134,35 +133,66 @@ class NotebookViewsTests(unittest.TestCase):
         self.assertEqual(out.getvalue(), "")        # Nothing is ever plain stdout text.
         return shown
 
-    def test_say_renders_markdown_not_stdout(self):
-        shown = self.shown(lambda: views.say("**59 games** received\nsecond line"))
+    def test_say_renders_fixed_size_html_not_stdout(self):
+        shown = self.shown(lambda: views.say("**59 games** received at " + views.esc("<private project bucket>")
+                                             + "\nfolder `initial-demo/` " + views.esc("A*B `x`")))
         self.assertEqual(len(shown), 1)
-        self.assertIsInstance(shown[0], Markdown)
-        self.assertEqual(shown[0].data, "**59 games** received  \nsecond line")
-        self.assertEqual(views.esc("<private project bucket>"), "&lt;private project bucket&gt;")
-        self.assertEqual(views.esc("a_b *c* [d] `e`"), "a\\_b \\*c\\* \\[d\\] \\`e\\`")
+        self.assertEqual(set(shown[0]), {"text/html", "text/plain"})
+        html = shown[0]["text/html"]
+        self.assertTrue(html.startswith('<div style="font-size: 13px; line-height: 1.45; font-family: system-ui'))
+        self.assertIn("<strong>59 games</strong> received at &lt;private project bucket&gt;<br>", html)
+        self.assertIn("font-size: 12px", html)               # `code` renders as small monospace.
+        self.assertIn(">initial-demo/</code> A*B `x`</div>", html)  # Escaped markup stays literal.
+        self.assertNotIn('"Segoe UI"', html)                # Quotes never break the style attribute.
+        self.assertEqual(shown[0]["text/plain"], "59 games received at <private project bucket>\n"
+                                                 "folder initial-demo/ A*B `x`")
+        self.assertEqual(views.text_html("<script>"), f'<div style="{views.WRAPPER_STYLE}">&lt;script&gt;</div>')
 
     def test_show_renders_compact_theme_neutral_html(self):
         frame = pd.DataFrame({"Home": ["Tulsa <b>"], "Games": ["2,194"], "Home win %": ["45.8%"]})
         shown = self.shown(lambda: views.show(frame))
         self.assertEqual(set(shown[0]), {"text/html", "text/plain"})
         html = shown[0]["text/html"]
-        self.assertIn("font-size: inherit", html)
-        self.assertIn("font-family: inherit", html)
+        self.assertTrue(html.startswith(f'<div style="{views.WRAPPER_STYLE}'))
+        self.assertIn("font-size: 13px", html)
         self.assertIn("white-space: normal", html)
         self.assertIn("max-width: 100%", html)
         self.assertIn("border-bottom: 1px solid currentColor", html)
-        self.assertIsNone(re.search(r"#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(|\b(white|black|gray|grey)\b(?!-)", html))
-        self.assertIn("Tulsa &lt;b&gt;", html)     # Cell text is escaped, never raw HTML.
-        self.assertEqual(html.count("<th "), 3)     # No index column.
+        headers = re.findall(r'<th style="([^"]*)"', html)
+        self.assertEqual(len(headers), 3)                   # No index column.
+        for style in headers:
+            self.assertEqual(re.findall(r"background:\s*([^;]+);", style), ["transparent"])
+            self.assertIn("color: inherit", style)
+            self.assertIn("font-weight: 600", style)
+        self.assertEqual(set(re.findall(r"background:\s*([^;]+);", html)), {"transparent"})
+        for banned in ("#fff", "white;", "white ", "var(--", "sticky", "black"):
+            self.assertNotIn(banned, html.lower())
+        self.assertIsNone(re.search(r"#[0-9a-fA-F]{3,8}\b", html))
+        self.assertIn("Tulsa &lt;b&gt;", html)             # Cell text is escaped, never raw HTML.
         self.assertIn('text-align: right;">2,194</td>', html)
         self.assertIn('text-align: left;">Tulsa', html)
         self.assertNotIn("max-height", html)
         long = pd.DataFrame({"Home": [f"Team {n}" for n in range(51)]})
         long_html = views.table_html(long)
         self.assertIn("max-height: 420px; overflow-y: auto", long_html)
-        self.assertIn("position: sticky", long_html)
-        self.assertEqual(long_html.count("<tr>"), 52)  # All rows kept, header included.
+        self.assertNotIn("sticky", long_html)
+        self.assertEqual(long_html.count("<tr"), 52)       # All rows kept, header included.
+        self.assertEqual(long_html.count(f"background: {views.ZEBRA};"), 25)  # Subtle zebra on every other row.
+        self.assertEqual(set(re.findall(r"background:\s*([^;]+);", long_html)), {"transparent", views.ZEBRA})
+
+    def test_feature_names_are_monospace_and_never_split(self):
+        for table in (views.feature_table(), views.example_matchup({
+                "week": "5", "home_team": "A", "away_team": "B", "cutoff": "2026-10-02T00:00:00Z",
+                "feature_source_season": "2025", "prior_win_pct_diff": "0.1", "prior_avg_margin_diff": "1",
+                "home_field": "1"})[1]):
+            html = views.table_html(table)
+            cells = re.findall(r'<tr style="[^"]*"><td style="([^"]*)">(.*?)</td>', html)
+            self.assertEqual(len(cells), 3)
+            for style, content in cells:
+                self.assertIn("white-space: nowrap", style)
+                self.assertRegex(content, r'^<code style="[^"]*font-size: 12px[^"]*">'
+                                          r"(prior_win_pct_diff|prior_avg_margin_diff|home_field)</code>")
+            self.assertIn("white-space: normal", html)      # Other columns still wrap.
 
     def test_step_failures_are_short_sanitized_and_stop_later_steps(self):
         shown = []
@@ -176,8 +206,8 @@ class NotebookViewsTests(unittest.TestCase):
         self.assertNotIn("SECRET", message)
         self.assertIn(views.REHEARSAL_DATASET_ID, message)
         self.assertIn("USE_EXISTING_DATASET_ID", message)
-        self.assertIsInstance(shown[0], Markdown)
-        self.assertIn("Step 1 failed at cfbd_fetch", shown[0].data)
+        self.assertIn("<strong>Step 1 failed at cfbd_fetch:</strong>", shown[0]["text/html"])
+        self.assertIn("font-size: 13px", shown[0]["text/html"])
         self.assertEqual(caught.exception._render_traceback_(), ["Stopped: see the message above."])
         ran = []
         with self.assertRaisesRegex(views.StepFailed, r"Step 2 skipped:\*\* Step 1 failed earlier"):
@@ -202,8 +232,9 @@ class NotebookViewsTests(unittest.TestCase):
         shown = self.shown(lambda: results.extend([views.live_step(1, None), views.live_step(1, DATASET_ID)]))
         self.assertEqual(results, [True, False])
         self.assertEqual(len(shown), 1)
-        self.assertIsInstance(shown[0], Markdown)
-        self.assertIn("**Step 1: skipped this step** — using existing dataset `abababab` already in S3", shown[0].data)
+        self.assertIn("Step 1: skipped this step — using existing dataset abababab already in S3",
+                      shown[0]["text/plain"])
+        self.assertIn("<strong>Step 1: skipped this step</strong>", shown[0]["text/html"])
 
 
 class InitialDemoNotebookTests(unittest.TestCase):
