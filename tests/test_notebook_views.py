@@ -119,10 +119,15 @@ class NotebookViewsTests(unittest.TestCase):
 
     def test_hypothetical_sentence(self):
         self.assertEqual(views.hypothetical_sentence((0.2, 7, 1), 0.662422294285731),
-                         "A home team that won 20 percentage points more games last season and outscored "
-                         "opponents by 7 more points per game: home win probability **66.2%**.")
-        self.assertIn("at a neutral site that won 10 percentage points fewer",
-                      views.hypothetical_sentence((-0.1, -3, 0), 0.4))
+                         "Hypothetical: the home team's win rate last season was 20 points higher than its "
+                         "opponent's (e.g., 70% vs. 50%), and it won by 7 more points per game on average. "
+                         "Home win probability: **66.2%**.")
+        self.assertEqual(views.hypothetical_sentence((-0.1, -3, 0), 0.4),
+                         "Hypothetical (at a neutral site): the home team's win rate last season was 10 points "
+                         "lower than its opponent's (e.g., 40% vs. 50%), and its average margin per game was 3 "
+                         "points worse. Home win probability: **40.0%**.")
+        self.assertIn("(e.g., 100% vs. 40%)", views.hypothetical_sentence((0.6, 0, 1), 0.9))   # Stays within 0–100%.
+        self.assertIn("(e.g., 0% vs. 70%)", views.hypothetical_sentence((-0.7, 0, 1), 0.1))
 
     def shown(self, run):
         """Run ``run`` while capturing everything passed to IPython's display, and any stdout."""

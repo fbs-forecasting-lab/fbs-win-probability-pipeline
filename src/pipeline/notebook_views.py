@@ -328,10 +328,14 @@ def predictions_table(rows):
 
 
 def hypothetical_sentence(vector, home_probability):
+    """Describe the HYPOTHETICAL feature vector in plain words, with the model's home win probability."""
     win_diff, margin_diff, home_field = vector
-    points = abs(win_diff) * 100
-    site = "" if int(home_field) == 1 else " at a neutral site"
-    return (f"A home team{site} that won {points:g} percentage points {'more' if win_diff >= 0 else 'fewer'} games "
-            f"last season and outscored opponents by {abs(margin_diff):g} "
-            f"{'more' if margin_diff >= 0 else 'fewer'} points per game: "
-            f"home win probability **{home_probability * 100:.1f}%**.")
+    points = round(win_diff * 100, 6)
+    # Example win rates with this difference, kept within 0–100% (e.g., 70% vs. 50% for +20 points).
+    opponent = min(max(50, -points), 100 - points)
+    site = "" if int(home_field) == 1 else " (at a neutral site)"
+    margin = (f"it won by {abs(margin_diff):g} more points per game on average" if margin_diff >= 0
+              else f"its average margin per game was {abs(margin_diff):g} points worse")
+    return (f"Hypothetical{site}: the home team's win rate last season was {abs(points):g} points "
+            f"{'higher' if points >= 0 else 'lower'} than its opponent's (e.g., {opponent + points:g}% vs. "
+            f"{opponent:g}%), and {margin}. Home win probability: **{home_probability * 100:.1f}%**.")
