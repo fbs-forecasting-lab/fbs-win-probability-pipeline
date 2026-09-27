@@ -1,5 +1,23 @@
 # Initial Demo Walkthrough — September 29, 2026
 
+## Recommended recording path: notebooks/initial_demo.ipynb
+
+The notebook runs the same pipeline functions as Step 1 and Section 1a below,
+one stage per cell, each with a plain-English explanation. Launch it from the
+repository root:
+
+```bash
+.venv/bin/jupyter lab notebooks/initial_demo.ipynb
+```
+
+Before each take, choose **Kernel → Restart Kernel and Clear All Outputs**, then
+run the cells top to bottom with **Shift+Enter**. Every run creates a new run tag
+and new S3 objects. If a step fails, it prints one short line naming the step;
+set `USE_EXISTING_DATASET_ID` in Step 0 (for example, the rehearsal dataset
+`b6b7c54503439ecc0ecad5b9d255281d6d6943c9da4013db2dff9eb8ab305e65`), restart, and
+run again. Steps 1–5 are then skipped. The command-line steps below remain the
+fallback.
+
 Allow about 6–8 minutes for the verified local sequence, plus about 5 minutes
 for Step 1 and Section 1a.
 
