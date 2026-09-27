@@ -15,8 +15,16 @@ run the cells top to bottom with **Shift+Enter**. Every run creates a new run ta
 and new S3 objects. If a step fails, it prints one short line naming the step;
 set `USE_EXISTING_DATASET_ID` in Step 0 (for example, the rehearsal dataset
 `b6b7c54503439ecc0ecad5b9d255281d6d6943c9da4013db2dff9eb8ab305e65`), restart, and
-run again. Steps 1–5 are then skipped. The command-line steps below remain the
-fallback.
+run again. Steps 1–5 (including 2b) are then skipped. The command-line steps below
+remain the fallback.
+
+The 2021–2025 history now lives in S3 under
+`initial-demo/raw/cfbd/games/season=<year>/`. Step 2b downloads it into the run's
+own folder and verifies each file's SHA-256 against the Week 4 reference dataset
+report, which is also read from S3. The notebook therefore needs no local
+`data/raw/cfbd/games` copy; only the command-line fallback below still reads
+local history. A fresh clone with only `.env` ran the notebook end to end on
+September 26 with identical holdout metrics.
 
 Allow about 6–8 minutes for the verified local sequence, plus about 5 minutes
 for Step 1 and Section 1a.
