@@ -2,7 +2,9 @@
 
 These functions only format values returned by the existing, tested pipeline
 functions into short tables and sentences. They never fetch, store, train, or
-predict. ``step`` turns a failure into one short, sanitized line that names the
+predict. ``say`` and ``show`` render as Markdown and inline-styled HTML so the
+outputs use the notebook's own font, size, wrapping, and light/dark colors.
+``step`` turns a failure into one short, sanitized message that names the
 stage, the same way ``week_refresh`` and ``s3_demo`` report errors.
 """
 
@@ -10,6 +12,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from datetime import datetime
+import html
 import re
 from zoneinfo import ZoneInfo
 
@@ -22,21 +25,37 @@ EASTERN = ZoneInfo("America/New_York")
 REHEARSAL_DATASET_ID = "b6b7c54503439ecc0ecad5b9d255281d6d6943c9da4013db2dff9eb8ab305e65"
 HIDDEN_BUCKET = "<private project bucket>"
 SANITIZED_ERRORS = (*week_refresh.PROJECT_ERRORS, week_refresh.RefreshError, s3_demo.DemoError)
-MINUS = "−"
+MINUS = "\u2212"
+LONG_TABLE_ROWS = 12
+LONG_TABLE_MAX_HEIGHT = "420px"
+NUMBER = re.compile(r"^[\u2212-]?[\d,]+(\.\d+)?%?$")
 _failed_step = None
 
 
 class StepFailed(Exception):
-    """A notebook step failed; IPython shows only this short message, not a traceback."""
+    """A notebook step failed. The message is shown with ``say``; the error box shows one short line."""
 
     def _render_traceback_(self):
-        return str(self).splitlines()
+        return ["Stopped: see the message above."]
+
+
+def esc(value):
+    """Escape text so Markdown shows it literally (team names, error details, placeholders)."""
+    return re.sub(r"([\\`*_\[\]#|])", r"\\\1", html.escape(str(value), quote=False))
+
+
+def say(text):
+    """Show a line of Markdown in the notebook's body font; newlines become line breaks."""
+    from IPython.display import Markdown, display
+    output = Markdown(text.replace("\n", "  \n"))
+    display(output)
+    return output
 
 
 def fallback_hint():
-    return ("To keep recording, set USE_EXISTING_DATASET_ID in Step 0 to a dataset already in S3, for example the "
-            f'September 24 rehearsal dataset "{REHEARSAL_DATASET_ID}", then choose Kernel → Restart Kernel and '
-            "Clear All Outputs and run the cells again. Steps 1–5 are then skipped.")
+    return ("To keep recording, set `USE_EXISTING_DATASET_ID` in Step 0 to a dataset already in S3, for example the "
+            f"September 24 rehearsal dataset `{REHEARSAL_DATASET_ID}`, then choose **Kernel → Restart Kernel and "
+            "Clear All Outputs** and run the cells again. Steps 1–5 are then skipped.")
 
 
 def reset():
@@ -47,10 +66,12 @@ def reset():
 
 @contextmanager
 def step(number, stage):
-    """Run one stage; on failure print a short stage-named message and stop later steps."""
+    """Run one stage; on failure show a short stage-named message and stop later steps."""
     global _failed_step
     if _failed_step is not None and _failed_step < number:
-        raise StepFailed(f"Step {number} skipped: Step {_failed_step} failed earlier. {fallback_hint()}")
+        message = f"**Step {number} skipped:** Step {_failed_step} failed earlier.\n{fallback_hint()}"
+        say(message)
+        raise StepFailed(message)
     try:
         yield
     except StepFailed:
@@ -58,7 +79,9 @@ def step(number, stage):
     except Exception as exc:
         _failed_step = number
         detail = str(exc) if isinstance(exc, SANITIZED_ERRORS) else f"unexpected {type(exc).__name__}; details suppressed."
-        raise StepFailed(f"Step {number} failed at {stage}: {detail}\n{fallback_hint()}") from None
+        message = f"**Step {number} failed at {stage}:** {esc(detail)}\n{fallback_hint()}"
+        say(message)
+        raise StepFailed(message) from None
     if _failed_step == number:
         _failed_step = None
 
@@ -66,18 +89,39 @@ def step(number, stage):
 def live_step(number, existing_dataset_id, what="this step"):
     """Return True when the live API/S3 path runs; otherwise say why the step is skipped."""
     if existing_dataset_id:
-        print(f"Step {number}: skipped {what} — using existing dataset {fingerprint(existing_dataset_id)} already in S3 "
-              "(USE_EXISTING_DATASET_ID).")
+        say(f"**Step {number}: skipped {what}** — using existing dataset `{fingerprint(existing_dataset_id)}` already "
+            "in S3 (`USE_EXISTING_DATASET_ID`).")
         return False
     return True
 
 
+def table_html(frame):
+    """Compact HTML table: no index, inherited font and colors, wrapping cells, numbers right-aligned."""
+    columns = list(frame.columns)
+    numeric = {column: len(frame) > 0 and all(NUMBER.match(str(value)) for value in frame[column])
+               for column in columns}
+    cell = "padding: 4px 10px; white-space: normal; overflow-wrap: anywhere; vertical-align: top;"
+    header = ("position: sticky; top: 0; background: var(--jp-layout-color0, var(--vscode-editor-background, "
+              "transparent)); border-bottom: 1px solid currentColor; font-weight: 600;")
+
+    def align(column):
+        return "right" if numeric[column] else "left"
+    head = "".join(f'<th style="{cell} {header} text-align: {align(column)};">{html.escape(str(column))}</th>'
+                   for column in columns)
+    body = "".join("<tr>" + "".join(f'<td style="{cell} text-align: {align(column)};">{html.escape(str(value))}</td>'
+                                    for column, value in zip(columns, row)) + "</tr>"
+                   for row in frame.itertuples(index=False, name=None))
+    table = ('<table style="font-family: inherit; font-size: inherit; color: inherit; background: transparent; '
+             'border-collapse: collapse; width: auto; max-width: 100%; margin: 0.25em 0;">'
+             f"<thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>")
+    scroll = f" max-height: {LONG_TABLE_MAX_HEIGHT}; overflow-y: auto;" if len(frame) > LONG_TABLE_ROWS else ""
+    return f'<div style="max-width: 100%; overflow-x: auto;{scroll}">{table}</div>'
+
+
 def show(frame):
-    """Display a table without the row index, with a plain-text copy for exported notebooks."""
+    """Display a table as compact HTML, with a plain-text copy for exported notebooks."""
     from IPython.display import display
-    styled = frame.style.hide(axis="index").set_properties(**{"text-align": "left"}).set_table_styles(
-        [{"selector": "th", "props": [("text-align", "left")]}])
-    display({"text/html": styled.to_html(), "text/plain": frame.to_string(index=False)}, raw=True)
+    display({"text/html": table_html(frame), "text/plain": frame.to_string(index=False)}, raw=True)
 
 
 def fingerprint(value):
@@ -122,7 +166,7 @@ def _status(value):
 
 
 def fetch_line(http_status, count, retrieved_at):
-    return f"HTTP {http_status} — {count} games received at {et_time(retrieved_at)} ET"
+    return f"HTTP {http_status} — **{count} games** received at {et_time(retrieved_at)} ET"
 
 
 def games_table(records):
@@ -183,8 +227,9 @@ def feature_table():
 
 def example_matchup(row):
     """row: one prediction.csv row. Returns (heading, table) with rounded feature values."""
-    heading = (f"Example Week {row['week']} matchup: {row['home_team']} (home) vs {row['away_team']} — "
-               f"{et_time(row['cutoff'])} ET; features from the {row['feature_source_season']} season")
+    heading = (f"Example Week {row['week']} matchup: **{esc(row['home_team'])}** (home) vs "
+               f"**{esc(row['away_team'])}** — {et_time(row['cutoff'])} ET; features from the "
+               f"{row['feature_source_season']} season")
     table = pd.DataFrame([
         {"Feature": "prior_win_pct_diff (win % diff)", "Value": _signed(float(row["prior_win_pct_diff"]), 2)},
         {"Feature": "prior_avg_margin_diff (margin diff)", "Value": _signed(float(row["prior_avg_margin_diff"]), 1)},
@@ -217,8 +262,8 @@ def download_table(download):
 
 def training_counts(metadata):
     counts, train, holdout = metadata["counts"], metadata["training_seasons"], metadata["holdout_seasons"]
-    return (f"Trained on {counts['train']:,} games from the {train[0]}–{train[-1]} seasons.\n"
-            f"Tested on {counts['holdout']:,} games from the {holdout[0]} season (never used for training).")
+    return (f"Trained on **{counts['train']:,} games** from the {train[0]}–{train[-1]} seasons.\n"
+            f"Tested on **{counts['holdout']:,} games** from the {holdout[0]} season (never used for training).")
 
 
 def metrics_table(evaluation):
@@ -254,4 +299,4 @@ def hypothetical_sentence(vector, home_probability):
     return (f"A home team{site} that won {points:g} percentage points {'more' if win_diff >= 0 else 'fewer'} games "
             f"last season and outscored opponents by {abs(margin_diff):g} "
             f"{'more' if margin_diff >= 0 else 'fewer'} points per game: "
-            f"home win probability {home_probability * 100:.1f}%.")
+            f"home win probability **{home_probability * 100:.1f}%**.")

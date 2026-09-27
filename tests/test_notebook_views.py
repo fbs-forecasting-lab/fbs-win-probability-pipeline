@@ -3,12 +3,13 @@
 import ast
 import io
 from contextlib import redirect_stdout
-from pathlib import Path
 import re
 import unittest
 from unittest.mock import patch
 
+from IPython.display import Markdown
 import nbformat
+import pandas as pd
 
 from src.ingestion import s3_storage as s3
 from src.ingestion.storage import PROJECT_ROOT
@@ -30,7 +31,7 @@ class NotebookViewsTests(unittest.TestCase):
         self.assertEqual(views.et_time("2026-10-03T16:30:00.000Z"), "Sat Oct 3, 12:30 PM")
         self.assertEqual(views.et_time("2026-10-03T04:00:00.000Z", tbd=True), "Sat Oct 3, time TBD")
         self.assertEqual(views.fetch_line(200, 59, "2026-09-25T02:59:44.466329Z"),
-                         "HTTP 200 — 59 games received at Thu Sep 24, 10:59 PM ET")
+                         "HTTP 200 — **59 games** received at Thu Sep 24, 10:59 PM ET")
 
     def test_games_table_sorted_by_kickoff(self):
         records = [{"homeTeam": "Late", "awayTeam": "B", "startDate": "2026-10-04T03:59:00Z", "startTimeTBD": False},
@@ -81,7 +82,7 @@ class NotebookViewsTests(unittest.TestCase):
                "prior_win_pct_diff": "-0.36363636363636365", "prior_avg_margin_diff": "-10.454545454545455",
                "home_field": "1"}
         heading, table = views.example_matchup(row)
-        self.assertIn("New Mexico State (home) vs Western Kentucky — Thu Oct 1, 8:00 PM ET", heading)
+        self.assertIn("**New Mexico State** (home) vs **Western Kentucky** — Thu Oct 1, 8:00 PM ET", heading)
         self.assertEqual(list(table["Value"]), ["−0.36", "−10.5", "1"])
         report = {"splits": {"train": {"output": 2194}, "holdout": {"output": 740}, "prediction": {"output": 51}}}
         split = views.split_table(report, 5)
@@ -97,8 +98,8 @@ class NotebookViewsTests(unittest.TestCase):
         metadata = {"counts": {"train": 2194, "holdout": 740}, "training_seasons": [2022, 2023, 2024],
                     "holdout_seasons": [2025]}
         self.assertEqual(views.training_counts(metadata),
-                         "Trained on 2,194 games from the 2022–2024 seasons.\n"
-                         "Tested on 740 games from the 2025 season (never used for training).")
+                         "Trained on **2,194 games** from the 2022–2024 seasons.\n"
+                         "Tested on **740 games** from the 2025 season (never used for training).")
         evaluation = {"model": {"brier_score": 0.21061287148858282, "log_loss": 0.6096025525960278,
                                 "accuracy": 0.6648648648648648},
                       "constant_baseline": {"brier_score": 0.24163577488303326, "log_loss": 0.6763272181260667,
@@ -120,22 +121,66 @@ class NotebookViewsTests(unittest.TestCase):
     def test_hypothetical_sentence(self):
         self.assertEqual(views.hypothetical_sentence((0.2, 7, 1), 0.662422294285731),
                          "A home team that won 20 percentage points more games last season and outscored "
-                         "opponents by 7 more points per game: home win probability 66.2%.")
+                         "opponents by 7 more points per game: home win probability **66.2%**.")
         self.assertIn("at a neutral site that won 10 percentage points fewer",
                       views.hypothetical_sentence((-0.1, -3, 0), 0.4))
 
+    def shown(self, run):
+        """Run ``run`` while capturing everything passed to IPython's display, and any stdout."""
+        shown, out = [], io.StringIO()
+        with patch("IPython.display.display", side_effect=lambda *args, **kwargs: shown.append(args[0])), \
+                redirect_stdout(out):
+            run()
+        self.assertEqual(out.getvalue(), "")        # Nothing is ever plain stdout text.
+        return shown
+
+    def test_say_renders_markdown_not_stdout(self):
+        shown = self.shown(lambda: views.say("**59 games** received\nsecond line"))
+        self.assertEqual(len(shown), 1)
+        self.assertIsInstance(shown[0], Markdown)
+        self.assertEqual(shown[0].data, "**59 games** received  \nsecond line")
+        self.assertEqual(views.esc("<private project bucket>"), "&lt;private project bucket&gt;")
+        self.assertEqual(views.esc("a_b *c* [d] `e`"), "a\\_b \\*c\\* \\[d\\] \\`e\\`")
+
+    def test_show_renders_compact_theme_neutral_html(self):
+        frame = pd.DataFrame({"Home": ["Tulsa <b>"], "Games": ["2,194"], "Home win %": ["45.8%"]})
+        shown = self.shown(lambda: views.show(frame))
+        self.assertEqual(set(shown[0]), {"text/html", "text/plain"})
+        html = shown[0]["text/html"]
+        self.assertIn("font-size: inherit", html)
+        self.assertIn("font-family: inherit", html)
+        self.assertIn("white-space: normal", html)
+        self.assertIn("max-width: 100%", html)
+        self.assertIn("border-bottom: 1px solid currentColor", html)
+        self.assertIsNone(re.search(r"#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(|\b(white|black|gray|grey)\b(?!-)", html))
+        self.assertIn("Tulsa &lt;b&gt;", html)     # Cell text is escaped, never raw HTML.
+        self.assertEqual(html.count("<th "), 3)     # No index column.
+        self.assertIn('text-align: right;">2,194</td>', html)
+        self.assertIn('text-align: left;">Tulsa', html)
+        self.assertNotIn("max-height", html)
+        long = pd.DataFrame({"Home": [f"Team {n}" for n in range(51)]})
+        long_html = views.table_html(long)
+        self.assertIn("max-height: 420px; overflow-y: auto", long_html)
+        self.assertIn("position: sticky", long_html)
+        self.assertEqual(long_html.count("<tr>"), 52)  # All rows kept, header included.
+
     def test_step_failures_are_short_sanitized_and_stop_later_steps(self):
-        with self.assertRaises(views.StepFailed) as caught:
-            with views.step(1, "cfbd_fetch"):
-                raise RuntimeError("SECRET token value")
+        shown = []
+        with patch("IPython.display.display", side_effect=lambda *args, **kwargs: shown.append(args[0])):
+            with self.assertRaises(views.StepFailed) as caught:
+                with views.step(1, "cfbd_fetch"):
+                    raise RuntimeError("SECRET token value")
         message = str(caught.exception)
-        self.assertTrue(message.startswith("Step 1 failed at cfbd_fetch: unexpected RuntimeError; details suppressed."))
+        self.assertTrue(message.startswith("**Step 1 failed at cfbd_fetch:** unexpected RuntimeError; "
+                                           "details suppressed."))
         self.assertNotIn("SECRET", message)
         self.assertIn(views.REHEARSAL_DATASET_ID, message)
         self.assertIn("USE_EXISTING_DATASET_ID", message)
-        self.assertEqual(caught.exception._render_traceback_(), message.splitlines())
+        self.assertIsInstance(shown[0], Markdown)
+        self.assertIn("Step 1 failed at cfbd_fetch", shown[0].data)
+        self.assertEqual(caught.exception._render_traceback_(), ["Stopped: see the message above."])
         ran = []
-        with self.assertRaisesRegex(views.StepFailed, "Step 2 skipped: Step 1 failed earlier"):
+        with self.assertRaisesRegex(views.StepFailed, r"Step 2 skipped:\*\* Step 1 failed earlier"):
             with views.step(2, "s3_upload_raw"):
                 ran.append(2)
         self.assertEqual(ran, [])
@@ -144,20 +189,21 @@ class NotebookViewsTests(unittest.TestCase):
         with views.step(2, "s3_upload_raw"):
             ran.append(2)
         self.assertEqual(ran, [1, 2])
-        with self.assertRaisesRegex(views.StepFailed, "Step 6 failed at s3_download: AWS access denied"):
+        with self.assertRaisesRegex(views.StepFailed, r"Step 6 failed at s3_download:\*\* AWS access denied"):
             with views.step(6, "s3_download"):
                 raise s3.S3StorageError("AWS access denied; check permissions for the selected bucket/prefix.")
         views.reset()
-        with self.assertRaisesRegex(views.StepFailed, "Step 7 failed at local_training: Model artifact"):
+        with self.assertRaisesRegex(views.StepFailed, r"Step 7 failed at local_training:\*\* Model artifact"):
             with views.step(7, "local_training"):
                 raise BaselineError("Model artifact hash mismatch; nothing deserialized.")
 
     def test_live_step_skips_with_existing_dataset(self):
-        out = io.StringIO()
-        with redirect_stdout(out):
-            self.assertTrue(views.live_step(1, None))
-            self.assertFalse(views.live_step(1, DATASET_ID))
-        self.assertIn("Step 1: skipped this step — using existing dataset abababab already in S3", out.getvalue())
+        results = []
+        shown = self.shown(lambda: results.extend([views.live_step(1, None), views.live_step(1, DATASET_ID)]))
+        self.assertEqual(results, [True, False])
+        self.assertEqual(len(shown), 1)
+        self.assertIsInstance(shown[0], Markdown)
+        self.assertIn("**Step 1: skipped this step** — using existing dataset `abababab` already in S3", shown[0].data)
 
 
 class InitialDemoNotebookTests(unittest.TestCase):
@@ -204,6 +250,12 @@ class InitialDemoNotebookTests(unittest.TestCase):
             self.assertIn("allow_retrospective_demo=True", segment, call)
         self.assertNotIn("put_object", source)
         self.assertNotIn("get_object", source)
+
+    def test_no_plain_stdout_calls_in_code_cells(self):
+        for cell in self.notebook.cells:
+            if cell.cell_type == "code":
+                self.assertIsNone(re.search(r"(?<![\w.])print\(", cell.source), cell.id)
+                self.assertNotIn("sys.stdout", cell.source)
 
 
 if __name__ == "__main__":
