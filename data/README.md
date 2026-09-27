@@ -864,3 +864,14 @@ Week 5 refresh rehearsal, September 24, 2026: `src.pipeline.week_refresh --week 
 Its train, holdout, and aggregate files are byte-identical to
 `demo-features-v1`. Dataset `8ecf7cf5…c5c5` and its objects above remain
 available as the Week 4 reference.
+
+History in S3, September 26, 2026: the 2021–2024 raw pairs were uploaded with
+the existing `upload-raw` path (all eight objects reported `uploaded`), and the
+2025 pair was `reused` as identical. All five seasons now live under
+`s3://<FBS_S3_BUCKET>/initial-demo/raw/cfbd/games/season=<year>/`.
+`S3Store.download_raw` reads a pair back, verifies it with the existing manifest
+loader (SHA-256, record count, coverage), and publishes it to a new directory
+without overwriting. `src.pipeline.week_refresh.download_history` reads the Week 4
+reference dataset from S3 to decide which manifests to fetch, then checks each
+one against that report. The demo notebook uses this path, so it needs no local
+raw history. The `week_refresh` CLI still reads local history by default.

@@ -229,6 +229,37 @@ class S3Store:
                 "dataset_report_sha256": _sha(report_bytes), "dataset_mode": "retrospective_demo",
                 "historical_availability_verified": False, "approved_for_point_in_time_forecasting": False}
 
+    def download_raw(self, season, manifest_name, output_dir):
+        """Download one raw snapshot pair uploaded by upload_raw, verify it, and return the local manifest path."""
+        if type(season) is not int or not 1869 <= season <= 9999:
+            raise S3StorageError("Season must be an integer year.")
+        if not isinstance(manifest_name, str) or not re.fullmatch(r"[0-9a-f]{32}\.manifest\.json", manifest_name):
+            raise S3StorageError("Manifest name must be a snapshot manifest filename, not a path.")
+        self._private_bucket()
+        base = f"{self.prefix}/raw/cfbd/games/season={season}"
+        manifest_bytes = self._get(f"{base}/{manifest_name}", optional=True)
+        if manifest_bytes is None:
+            raise S3StorageError(f"Season {season} raw snapshot is not in S3; upload it with upload-raw first.")
+        # Only the fixed sibling name ever becomes a path; load_snapshot rejects any other response_file.
+        raw_name = manifest_name.removesuffix(".manifest.json") + ".json"
+        artifacts = {raw_name: self._get(f"{base}/{raw_name}"), manifest_name: manifest_bytes}
+        try:
+            with tempfile.TemporaryDirectory(prefix="fbs-s3-raw-verify-") as temporary:
+                staging = Path(temporary)
+                for name, content in artifacts.items():
+                    (staging / name).write_bytes(content)
+                snapshot = games.load_snapshot(staging / manifest_name)
+        except (games.NormalizationError, OSError):
+            raise S3StorageError("Downloaded raw snapshot failed SHA-256 or manifest verification; "
+                                 "no local files published.") from None
+        if snapshot.source["request_parameters"]["year"] != season:
+            raise S3StorageError("Downloaded raw snapshot season does not match its S3 folder.")
+        try:
+            dataset._publish(Path(output_dir), artifacts)
+        except dataset.DatasetError:
+            raise S3StorageError("Local raw snapshot publication failed; existing files preserved.") from None
+        return Path(output_dir) / manifest_name
+
 
 def configuration():
     # Read only nonsecret project settings. AWS credentials are left entirely

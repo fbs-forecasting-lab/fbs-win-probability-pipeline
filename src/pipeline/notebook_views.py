@@ -19,7 +19,7 @@ from zoneinfo import ZoneInfo
 
 import pandas as pd
 
-from src.models.baseline import DATA_FILES
+from src.models.baseline import DATA_FILES, read_file, read_json
 from src.pipeline import s3_demo, week_refresh
 
 EASTERN = ZoneInfo("America/New_York")
@@ -37,6 +37,7 @@ CODE_STYLE = ('font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monos
 ZEBRA = "rgba(127,127,127,0.08)"  # Neutral gray at low opacity reads on dark and light themes.
 IDENTIFIER = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)(.*)$", re.S)
 _failed_step = None
+_failed_label = None
 
 
 class StepFailed(Exception):
@@ -86,16 +87,20 @@ def fallback_hint():
 
 def reset():
     """Clear any earlier failure; Step 0 calls this at the start of every take."""
-    global _failed_step
-    _failed_step = None
+    global _failed_step, _failed_label
+    _failed_step = _failed_label = None
 
 
 @contextmanager
-def step(number, stage):
-    """Run one stage; on failure show a short stage-named message and stop later steps."""
-    global _failed_step
+def step(number, stage, label=None):
+    """Run one stage; on failure show a short stage-named message and stop later steps.
+
+    ``number`` orders the steps; ``label`` (e.g. "2b") is only what the message shows.
+    """
+    global _failed_step, _failed_label
+    label = number if label is None else label
     if _failed_step is not None and _failed_step < number:
-        message = f"**Step {number} skipped:** Step {_failed_step} failed earlier.\n{fallback_hint()}"
+        message = f"**Step {label} skipped:** Step {_failed_label} failed earlier.\n{fallback_hint()}"
         say(message)
         raise StepFailed(message)
     try:
@@ -103,20 +108,20 @@ def step(number, stage):
     except StepFailed:
         raise
     except Exception as exc:
-        _failed_step = number
+        _failed_step, _failed_label = number, label
         detail = str(exc) if isinstance(exc, SANITIZED_ERRORS) else f"unexpected {type(exc).__name__}; details suppressed."
-        message = f"**Step {number} failed at {stage}:** {esc(detail)}\n{fallback_hint()}"
+        message = f"**Step {label} failed at {stage}:** {esc(detail)}\n{fallback_hint()}"
         say(message)
         raise StepFailed(message) from None
     if _failed_step == number:
-        _failed_step = None
+        _failed_step = _failed_label = None
 
 
-def live_step(number, existing_dataset_id, what="this step"):
+def live_step(number, existing_dataset_id, what="this step", label=None):
     """Return True when the live API/S3 path runs; otherwise say why the step is skipped."""
     if existing_dataset_id:
-        say(f"**Step {number}: skipped {what}** — using existing dataset `{fingerprint(existing_dataset_id)}` already "
-            "in S3 (`USE_EXISTING_DATASET_ID`).")
+        say(f"**Step {number if label is None else label}: skipped {what}** — using existing dataset "
+            f"`{fingerprint(existing_dataset_id)}` already in S3 (`USE_EXISTING_DATASET_ID`).")
         return False
     return True
 
@@ -285,6 +290,16 @@ def split_table(report, week):
 def dataset_upload_table(objects, show_bucket_name):
     return pd.DataFrame([{"File": uri.rsplit("/", 1)[1], "S3 folder": _s3_folder(uri, show_bucket_name),
                           "Status": _status(status)} for uri, status in objects.items()])
+
+
+def history_table(manifest_paths):
+    """One row per downloaded history season; call only after download_history has verified the files."""
+    rows = []
+    for path in manifest_paths:
+        manifest = read_json(read_file(path))
+        rows.append({"Season": str(manifest["request_parameters"]["year"]), "Games": f"{manifest['record_count']:,}",
+                     "Downloaded": "downloaded ✓", "Fingerprint verified": "✓"})
+    return pd.DataFrame(rows)
 
 
 def download_table(download):

@@ -42,6 +42,7 @@ from src.pipeline.s3_demo import display_path
 SEASON = 2026
 HISTORY_SEASONS = tuple(range(2021, 2026))
 REFERENCE_REPORT = Path("data/processed/demo-features-v1/dataset_report.json")
+REFERENCE_DATASET_ID = "8ecf7cf50b5f4ae68bde2ad902370b7528d327ed0919b5fed7a1211447c7e5c5"  # Week 4 reference.
 HISTORY_RAW_ROOT = Path("data/raw/cfbd/games")
 RETROSPECTIVE_REQUIRED = "Pass --allow-retrospective-demo; historical availability remains unverified."
 PROJECT_ERRORS = (cfbd.CFBDError, SnapshotError, games.NormalizationError, dataset.DatasetError,
@@ -95,19 +96,40 @@ def check_new_dir(path):
 def discover_history(root):
     """Find the five history manifests recorded in the reference dataset report."""
     try:
-        report = read_json(read_file(root / REFERENCE_REPORT))
-        paths, expected = [], {}
+        names, expected = history_sources(read_json(read_file(root / REFERENCE_REPORT)))
+    except BaselineError:
+        raise RefreshError(f"Could not discover history manifests from {REFERENCE_REPORT}; "
+                           "pass --history-manifest once per season 2021–2025.") from None
+    return [root / HISTORY_RAW_ROOT / f"season={season}" / names[season] for season in HISTORY_SEASONS], expected
+
+
+def history_sources(report):
+    """Return the manifest filename and expected source metadata per history season from a dataset report."""
+    try:
+        names, expected = {}, {}
         for season in HISTORY_SEASONS:
             source = report["sources"][str(season)]["source"]
             name = source["manifest_file"]
             if not isinstance(name, str) or not re.fullmatch(r"[0-9a-f]{32}\.manifest\.json", name):
                 raise RefreshError("Reference dataset report lists an unsafe manifest filename.")
-            paths.append(root / HISTORY_RAW_ROOT / f"season={season}" / name)
-            expected[season] = source
-    except (BaselineError, KeyError, TypeError):
-        raise RefreshError(f"Could not discover history manifests from {REFERENCE_REPORT}; "
-                           "pass --history-manifest once per season 2021–2025.") from None
-    return paths, expected
+            names[season], expected[season] = name, source
+    except (KeyError, TypeError):
+        raise RefreshError("Reference dataset report does not list the 2021–2025 history sources.") from None
+    return names, expected
+
+
+def download_history(store, directory, reference_dataset_id=REFERENCE_DATASET_ID):
+    """Download and verify the 2021–2025 history from S3 only; no local raw history is read.
+
+    The verified reference dataset in S3 names the five manifests and their expected
+    source metadata. Each raw pair is SHA-256 verified on download, then checked
+    against that metadata with ``verify_history``. Returns the local manifest paths.
+    """
+    directory = Path(directory)
+    store.download_dataset(reference_dataset_id, directory / "reference-dataset", allow_retrospective_demo=True)
+    names, expected = history_sources(read_json(read_file(directory / "reference-dataset" / "dataset_report.json")))
+    paths = [store.download_raw(season, names[season], directory / f"season={season}") for season in HISTORY_SEASONS]
+    return verify_history(paths, expected)
 
 
 def verify_history(paths, expected=None):

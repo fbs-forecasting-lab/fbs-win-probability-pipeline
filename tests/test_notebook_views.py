@@ -2,6 +2,9 @@
 
 import ast
 import io
+import json
+from pathlib import Path
+import tempfile
 from contextlib import redirect_stdout
 import re
 import unittest
@@ -232,6 +235,28 @@ class NotebookViewsTests(unittest.TestCase):
             with views.step(7, "local_training"):
                 raise BaselineError("Model artifact hash mismatch; nothing deserialized.")
 
+    def test_step_labels_and_history_table(self):
+        shown = []
+        with patch("IPython.display.display", side_effect=lambda *args, **kwargs: shown.append(args[0])):
+            with self.assertRaisesRegex(views.StepFailed, r"Step 2b failed at s3_download_history:"):
+                with views.step(2, "s3_download_history", label="2b"):
+                    raise s3.S3StorageError("Season 2023 raw snapshot is not in S3; upload it with upload-raw first.")
+            with self.assertRaisesRegex(views.StepFailed, r"Step 3 skipped:\*\* Step 2b failed earlier"):
+                with views.step(3, "normalize"):
+                    pass
+            self.assertFalse(views.live_step(2, DATASET_ID, label="2b"))
+        self.assertIn("<strong>Step 2b: skipped this step</strong>", shown[-1]["text/html"])
+        with tempfile.TemporaryDirectory() as folder:
+            paths = []
+            for year, count in ((2021, 849), (2025, 888)):
+                path = Path(folder) / f"{year}.manifest.json"
+                path.write_text(json.dumps({"request_parameters": {"year": year}, "record_count": count}))
+                paths.append(path)
+            table = views.history_table(paths)
+        self.assertEqual(table.values.tolist(), [["2021", "849", "downloaded ✓", "✓"],
+                                                 ["2025", "888", "downloaded ✓", "✓"]])
+        self.assertEqual(list(table.columns), ["Season", "Games", "Downloaded", "Fingerprint verified"])
+
     def test_live_step_skips_with_existing_dataset(self):
         results = []
         shown = self.shown(lambda: results.extend([views.live_step(1, None), views.live_step(1, DATASET_ID)]))
@@ -286,6 +311,18 @@ class InitialDemoNotebookTests(unittest.TestCase):
             self.assertIn("allow_retrospective_demo=True", segment, call)
         self.assertNotIn("put_object", source)
         self.assertNotIn("get_object", source)
+
+    def test_history_comes_from_s3_not_local_files(self):
+        source = "\n".join(cell.source for cell in self.notebook.cells if cell.cell_type == "code")
+        self.assertIn('HISTORY = week_refresh.download_history(store, RUN_DIRS["raw"] / "history")', source)
+        for local in ("discover_history", "verify_history", "data/raw/cfbd/games", "HISTORY_RAW_ROOT"):
+            self.assertNotIn(local, source)
+        ids = [cell.id for cell in self.notebook.cells]
+        self.assertEqual(ids[ids.index("step-2-code") + 1:ids.index("step-2-code") + 3], ["step-2b-md", "step-2b-code"])
+        self.assertTrue(self.notebook.cells[ids.index("step-2b-md")].source.startswith(
+            "## Step 2b — Load past seasons from S3"))
+        # History is loaded before Step 3 uses it.
+        self.assertLess(source.index("download_history("), source.index("for _path in HISTORY"))
 
     def test_no_plain_stdout_calls_in_code_cells(self):
         for cell in self.notebook.cells:
