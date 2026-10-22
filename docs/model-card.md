@@ -33,7 +33,7 @@ Previous-season means use only retained completed regular-season FBS–FBS games
 from exactly Y-1, joined by team ID. Scores, labels, completion status, IDs,
 sample counts, and provenance are never automatically selected as predictors.
 The target label is `home_win` (1 if home points exceed away points, else 0).
-Upcoming prediction inputs have no invented label.
+Prediction inputs marked uncompleted in the saved snapshot have no invented label.
 
 | Role | Target seasons | Actual rows |
 | --- | --- | ---: |
@@ -45,10 +45,11 @@ Upcoming prediction inputs have no invented label.
 The Week 5 dataset, built by `src.pipeline.week_refresh` on September 24, has
 byte-identical train, holdout, and aggregate files, so a model trained on it has
 the same coefficients and holdout results. Only its prediction split differs:
-51 upcoming Week 5 games, with North Dakota State–Wyoming (`401864515`) excluded
+51 Week 5 games marked uncompleted in the September 24 snapshot, with North Dakota State–Wyoming (`401864515`) excluded
 for missing 2025 FBS history and four games with TBD kickoffs quarantined during
 normalization. Dataset `8ecf7cf5…c5c5` remains available as the Week 4 reference
-described below.
+described below. Week 5 is now historical; fetching it again can change
+completion status and eligibility and does not reproduce the September snapshot.
 
 Dataset eligibility excluded 43 train, 22 holdout, and 1 prediction targets.
 The uncompleted 2024 App State–Liberty game `401640992` has neither a training

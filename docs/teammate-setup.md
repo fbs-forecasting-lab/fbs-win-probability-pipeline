@@ -56,9 +56,11 @@ It contains exactly 36 data files under `data/` and two root metadata files.
 No trained model or credential is included.
 
 This handoff remains the Week 4 reference (dataset `8ecf7cf5…c5c5`). The
-recording now uses a fresh 2026 Week 5 pull built by `src.pipeline.week_refresh`
+September recording used a 2026 Week 5 pull built by `src.pipeline.week_refresh`
 (September 24 rehearsal dataset `b6b7c545…5e65`). The Week 5 data is not in this
 handoff. Its train and holdout files are byte-identical to the handoff's.
+Week 5 is now historical. A new pull can change completion status, kickoff
+times, and eligibility; it does not recreate that September snapshot.
 
 From the fresh clone, run the same command in macOS/Linux or PowerShell. It
 verifies the companion checksum, exact membership, safe paths, file sizes, and
