@@ -1,5 +1,12 @@
 # Initial Demo Walkthrough — September 29, 2026
 
+**Historical walkthrough note (October 22, 2026):** The September rehearsal
+results below are dated observations. Fixed 2026 Week 5 is no longer upcoming.
+Fetching it now may return completed games or revised kickoff times, changing
+eligibility, counts, and results; it will not recreate the September snapshot.
+Use the saved rehearsal dataset for reproduction. No current live verification
+is implied.
+
 ## Recommended recording path: notebooks/initial_demo.ipynb
 
 The notebook runs the same pipeline functions as Step 1 and Section 1a below,
@@ -32,9 +39,8 @@ for Step 1 and Section 1a.
 Open a terminal in your local clone of the repository (the folder containing
 README.md), then run every command from there.
 
-Current for `feature/week-refresh` (base `caa362b`) plus its uncommitted
-`src.pipeline.week_refresh` changes, using the existing Python 3.14.x `.venv` and
-local artifacts. Step 1 makes one live CFBD request and new S3 uploads; Section 1a
+Originally rehearsed on September 24, 2026 using the then-current
+`src.pipeline.week_refresh` implementation, Python 3.14.x, and local artifacts. Step 1 makes one live CFBD request and new S3 uploads; Section 1a
 reads from S3 and trains locally. Steps 2–7 are read-only and offline. Both live
 commands were rehearsed on September 24, 2026. Open the listed files in your
 editor; paths below are relative to the repository root. Keep `.env` and
@@ -43,9 +49,9 @@ joblib deserialization can execute code.
 
 Opening note: “This demo connects CFBD ingestion, raw storage, normalized games,
 three historical predictors, a baseline model, evaluation, and probabilities.
-During this recording we pull the upcoming Week 5 schedule from the API, store it
+During this recording we pull the historical Week 5 schedule from the API, store it
 in S3, download and verify the dataset, train the model locally on that copy, and
-predict games that have not been played yet, using prior-season features only.
+predict eligible rows in that saved snapshot, using prior-season features only.
 In-season features are planned next. It is a retrospective demonstration.
 Historical availability is unverified, so it is not yet an approved
 point-in-time forecasting system.”
@@ -58,7 +64,7 @@ point-in-time forecasting system.”
 | Show where data is stored | Step 1 raw files and S3 uploads + Section 1a S3 console |
 | Explain which features are stored and why | Step 3 |
 | Show how data is used to train a model | Section 1a (training on the S3 download) + Step 4 |
-| Show predictions on ideal data | Section 1a output (upcoming Week 5 matchups + hypothetical vector) + Steps 6–7 |
+| Show predictions on ideal data | Section 1a output (saved Week 5 matchups + hypothetical vector) + Steps 6–7 |
 
 Present the predictions of the model trained live in Section 1a. Steps 5–6 read
 saved artifacts in `data/processed/demo-baseline-v1` for explanation only; its
@@ -143,8 +149,8 @@ data/processed/week5-take-1-features/prediction.csv
 data/processed/week5-take-1-features/dataset_report.json
 ```
 
-Say: “This is a live request to the College Football Data API for the upcoming
-Week 5 schedule. We keep the raw response unchanged, with its retrieval time,
+Say: “This is a live request to the College Football Data API for the historical
+2026 Week 5 schedule. We keep the raw response unchanged, with its retrieval time,
 request parameters, and hash, and store it both locally and in our private S3
 bucket. Then we build the model dataset and upload it as well. Games without an
 announced kickoff time are quarantined rather than guessed, and FBS–FCS games are
@@ -186,7 +192,7 @@ Expected: **888 records**, HTTP 200, `year=2025`, `seasonType=regular`,
 
 Run the `next_command` printed by `week_refresh`. It downloads the dataset that
 Step 1 just uploaded, trains the fixed model on the downloaded copy, reloads that
-new model, and generates predictions for the upcoming Week 5 games on camera.
+new model, and generates predictions for the saved Week 5 sample on camera.
 
 **S3 console to show:** open the project bucket (`<FBS_S3_BUCKET>`), show the
 Permissions tab with all four Block Public Access settings on, then open:
@@ -253,7 +259,7 @@ download, local training, or prediction) and exits with code 1.
 Say: “The dataset we just built from the API is downloaded from our private S3
 bucket, and every file is verified against SHA-256. The baseline is trained
 locally on that verified copy, and the newly trained model predicts the Week 5
-games. These games have not been played yet; Week 5 starts October 1. The model
+sample. These games were unplayed in the September 24 snapshot; Week 5 began October 1. The model
 uses prior-season features only; in-season features are planned next. These are
 retrospective-demo results from a saved snapshot: historical availability is
 unverified, and they are not approved forecasts.”
@@ -374,14 +380,14 @@ from pathlib import Path
 from src.models.baseline import PREDICTORS
 with Path("data/processed/week5-rehearsal-1-features/prediction.csv").open(newline="") as handle:
     row = next(r for r in csv.DictReader(handle) if r["game_id"] == "401871049")
-print("Upcoming Week 5 matchup:", row["game_id"], row["home_team"], "vs", row["away_team"])
+print("Saved Week 5 matchup:", row["game_id"], row["home_team"], "vs", row["away_team"])
 print("Predictors in model order:", {name: float(row[name]) for name in PREDICTORS})
 print("Audit only: prior season/counts/cutoff:", row["feature_source_season"],
       row["home_prior_game_count"], row["away_prior_game_count"], row["cutoff"])
 PY
 ```
 
-Expected (rehearsal values): upcoming **New Mexico State–Western Kentucky**, game
+Expected (September 24 rehearsal values): saved **New Mexico State–Western Kentucky**, game
 **401871049**:
 
 | Predictor, in model order | Value | Rationale |
@@ -392,7 +398,7 @@ Expected (rehearsal values): upcoming **New Mexico State–Western Kentucky**, g
 
 Audit fields: source season **2025**, **11 games per team**, cutoff
 `2026-10-02T00:00:00Z` (Thursday, October 1, 8:00 p.m. ET). This is the scheduled
-kickoff in the saved snapshot; the game has not been played yet.
+kickoff in the saved snapshot; the game was unplayed when pulled on September 24.
 
 Say: “Only these three columns enter the model. We join teams by ID and use
 completed regular-season FBS–FBS games from exactly Y−1. IDs, scores, completion
@@ -510,14 +516,14 @@ PY
 
 Expected (rehearsal values): **51 rows**, reload maximum difference **0.0**:
 
-| Game ID | Upcoming Week 5 matchup (home vs. away) | Home | Away |
+| Game ID | Saved Week 5 matchup (home vs. away) | Home | Away |
 | --- | --- | ---: | ---: |
 | 401871049 | New Mexico State vs. Western Kentucky | 45.8083% | 54.1917% |
 | 401862786 | Tulsa vs. North Texas | 27.7765% | 72.2235% |
 | 401858245 | Virginia Tech vs. Pittsburgh | 35.6285% | 64.3715% |
 
-Say: “These are upcoming games that have not been played yet; the earliest
-kicks off Thursday, October 1. The model uses prior-season 2025 features only,
+Say: “These games were unplayed at the September 24 rehearsal; the earliest
+saved kickoff was Thursday, October 1. The model uses prior-season 2025 features only,
 and in-season features are planned next. North Dakota State–Wyoming, game
 401864515, has no qualifying 2025 FBS history for North Dakota State and receives
 no invented probability. Four games without announced kickoff times were

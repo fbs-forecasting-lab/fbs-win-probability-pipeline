@@ -282,7 +282,7 @@ def split_table(report, week):
     splits = report["splits"]
     seasons = {"train": "2022–2024", "holdout": "2025", "prediction": f"2026 Week {week}"}
     labels = {"train": "Train (the model learns from these)", "holdout": "Test (checks the model on unseen games)",
-              "prediction": "Predict (upcoming games, no result yet)"}
+              "prediction": "Predict (saved uncompleted sample)"}
     return pd.DataFrame([{"Split": labels[name], "Seasons": seasons[name], "Games": f"{splits[name]['output']:,}"}
                          for name in ("train", "holdout", "prediction")])
 
