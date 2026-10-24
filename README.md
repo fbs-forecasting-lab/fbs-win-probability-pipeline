@@ -1,8 +1,14 @@
 # FBS Win Probability Pipeline
 
-A UNC Charlotte DTSC 3601/3602 project by Hampton Abbott and the FBS Forecasting
-Lab team. The project estimates the probability that the designated home team
-wins an FBS college-football game.
+A UNC Charlotte DTSC 3601/3602 project by the FBS Forecasting Lab team.
+
+- Hampton Abbott
+- Dharm Patel
+- Josh Livengood
+- Sarah Asianut Okwalinga
+
+The project estimates the probability that the designated home team wins an
+FBS college-football game.
 
 Implemented: versioned game snapshots, SHA-256 integrity checks, normalization,
 prior-season features, chronological dataset splits, logistic regression,
