@@ -13,6 +13,21 @@ from src.models.baseline import (
 
 
 def predict_vector(model, values):
+    """Predict one hypothetical matchup described only by the three predictors.
+
+    Args:
+        model: Pipeline returned by ``load_trusted_model``.
+        values: Dict with exactly prior_win_pct_diff, prior_avg_margin_diff, and home_field, in order.
+
+    Returns:
+        Dict with the input context and features, ``home_win_probability`` and
+        ``away_win_probability`` (they sum to one), and the retrospective status flags. This is a
+        binary-classification probability, not a predicted score.
+
+    Raises:
+        BaselineError: If feature names or order are wrong, or values are missing, non-finite, or out
+            of domain.
+    """
     if not isinstance(values, dict) or list(values) != PREDICTORS:
         raise BaselineError("Hypothetical feature names/order must match the three predictors exactly.")
     probability = float(home_probabilities(model, feature_frame([values]))[0])
@@ -21,6 +36,23 @@ def predict_vector(model, values):
 
 
 def predict_saved_sample(model_dir, dataset_dir, output_dir, *, allow_retrospective_demo=False):
+    """Score the saved 2026 prediction rows with a reloaded model and publish the results.
+
+    Args:
+        model_dir: Trusted model directory written by ``train_baseline``.
+        dataset_dir: The exact verified dataset that model was trained from.
+        output_dir: New or matching directory for predictions.csv, exclusions.json, and
+            prediction_report.json.
+        allow_retrospective_demo: Must be True to acknowledge unverified historical availability.
+
+    Returns:
+        The prediction report: row count, context ``saved_2026_sample_not_live``, dataset and model
+        hashes, source availability, limitations, status flags, and artifact hashes.
+
+    Raises:
+        BaselineError: If the model or dataset fails verification, the dataset is not the one the
+            model was trained on, or existing output conflicts.
+    """
     model, metadata = load_trusted_model(model_dir, allow_retrospective_demo=allow_retrospective_demo)
     data = load_dataset(dataset_dir, allow_retrospective_demo=allow_retrospective_demo)
     if (data["report_sha256"] != metadata["dataset_report_sha256"]
@@ -43,6 +75,7 @@ def predict_saved_sample(model_dir, dataset_dir, output_dir, *, allow_retrospect
 
 
 def main(argv=None):
+    """Command-line entry point: batch-predict a saved dataset or score one hypothetical vector."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model-dir", type=Path, required=True, help="Trusted locally generated model directory only")
     mode = parser.add_mutually_exclusive_group(required=True)

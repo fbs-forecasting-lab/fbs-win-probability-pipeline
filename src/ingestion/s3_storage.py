@@ -58,6 +58,7 @@ def _aws_error(exc):
 
 
 def make_client(region=None, profile=None):
+    """Create an S3 client from the standard AWS credential chain with bounded timeouts and retries."""
     try:
         session = boto3.Session(profile_name=profile, region_name=region)
         if not session.region_name:
@@ -80,6 +81,21 @@ def _dataset_id(value):
 
 
 class S3Store:
+    """Explicit, no-overwrite transfers between verified local artifacts and one private bucket/prefix.
+
+    Every transfer first requires all four bucket-level Block Public Access settings (a read-only
+    check; no settings are changed). Uploads use conditional writes, reuse identical objects, refuse
+    conflicting ones, and read back what they wrote. Downloads verify SHA-256 and content before
+    publishing locally; data is downloaded and checked, never streamed into training.
+
+    Args:
+        client: A boto3 S3 client, or ``None`` to validate the configuration before creating one.
+        bucket: An explicit general-purpose bucket name.
+        prefix: Slash-separated project prefix, for example ``initial-demo``.
+
+    Raises:
+        S3StorageError: If the bucket name or prefix is invalid.
+    """
     def __init__(self, client, bucket, prefix):
         if (not isinstance(bucket, str) or not re.fullmatch(r"[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]", bucket)
                 or ".." in bucket or bucket.endswith("--x-s3") or re.fullmatch(r"\d+\.\d+\.\d+\.\d+", bucket)):
@@ -162,6 +178,19 @@ class S3Store:
         return result
 
     def upload_raw(self, manifest_path):
+        """Upload one verified raw snapshot and its manifest under ``<prefix>/raw/cfbd/games/season=<year>/``.
+
+        Args:
+            manifest_path: Local manifest whose sibling raw file and hashes pass ``load_snapshot``.
+
+        Returns:
+            Dict mapping each ``s3://`` URI to ``"uploaded"`` or ``"reused"`` (identical object already
+            present). The manifest is written last.
+
+        Raises:
+            S3StorageError: If local validation fails, the bucket is not fully private, remote content
+                conflicts, or an AWS operation fails (sanitized message).
+        """
         try:
             path = Path(manifest_path)
             snapshot = games.load_snapshot(path)
@@ -178,6 +207,20 @@ class S3Store:
         return self._upload(base, {f"{sid}.json": raw, marker: manifest}, marker)
 
     def upload_dataset(self, directory, *, allow_retrospective_demo=False):
+        """Upload a verified six-file dataset under ``<prefix>/datasets/<dataset_id>/``.
+
+        Args:
+            directory: Local dataset directory that passes ``load_dataset``.
+            allow_retrospective_demo: Must be True to acknowledge unverified historical availability.
+
+        Returns:
+            Dict mapping each ``s3://`` URI to ``"uploaded"`` or ``"reused"``. dataset_report.json, the
+            completion marker, is written last.
+
+        Raises:
+            S3StorageError: If local validation fails, the bucket is not fully private, remote content
+                conflicts, or an AWS operation fails (sanitized message).
+        """
         try:
             data = load_dataset(directory, allow_retrospective_demo=allow_retrospective_demo)
             report = (Path(directory) / "dataset_report.json").read_bytes()
@@ -190,6 +233,25 @@ class S3Store:
         return self._upload(f"{self.prefix}/datasets/{identifier}", artifacts, "dataset_report.json")
 
     def download_dataset(self, identifier, output_dir, *, allow_retrospective_demo=False):
+        """Download a dataset by ID, verify it, and publish it to a local directory.
+
+        Only the fixed allowlisted file names are fetched. Every file's SHA-256 must match the remote
+        report and the files must pass ``load_dataset`` in a temporary folder before anything is
+        published locally.
+
+        Args:
+            identifier: 64-character lowercase SHA-256 dataset ID.
+            output_dir: New or matching local directory for the six files.
+            allow_retrospective_demo: Must be True to acknowledge unverified historical availability.
+
+        Returns:
+            Receipt with ``dataset_id``, ``s3_location``, ``output_dir``, ``verified_files``,
+            ``dataset_report_sha256``, and the retrospective status flags.
+
+        Raises:
+            S3StorageError: If permission is missing, the ID is invalid, an object is missing or tampered
+                with, validation fails, existing local files conflict, or an AWS operation fails.
+        """
         try:
             require_demo(allow_retrospective_demo)
         except BaselineError:
@@ -230,7 +292,24 @@ class S3Store:
                 "historical_availability_verified": False, "approved_for_point_in_time_forecasting": False}
 
     def download_raw(self, season, manifest_name, output_dir):
-        """Download one raw snapshot pair uploaded by upload_raw, verify it, and return the local manifest path."""
+        """Download one raw snapshot pair uploaded by ``upload_raw``, verify it, and publish it locally.
+
+        The manifest and its fixed sibling raw file are checked with ``load_snapshot`` (SHA-256, record
+        count, coverage, schema) in a temporary folder, and the manifest's year must match the S3 season
+        folder, before anything is written to ``output_dir``.
+
+        Args:
+            season: Season year whose ``season=<year>`` folder holds the pair.
+            manifest_name: Snapshot manifest file name (``<32-hex id>.manifest.json``), not a path.
+            output_dir: New or matching local directory.
+
+        Returns:
+            Path of the local manifest.
+
+        Raises:
+            S3StorageError: If arguments are invalid, the season's snapshot is not in S3, verification
+                fails, existing local files conflict, or an AWS operation fails.
+        """
         if type(season) is not int or not 1869 <= season <= 9999:
             raise S3StorageError("Season must be an integer year.")
         if not isinstance(manifest_name, str) or not re.fullmatch(r"[0-9a-f]{32}\.manifest\.json", manifest_name):
@@ -262,6 +341,7 @@ class S3Store:
 
 
 def configuration():
+    """Read the nonsecret FBS_S3_* and FBS_AWS_PROFILE settings from the environment or project .env."""
     # Read only nonsecret project settings. AWS credentials are left entirely
     # to boto3's standard chain, including AWS_SESSION_TOKEN when needed.
     local = dotenv_values(PROJECT_ROOT / ".env")
@@ -270,6 +350,7 @@ def configuration():
 
 
 def main(argv=None):
+    """Command-line entry point for the upload-raw, upload-dataset, and download-dataset commands."""
     defaults = configuration()
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)

@@ -52,6 +52,7 @@ def coverage_report(records: list[dict]) -> dict:
                       and type(row["id"]) is not int for row in records)
 
     def classification(row: dict, field: str) -> str:
+        """Return a row's classification, or a <missing>/<null>/<invalid> placeholder."""
         if field not in row:
             return "<missing>"
         if row[field] is None:
@@ -96,7 +97,23 @@ def _atomic_create(path: Path, content: bytes) -> None:
 
 
 def save_snapshot(result: GamesResponse, output_dir: Path | str | None = None) -> tuple[Path, Path]:
-    """Save raw bytes, then a manifest completion marker; return both paths."""
+    """Save a response's original bytes and then its manifest (the completion marker).
+
+    The manifest records the snapshot ID, request parameters, retrieval time, HTTP status, record
+    count, SHA-256 of the raw bytes, coverage, and unknown historical availability. Both files are
+    created exclusively, so nothing is overwritten; a raw file without a manifest is incomplete.
+
+    Args:
+        result: Response returned by ``fetch_games``.
+        output_dir: Games root (default ``data/raw/cfbd/games``); a ``season=<year>`` folder is added.
+
+    Returns:
+        ``(raw_path, manifest_path)``.
+
+    Raises:
+        SnapshotError: If the response is not a JSON array of game objects or the files cannot be
+            published.
+    """
     records = parse_games(result.raw_response)
     root = DEFAULT_OUTPUT_DIR if output_dir is None else Path(output_dir)
     directory = root / f"season={result.parameters['year']}"

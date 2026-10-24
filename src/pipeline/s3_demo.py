@@ -71,7 +71,27 @@ def check_run_dir(run_dir):
 
 
 def run(store, dataset_id, run_dir, *, allow_retrospective_demo=False, vector=None):
-    """Run download -> train -> predict into fresh subdirectories of ``run_dir``."""
+    """Download a dataset from S3, train locally, and predict, in fresh subdirectories of ``run_dir``.
+
+    Stages: verified ``download_dataset`` into ``dataset/``, ``train_baseline`` into ``model/`` (the
+    model must reference the downloaded dataset ID), ``predict_saved_sample`` into ``predictions/``,
+    and an optional hypothetical vector scored with the reloaded model.
+
+    Args:
+        store: S3Store with a client attached.
+        dataset_id: Dataset ID already uploaded under the store's prefix.
+        run_dir: New or empty, non-symlink directory.
+        allow_retrospective_demo: Must be True to acknowledge unverified historical availability.
+        vector: Optional ``(prior_win_pct_diff, prior_avg_margin_diff, home_field)`` tuple.
+
+    Returns:
+        Summary dict with per-stage results (paths relative to the working directory when inside it)
+        and the retrospective status flags.
+
+    Raises:
+        DemoError: If permission is missing, ``run_dir`` is unusable, or any stage fails; the message
+            names the stage and is sanitized.
+    """
     if allow_retrospective_demo is not True:
         raise DemoError(RETROSPECTIVE_REQUIRED)
     run_dir = check_run_dir(run_dir)
@@ -118,6 +138,7 @@ def run(store, dataset_id, run_dir, *, allow_retrospective_demo=False, vector=No
 
 
 def main(argv=None):
+    """Command-line entry point: refuse unsafe inputs before creating an AWS client, then run the chain."""
     defaults = s3_storage.configuration()
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--dataset-id", required=True, help="SHA-256 dataset ID stored under <prefix>/datasets/")

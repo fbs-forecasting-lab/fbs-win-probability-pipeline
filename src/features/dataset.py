@@ -61,6 +61,7 @@ class DatasetError(ValueError):
 
 @dataclass(frozen=True)
 class SeasonInput:
+    """Verified inputs for one season: source metadata, typed normalized rows, counts, artifact hashes."""
     source: dict
     rows: list[dict]
     normalization_counts: dict
@@ -224,7 +225,28 @@ def _publish(directory: Path, artifacts: dict[str, bytes]) -> None:
 def build_dataset(manifest_paths: list[Path | str], output_dir: Path | str, *,
                   allow_retrospective_demo: bool = False,
                   normalized_root: Path | str = games.DEFAULT_OUTPUT_ROOT) -> dict:
-    """Build the fixed demo splits, preserving all source availability limitations."""
+    """Build the fixed train/holdout/prediction splits from one verified snapshot per season.
+
+    Each target game gets three predictors computed from the previous season's completed FBS-vs-FBS
+    games: win-percentage difference, average-margin difference, and home field. Training targets
+    are 2022–2024, holdout is 2025, and prediction rows are uncompleted 2026 games; 2021 supplies
+    history only. Games with no prior history, the wrong completion status, or history that is not
+    before the scheduled kickoff are excluded with recorded reasons.
+
+    Args:
+        manifest_paths: Exactly one manifest per season 2021–2026; 2021–2025 must be full seasons.
+        output_dir: New or matching directory for the six dataset files.
+        allow_retrospective_demo: Must be True to acknowledge unverified historical availability.
+        normalized_root: Folder holding each snapshot's existing normalized outputs, re-verified here.
+
+    Returns:
+        The dataset report (also written as dataset_report.json), including ``dataset_id``: the
+        SHA-256 of the source metadata and hashes, predictor columns, and mode.
+
+    Raises:
+        DatasetError: If permission is missing, seasons are missing or duplicated, inputs fail
+            verification, or existing output conflicts.
+    """
     if allow_retrospective_demo is not True:
         raise DatasetError("Historical availability is unverified. Pass --allow-retrospective-demo to explicitly "
                            "permit reconstruction; it does not approve point-in-time forecasting.")
@@ -319,6 +341,7 @@ def build_dataset(manifest_paths: list[Path | str], output_dir: Path | str, *,
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Command-line entry point: build a dataset from --manifest files into --output-dir and print its ID."""
     parser = argparse.ArgumentParser(description="Build explicitly permitted retrospective demo datasets offline.")
     parser.add_argument("--manifest", nargs="+", action="extend", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)

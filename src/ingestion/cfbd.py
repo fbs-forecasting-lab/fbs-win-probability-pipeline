@@ -29,6 +29,7 @@ class CFBDError(RuntimeError):
 
 @dataclass(frozen=True)
 class GamesResponse:
+    """One raw CFBD /games response: original bytes, request parameters, retrieval time, HTTP status."""
     raw_response: bytes = field(repr=False)
     parameters: dict
     retrieved_at: str
@@ -63,7 +64,24 @@ def _retry_delay(retry_after: str | None, attempt: int) -> float:
 
 
 def fetch_games(season: int, week: int | None = None) -> GamesResponse:
-    """Fetch an unfiltered raw games snapshot; storage is a separate operation."""
+    """Request one regular-season FBS games snapshot from the College Football Data API.
+
+    Makes a real HTTPS request using the CFBD key from the environment or project ``.env``.
+    Timeouts, connection errors, HTTP 429, and 5xx responses are retried a bounded number of times.
+    The response is returned unmodified; storage is a separate step (``save_snapshot``).
+
+    Args:
+        season: Season year.
+        week: Optional nonnegative week; ``None`` requests the whole regular season.
+
+    Returns:
+        GamesResponse with the original response bytes, request parameters, UTC retrieval time, and
+        HTTP status.
+
+    Raises:
+        CFBDError: If the key or parameters are invalid, access is denied, retries are exhausted, or
+            the response is unusable. Messages never include the key or the response body.
+    """
     if type(season) is not int or not 1869 <= season <= 9999:
         raise CFBDError("Season must be an integer year between 1869 and 9999.")
     if week is not None and (type(week) is not int or week < 0):
@@ -122,6 +140,7 @@ def fetch_games(season: int, week: int | None = None) -> GamesResponse:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Command-line entry point: fetch one season (or week) and save it as a raw snapshot plus manifest."""
     parser = argparse.ArgumentParser(description="Save a raw CFBD games snapshot and provenance manifest.")
     parser.add_argument("--season", type=int, required=True)
     parser.add_argument("--week", type=int)

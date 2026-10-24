@@ -61,6 +61,7 @@ def stage_error(stage, exc):
 
 
 def positive_int(value):
+    """argparse type: parse a positive integer week."""
     try:
         number = int(value)
     except ValueError:
@@ -71,12 +72,14 @@ def positive_int(value):
 
 
 def run_tag(value):
+    """argparse type: accept 1–64 lowercase letters, digits, or hyphens, starting with a letter or digit."""
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,63}", value):
         raise argparse.ArgumentTypeError("use 1–64 lowercase letters, digits, or hyphens, starting with a letter or digit")
     return value
 
 
 def output_dirs(root, tag):
+    """Return this run tag's raw, interim, features, and s3_demo run directories under ``root``."""
     return {"raw": root / "data/raw/cfbd" / tag, "interim": root / "data/interim/cfbd" / tag,
             "features": root / "data/processed" / f"{tag}-features", "run": root / "data/processed" / f"{tag}-run"}
 
@@ -157,13 +160,33 @@ def verify_history(paths, expected=None):
 
 
 def next_command(dataset_id, tag, extra=()):
+    """Build the exact s3_demo command line for a new dataset, including any S3 setting overrides."""
     return " ".join([".venv/bin/python -B -m src.pipeline.s3_demo", "--dataset-id", dataset_id,
                      "--run-dir", f"data/processed/{tag}-run", *extra,
                      "--prior-win-pct-diff 0.2 --prior-avg-margin-diff 7 --home-field 1 --allow-retrospective-demo"])
 
 
 def run(store, week, tag, history, *, root=None, extra_args=()):
-    """Run fetch -> raw upload -> normalize -> build -> dataset upload for one new run tag."""
+    """Fetch one 2026 week, store it in S3, rebuild the dataset, and upload it, for one new run tag.
+
+    Stages: read-only private-bucket preflight, CFBD fetch and local save, raw upload, normalization
+    of the new week and the history, dataset build, and dataset upload.
+
+    Args:
+        store: S3Store with a client attached.
+        week: Regular-season week to fetch.
+        tag: Run tag naming this run's new output directories.
+        history: Verified 2021–2025 manifest paths (see ``verify_history``).
+        root: Project root for output directories (default: the repository root).
+        extra_args: Extra s3_demo options, such as bucket/prefix overrides, for ``next_command``.
+
+    Returns:
+        Summary dict with per-stage results, the retrospective status flags, the new ``dataset_id``,
+        and ``next_command`` (the s3_demo command for this dataset).
+
+    Raises:
+        RefreshError: If any stage fails; the message names the stage and is sanitized.
+    """
     dirs = output_dirs(PROJECT_ROOT if root is None else Path(root), tag)
     normalized_root, features_dir = dirs["interim"] / "games", dirs["features"]
     stage = "aws_preflight"
@@ -217,6 +240,7 @@ def run(store, week, tag, history, *, root=None, extra_args=()):
 
 
 def main(argv=None):
+    """Command-line entry point: validate inputs before any request, then run the refresh."""
     defaults = s3_storage.configuration()
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--season", type=int, choices=[SEASON], default=SEASON, help="Target season (only 2026)")

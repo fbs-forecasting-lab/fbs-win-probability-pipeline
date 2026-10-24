@@ -39,6 +39,7 @@ class NormalizationError(ValueError):
 
 @dataclass(frozen=True)
 class Snapshot:
+    """A verified raw snapshot: the parsed game records and their source metadata."""
     records: list[dict]
     source: dict
 
@@ -252,7 +253,24 @@ def _normalize(snapshot: Snapshot) -> tuple[list[dict], dict, dict]:
 
 
 def normalize_snapshot(manifest_path: Path | str, output_root: Path | str | None = None) -> Path:
-    """Produce deterministic per-snapshot artifacts; safely resume identical partial writes."""
+    """Verify one raw snapshot and publish its normalized games, exclusions, and quality report.
+
+    Rows with two FBS opponents are kept; other classifications are excluded, and invalid rows (for
+    example, unresolved TBD kickoff times) are quarantined with reasons. Raw data is never repaired,
+    and uncompleted games keep null scores. Output is deterministic, so an identical partial write
+    can be resumed safely.
+
+    Args:
+        manifest_path: Manifest whose sibling raw file passes ``load_snapshot``.
+        output_root: Root folder; a subfolder named by the snapshot ID is created (default
+            ``data/interim/cfbd/games``).
+
+    Returns:
+        The snapshot's output directory containing games.csv, exclusions.json, and quality_report.json.
+
+    Raises:
+        NormalizationError: If the snapshot fails verification or existing output conflicts.
+    """
     snapshot = load_snapshot(manifest_path)
     games, exclusions, report = _normalize(snapshot)
     buffer = io.StringIO(newline="")
@@ -291,6 +309,7 @@ def normalize_snapshot(manifest_path: Path | str, output_root: Path | str | None
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Command-line entry point: normalize each --manifest offline and print its counts."""
     parser = argparse.ArgumentParser(description="Normalize explicitly selected CFBD manifests offline.")
     parser.add_argument("--manifest", type=Path, nargs="+", action="extend", required=True,
                         help="One or more paths; this option can also be repeated.")

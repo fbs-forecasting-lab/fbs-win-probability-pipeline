@@ -22,10 +22,12 @@ TEAMS = ("Synthetic Alder Owls", "Synthetic Birch Foxes", "Synthetic Cedar Kites
 
 
 def json_bytes(value):
+    """Serialize a value as sorted, indented JSON bytes with a trailing newline."""
     return (json.dumps(value, indent=2, sort_keys=True, allow_nan=False) + "\n").encode()
 
 
 def write_new(path, content):
+    """Write bytes to a path that must not already exist (exclusive create)."""
     with path.open("xb") as handle:
         handle.write(content)
 
@@ -71,6 +73,27 @@ def make_snapshot(year, directory):
 
 
 def run(run_dir, *, allow_retrospective_demo=False, root=ROOT):
+    """Run the real pipeline end to end on deterministic fictional games, entirely offline.
+
+    Creates a synthetic snapshot for each season 2021–2026, then calls normalize_snapshot,
+    build_dataset, train_baseline, predict_saved_sample, load_trusted_model, and predict_vector. No
+    network or credentials are used, and all teams, scores, and metrics are fictional.
+
+    Args:
+        run_dir: New directory beneath ``data/processed``; relative paths are resolved against ``root``.
+        allow_retrospective_demo: Must be True to acknowledge that results are not approved forecasts.
+        root: Repository root used to resolve and confine ``run_dir``.
+
+    Returns:
+        The summary also written to synthetic_summary.json: notice, status flags, dataset ID, counts,
+        synthetic holdout metrics, saved-model prediction count, hypothetical result, and output
+        directory.
+
+    Raises:
+        ValueError: If permission is missing, or ``run_dir`` already exists, contains a symbolic link,
+            or is not beneath ``data/processed``. Pipeline stages raise ValueError subclasses
+            (NormalizationError, DatasetError, BaselineError) if they reject the synthetic inputs.
+    """
     if not allow_retrospective_demo:
         raise ValueError("Pass --allow-retrospective-demo; synthetic results are not approved forecasts.")
     root = Path(root).resolve()
@@ -110,6 +133,7 @@ def run(run_dir, *, allow_retrospective_demo=False, root=ROOT):
 
 
 def main(argv=None):
+    """Command-line entry point: run the synthetic example and print its summary."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-dir", default="data/processed/synthetic-demo", type=Path)
     parser.add_argument("--allow-retrospective-demo", action="store_true")

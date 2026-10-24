@@ -43,16 +43,19 @@ class BaselineError(ValueError):
 
 
 def require_demo(allowed):
+    """Raise BaselineError unless retrospective-demo use was explicitly acknowledged (``allowed is True``)."""
     if allowed is not True:
         raise BaselineError("Pass --allow-retrospective-demo; historical availability is unverified "
                             "and point-in-time forecasting remains unapproved.")
 
 
 def digest(content):
+    """Return the lowercase SHA-256 hex digest of ``content`` bytes."""
     return hashlib.sha256(content).hexdigest()
 
 
 def read_file(path):
+    """Read one artifact's bytes, refusing symbolic links; errors name only the file, never its path."""
     path = Path(path)
     if path.is_symlink():
         raise BaselineError("Symbolic-link artifacts are not supported.")
@@ -63,6 +66,7 @@ def read_file(path):
 
 
 def read_json(content):
+    """Parse JSON bytes into a dict, rejecting NaN/Infinity constants and non-object documents."""
     try:
         value = json.loads(content, parse_constant=lambda value: (_ for _ in ()).throw(ValueError()))
     except (ValueError, UnicodeError):
@@ -73,12 +77,14 @@ def read_json(content):
 
 
 def check_status(value):
+    """Require ``dataset_mode=retrospective_demo`` and the three availability/approval flags set to False."""
     if not isinstance(value, dict) or any(type(value.get(k)) is not type(v) or value[k] != v
                                           for k, v in STATUS.items()):
         raise BaselineError("Expected retrospective-demo mode and false availability/approval flags.")
 
 
 def read_csv(content, columns):
+    """Parse UTF-8 CSV bytes whose header exactly matches ``columns``; reject malformed or ragged rows."""
     try:
         reader = csv.DictReader(io.StringIO(content.decode("utf-8")), strict=True)
         if reader.fieldnames != list(columns):
@@ -103,6 +109,7 @@ def feature_frame(rows):
 
 
 def validate_features(frame):
+    """Check predictor names and order, finite values, win-pct diff in [-1, 1], and home_field in {0, 1}."""
     if not isinstance(frame, pd.DataFrame) or list(frame.columns) != PREDICTORS:
         raise BaselineError("Predictor names/order must match the exact three-column contract.")
     try:
@@ -116,6 +123,24 @@ def validate_features(frame):
 
 
 def load_dataset(directory, *, allow_retrospective_demo=False):
+    """Load and fully verify a six-file retrospective demo dataset.
+
+    Checks the report's schema version, demo flags, predictor contract, identity hash, and every
+    artifact's SHA-256, then the split seasons and counts, exclusion reasons, unique game IDs,
+    completion status, binary labels, and feature domains before returning anything.
+
+    Args:
+        directory: Folder containing dataset_report.json and the five data artifacts.
+        allow_retrospective_demo: Must be True to acknowledge unverified historical availability.
+
+    Returns:
+        Dict with ``report`` (parsed report), ``report_sha256``, ``artifacts`` (bytes by file name), and
+        ``splits`` mapping train/holdout/prediction to ``{"rows", "x", "y"}``: the CSV rows, the
+        three-column predictor frame, and the 0/1 labels (``None`` for prediction rows).
+
+    Raises:
+        BaselineError: If permission is missing or any file, hash, count, or field fails validation.
+    """
     require_demo(allow_retrospective_demo)
     directory = Path(directory)
     report_bytes = read_file(directory / "dataset_report.json")
@@ -206,6 +231,7 @@ def load_dataset(directory, *, allow_retrospective_demo=False):
 
 
 def home_probabilities(model, frame):
+    """Return P(home team wins) per row, using the model's class order and rejecting invalid outputs."""
     validate_features(frame)
     classes = list(model.classes_)
     if len(classes) != 2 or set(classes) != {0, 1}:
@@ -220,6 +246,7 @@ def home_probabilities(model, frame):
 
 
 def prediction_csv(rows, probabilities, context):
+    """Serialize rows with home/away win probabilities, a context label, and the unchanged status flags."""
     output = []
     for row, probability in zip(rows, probabilities, strict=True):
         result = {key: row[key] for key in PREDICTION_COLUMNS if key in row and key not in STATUS}
@@ -230,6 +257,7 @@ def prediction_csv(rows, probabilities, context):
 
 
 def publish(directory, artifacts):
+    """Publish artifacts with the dataset module's no-overwrite rules, raising BaselineError on conflict."""
     try:
         dataset._publish(Path(directory), artifacts)
     except dataset.DatasetError as exc:
@@ -237,25 +265,50 @@ def publish(directory, artifacts):
 
 
 def versions():
+    """Return the Python and library versions saved in model metadata and required to match on reload."""
     return {"python": platform.python_version(), "scikit_learn": sklearn.__version__, "numpy": np.__version__,
             "scipy": scipy.__version__, "pandas": pd.__version__, "joblib": joblib.__version__}
 
 
 def train_baseline(dataset_dir, output_dir, *, allow_retrospective_demo=False):
+    """Fit the fixed scaler + logistic regression and evaluate it on the 2025 holdout.
+
+    The pipeline is fitted on the 2022–2024 training rows only. Holdout rows are scored, never used
+    for fitting, and compared with a constant baseline that always predicts the training home-win
+    rate. The saved 2026 prediction rows are also scored. The fitted pipeline is serialized and
+    reloaded, and its predictions must be unchanged before anything is published.
+
+    Args:
+        dataset_dir: Verified dataset directory (see ``load_dataset``).
+        output_dir: New or matching directory for the seven model artifacts.
+        allow_retrospective_demo: Must be True to acknowledge unverified historical availability.
+
+    Returns:
+        ``(metadata, evaluation)``: the metadata written to model_metadata.json, and the holdout
+        evaluation with Brier score, log loss, and accuracy for the model and the constant baseline.
+
+    Raises:
+        BaselineError: If the dataset is invalid, the model does not converge, serialization changes
+            predictions, or existing output conflicts.
+    """
     data = load_dataset(dataset_dir, allow_retrospective_demo=allow_retrospective_demo)
     train, holdout, prediction = (data["splits"][name] for name in ("train", "holdout", "prediction"))
+    # Scaler and logistic regression are fitted on training rows only; holdout labels never reach the fit.
     model = Pipeline([("scaler", StandardScaler()), ("logistic", LogisticRegression(**MODEL_SETTINGS))])
     try:
         with warnings.catch_warnings():
+            # Nonconvergence becomes an error, so an unconverged model is never published.
             warnings.simplefilter("error", ConvergenceWarning)
             model.fit(train["x"], train["y"])
     except ConvergenceWarning:
         raise BaselineError("Logistic regression did not converge; no outputs published. Investigate before retrying.") from None
+    # Score the untouched 2025 holdout and a constant baseline (always the training home-win rate).
     holdout_p = home_probabilities(model, holdout["x"])
     prediction_p = home_probabilities(model, prediction["x"])
     rate = float(train["y"].mean())
     model_scores, calibration = evaluate_probabilities(holdout["y"], holdout_p)
     constant_scores, constant_calibration = evaluate_probabilities(holdout["y"], np.full(len(holdout_p), rate))
+    # Round-trip the serialized model and require identical predictions before publishing anything.
     buffer = io.BytesIO()
     joblib.dump(model, buffer, compress=3, protocol=5)
     model_bytes = buffer.getvalue()
@@ -275,6 +328,7 @@ def train_baseline(dataset_dir, output_dir, *, allow_retrospective_demo=False):
         "sample_predictions.csv": prediction_csv(prediction["rows"], prediction_p, "saved_2026_sample_not_live"),
         "exclusions.json": data["artifacts"]["exclusions.json"],
     }
+    # Metadata records artifact hashes, settings, and library versions that load_trusted_model checks.
     metadata = {
         "model_schema_version": 1, **STATUS, "dataset_id": data["report"]["dataset_id"],
         "dataset_report_sha256": data["report_sha256"], "dataset_artifact_sha256": data["report"]["artifact_sha256"],
@@ -299,7 +353,24 @@ def train_baseline(dataset_dir, output_dir, *, allow_retrospective_demo=False):
 
 
 def load_trusted_model(directory, *, allow_retrospective_demo=False):
-    """Load only a trusted locally generated run; joblib can execute code."""
+    """Reload a trusted, locally generated model after verifying its saved artifacts.
+
+    Checks the metadata's demo flags, schema, predictor and class order, and library versions, then
+    every artifact's SHA-256, before deserializing model.joblib. The restored pipeline must match the
+    recorded structure and settings. Hashes detect changes but do not make an untrusted joblib file
+    safe: joblib can execute code, so load only model directories this project created.
+
+    Args:
+        directory: Model directory written by ``train_baseline``.
+        allow_retrospective_demo: Must be True to acknowledge unverified historical availability.
+
+    Returns:
+        ``(model, metadata)``: the restored scikit-learn pipeline and its parsed metadata.
+
+    Raises:
+        BaselineError: If permission is missing, versions or hashes do not match, or the model fails
+            validation.
+    """
     require_demo(allow_retrospective_demo)
     directory = Path(directory)
     metadata = read_json(read_file(directory / "model_metadata.json"))
@@ -332,6 +403,7 @@ def load_trusted_model(directory, *, allow_retrospective_demo=False):
 
 
 def main(argv=None):
+    """Command-line entry point: train and evaluate the baseline from --dataset-dir into --output-dir."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dataset-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)

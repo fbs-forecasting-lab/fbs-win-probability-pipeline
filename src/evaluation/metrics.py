@@ -5,7 +5,21 @@ from sklearn.metrics import accuracy_score, brier_score_loss, log_loss
 
 
 def evaluate_probabilities(labels, probabilities):
-    """Score home-win probabilities; ties at 0.5 predict a home win."""
+    """Score home-win probabilities against binary outcomes; descriptive only, no calibration fitting.
+
+    Args:
+        labels: 1-D array of 0/1 outcomes (1 means the home team won).
+        probabilities: Matching 1-D array of home-win probabilities in [0, 1].
+
+    Returns:
+        ``(scores, calibration)``: Brier score, log loss, and accuracy (a probability of 0.5 or more
+        counts as a home-win prediction), plus ten fixed equal-width bins with counts, mean predicted
+        probability, and observed home-win rate (``None`` for empty bins).
+
+    Raises:
+        ValueError: If the arrays are empty, mismatched, or not 1-D, or contain non-binary labels or
+            probabilities outside [0, 1].
+    """
     y = np.asarray(labels)
     p = np.asarray(probabilities, dtype=float)
     if y.ndim != 1 or p.ndim != 1 or len(y) != len(p) or not len(y):

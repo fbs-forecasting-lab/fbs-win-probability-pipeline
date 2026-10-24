@@ -80,6 +80,7 @@ def say(text):
 
 
 def fallback_hint():
+    """Return the hint explaining how to continue with USE_EXISTING_DATASET_ID."""
     return ("To keep recording, set `USE_EXISTING_DATASET_ID` in Step 0 to a dataset already in S3, for example the "
             f"September 24 rehearsal dataset `{REHEARSAL_DATASET_ID}`, then choose **Kernel → Restart Kernel and "
             "Clear All Outputs** and run the cells again. Steps 1–5 are then skipped.")
@@ -135,9 +136,11 @@ def table_html(frame):
     header = "font-weight: 600; color: inherit; background: transparent; border-bottom: 1px solid currentColor;"
 
     def align(column):
+        """Right-align numeric columns and left-align text."""
         return "right" if numeric[column] else "left"
 
     def body_cell(column, value):
+        """Render one body cell; feature names are monospace and never wrap."""
         if column == "Feature":
             # Feature names read as variable names and never split mid-word.
             match = IDENTIFIER.match(str(value))
@@ -165,10 +168,12 @@ def show(frame):
 
 
 def fingerprint(value):
+    """Return the first eight characters of an ID or hash for display."""
     return str(value)[:8]
 
 
 def bucket_label(bucket, show_bucket_name):
+    """Return the bucket name, or a placeholder when it should not be shown."""
     return bucket if show_bucket_name else HIDDEN_BUCKET
 
 
@@ -206,10 +211,12 @@ def _status(value):
 
 
 def fetch_line(http_status, count, retrieved_at):
+    """One-line summary of the CFBD response: status, game count, and retrieval time in Eastern time."""
     return f"HTTP {http_status} — **{count} games** received at {et_time(retrieved_at)} ET"
 
 
 def games_table(records):
+    """Table of fetched games (home, away, Eastern kickoff), sorted by kickoff."""
     rows = sorted(records, key=lambda row: (_parse(row["startDate"]), row["homeTeam"]))
     return pd.DataFrame({"Home": [row["homeTeam"] for row in rows], "Away": [row["awayTeam"] for row in rows],
                          "Kickoff (ET)": [et_time(row["startDate"], tbd=row.get("startTimeTBD") is True)
@@ -228,6 +235,7 @@ def raw_upload_table(objects, sizes, show_bucket_name):
 
 
 def cleaning_counts(counts):
+    """One-row table of normalization counts: received, kept, excluded, and set aside."""
     return pd.DataFrame([{"Received": counts["input"], "Kept FBS vs FBS": counts["retained"],
                           "Excluded FBS vs FCS": counts["excluded"],
                           "Set aside: kickoff time TBD": counts["quarantined"]}])
@@ -242,6 +250,7 @@ def _plain_reason(reason):
 
 
 def set_aside_table(exclusions, records):
+    """Table of excluded and quarantined games by team name, with a plain-English reason."""
     rows = []
     for status, items in (("Excluded", exclusions["excluded"]), ("Set aside", exclusions["quarantined"])):
         for item in items:
@@ -252,6 +261,7 @@ def set_aside_table(exclusions, records):
 
 
 def feature_table():
+    """Table explaining the three model features in plain English."""
     return pd.DataFrame([
         {"Feature": "prior_win_pct_diff",
          "Plain-English meaning": "Home team's win % last season minus the away team's win % last season",
@@ -279,6 +289,7 @@ def example_matchup(row):
 
 
 def split_table(report, week):
+    """Table of the train/test/predict splits with seasons and game counts from a dataset report."""
     splits = report["splits"]
     seasons = {"train": "2022–2024", "holdout": "2025", "prediction": f"2026 Week {week}"}
     labels = {"train": "Train (the model learns from these)", "holdout": "Test (checks the model on unseen games)",
@@ -288,6 +299,7 @@ def split_table(report, week):
 
 
 def dataset_upload_table(objects, show_bucket_name):
+    """Table of uploaded dataset files with their shortened S3 folder and upload status."""
     return pd.DataFrame([{"File": uri.rsplit("/", 1)[1], "S3 folder": _s3_folder(uri, show_bucket_name),
                           "Status": _status(status)} for uri, status in objects.items()])
 
@@ -303,6 +315,7 @@ def history_table(manifest_paths):
 
 
 def download_table(download):
+    """Table confirming the six dataset files were downloaded and verified; call only after a download."""
     names = [*sorted(DATA_FILES), "dataset_report.json"]
     if download["verified_files"] != len(names):
         raise s3_demo.DemoError("Downloaded file count does not match the six dataset files.")
@@ -311,12 +324,14 @@ def download_table(download):
 
 
 def training_counts(metadata):
+    """Two lines stating how many games the model trained and was tested on, and from which seasons."""
     counts, train, holdout = metadata["counts"], metadata["training_seasons"], metadata["holdout_seasons"]
     return (f"Trained on **{counts['train']:,} games** from the {train[0]}–{train[-1]} seasons.\n"
             f"Tested on **{counts['holdout']:,} games** from the {holdout[0]} season (never used for training).")
 
 
 def metrics_table(evaluation):
+    """Side-by-side holdout metrics for the model and the constant baseline, with a "Better?" column."""
     model, baseline = evaluation["model"], evaluation["constant_baseline"]
     rows = []
     for key, label, lower_better in (("brier_score", "Brier score (lower is better)", True),
@@ -332,6 +347,7 @@ def metrics_table(evaluation):
 
 
 def predictions_table(rows):
+    """Table of predicted games sorted by kickoff, with home/away win % and the favored team."""
     rows = sorted(rows, key=lambda row: (_parse(row["cutoff"]), row["game_id"]))
     output = []
     for row in rows:
