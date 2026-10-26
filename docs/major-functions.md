@@ -1,5 +1,9 @@
 # Major-function guide
 
+For a first pass through the model and its call sequence, start with the
+[code-reading guide](code-reading-guide.md), then use this page for detailed
+inputs, outputs, and failure conditions.
+
 These are implemented names, not proposed services. Paths are relative to the
 repository root. CLI entry points expose `main(argv=None)` and return nonzero on
 failure. See the [architecture](architecture.md) for the full flow.

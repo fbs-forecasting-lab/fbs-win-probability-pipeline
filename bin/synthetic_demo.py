@@ -110,14 +110,18 @@ def run(run_dir, *, allow_retrospective_demo=False, root=ROOT):
         raise ValueError("Run directory already exists; choose a new name. Nothing was overwritten.")
     path.mkdir(parents=True, exist_ok=False)
     write_new(path / "SYNTHETIC.txt", (NOTICE + "\n").encode())
+    # Prepare fictional raw snapshots, then use the same normalizer as the CFBD workflow.
     manifests = []
     for year in dataset.SEASONS:
         manifest = make_snapshot(year, path / "raw" / f"season={year}")
         games.normalize_snapshot(manifest, path / "normalized")
         manifests.append(manifest)
+    # Build the chronological splits: 2021 supplies history; it is not a training target season.
     report = dataset.build_dataset(manifests, path / "dataset", normalized_root=path / "normalized",
                                    allow_retrospective_demo=True)
+    # Fit on training rows and evaluate on holdout rows inside the production baseline function.
     metadata, evaluation = train_baseline(path / "dataset", path / "model", allow_retrospective_demo=True)
+    # Reload the saved model for both a batch and one hypothetical matchup, exercising inference too.
     prediction = predict_saved_sample(path / "model", path / "dataset", path / "predictions",
                                       allow_retrospective_demo=True)
     model, _ = load_trusted_model(path / "model", allow_retrospective_demo=True)

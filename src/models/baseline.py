@@ -143,6 +143,7 @@ def load_dataset(directory, *, allow_retrospective_demo=False):
     """
     require_demo(allow_retrospective_demo)
     directory = Path(directory)
+    # First verify the declared schema and file bytes, before trusting any training rows.
     report_bytes = read_file(directory / "dataset_report.json")
     report = read_json(report_bytes)
     check_status(report)
@@ -170,6 +171,7 @@ def load_dataset(directory, *, allow_retrospective_demo=False):
             availability = source["source_availability"]
             if availability["status"] == "unknown" and availability["available_at"] is not None:
                 raise BaselineError("Unknown source availability must have no invented timestamp.")
+        # Reports and exclusions must describe the same sources and dataset, not mixed runs.
         exclusions = read_json(artifacts["exclusions.json"])
         check_status(exclusions)
         if exclusions["dataset_id"] != report["dataset_id"] or exclusions["sources"] != report["sources"]:
@@ -180,6 +182,7 @@ def load_dataset(directory, *, allow_retrospective_demo=False):
         aggregates = read_csv(artifacts["team_season_aggregates.csv"], dataset.AGGREGATE_COLUMNS)
         if type(report["aggregate_row_count"]) is not int or len(aggregates) != report["aggregate_row_count"]:
             raise BaselineError("Aggregate row count differs from report.")
+        # One shared set detects duplicate game IDs both within a split and across splits.
         splits, seen = {}, set()
         if set(report["splits"]) != set(dataset.SPLIT_SEASONS):
             raise BaselineError("Unexpected dataset splits.")
@@ -216,6 +219,8 @@ def load_dataset(directory, *, allow_retrospective_demo=False):
                         raise BaselineError("Unknown availability must remain null.")
                 if not all(row[k] for k in ("home_id", "home_team", "away_id", "away_team", "cutoff")):
                     raise BaselineError("Missing game identity metadata.")
+            # X contains only the three documented predictor columns, never scores or audit fields.
+            # Schema membership does not establish historical availability or forecasting approval.
             x = feature_frame(rows)
             y = None
             if split != "prediction":
@@ -242,6 +247,7 @@ def home_probabilities(model, frame):
     if (p.shape != (len(frame), 2) or not np.isfinite(p).all() or ((p < 0) | (p > 1)).any()
             or not np.allclose(p.sum(axis=1), 1, rtol=0, atol=1e-12)):
         raise BaselineError("Model emitted invalid probabilities.")
+    # The label 1 means a home win; locate its column rather than assuming class-array order.
     return p[:, classes.index(1)]
 
 

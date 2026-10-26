@@ -83,6 +83,11 @@ def _csv(rows: list[dict], columns: tuple) -> bytes:
 
 
 def _load_inputs(manifest_paths: list[Path | str], normalized_root: Path) -> dict[int, SeasonInput]:
+    """Verify one complete source per required season and recover typed normalized rows.
+
+    Existing normalized bytes are checked against the raw snapshot before CSV strings are
+    converted back to numbers and booleans. This step verifies inputs; it does not build features.
+    """
     selected = {}
     for manifest_path in manifest_paths:
         path = Path(manifest_path)
@@ -150,6 +155,12 @@ def _source_audit(source: dict) -> dict:
 
 
 def _aggregate(inputs: dict[int, SeasonInput]) -> tuple[dict, dict]:
+    """Summarize completed games by (season, team ID), with provenance and usage counts.
+
+    Each game contributes once to each team's own perspective: a positive margin for one team
+    is negative for its opponent. These season summaries become Y-1 inputs to season Y targets.
+    Scheduled-start ordering is retained for a chronology check, not proof of publication time.
+    """
     aggregates, usage = {}, {}
     for season in range(2021, 2026):
         source = inputs[season].source
@@ -158,6 +169,7 @@ def _aggregate(inputs: dict[int, SeasonInput]) -> tuple[dict, dict]:
         usage[str(season)] = {"normalized_games": len(rows), "completed_games_used": len(complete),
                               "incomplete_games_omitted": [row["id"] for row in rows if not row["completed"]]}
         for row in complete:
+            # Count both teams' results, including the away team's wins and scoring margins.
             for side, opponent in (("home", "away"), ("away", "home")):
                 key = (season, row[f"{side}_id"])
                 aggregate = aggregates.setdefault(key, {
@@ -198,6 +210,11 @@ def _target_audit(row: dict, source: dict, prior_source: dict) -> dict:
 
 
 def _publish(directory: Path, artifacts: dict[str, bytes]) -> None:
+    """Publish individual artifacts without replacing conflicting files.
+
+    Byte-identical existing files allow a partial run to resume. Publication is per file, not a
+    transaction over the whole directory; callers put their completion report/metadata last.
+    """
     try:
         if directory.is_symlink():
             raise DatasetError("Dataset output directory must not be a symbolic link.")
@@ -258,6 +275,7 @@ def build_dataset(manifest_paths: list[Path | str], output_dir: Path | str, *,
         if isinstance(exc, DatasetError):
             raise
         raise DatasetError("Could not read verified inputs; check manifest and normalized artifacts.") from None
+    # Build team-season summaries once; every target below looks up exactly the previous season.
     aggregates, aggregate_usage = _aggregate(inputs)
     exclusions, splits, split_reports = [], {}, {}
     for split, seasons in SPLIT_SEASONS.items():
@@ -270,6 +288,7 @@ def build_dataset(manifest_paths: list[Path | str], output_dir: Path | str, *,
                 audit.update(home_prior_game_count=home["completed_game_count"] if home else 0,
                              away_prior_game_count=away["completed_game_count"] if away else 0)
                 reasons = []
+                # Training/evaluation need outcomes; saved prediction rows must have no outcome.
                 if split != "prediction" and not target["completed"]:
                     reasons.append("target_uncompleted")
                 if split == "prediction" and target["completed"]:
@@ -282,6 +301,7 @@ def build_dataset(manifest_paths: list[Path | str], output_dir: Path | str, *,
                 if reasons:
                     rejected.append(audit | {"split": split, "reasons": reasons})
                     continue
+                # Keep predictors separate from provenance and target-game outcome fields.
                 features = {
                     "prior_win_pct_diff": home["prior_win_pct"] - away["prior_win_pct"],
                     "prior_avg_margin_diff": home["prior_avg_margin"] - away["prior_avg_margin"],
@@ -289,6 +309,7 @@ def build_dataset(manifest_paths: list[Path | str], output_dir: Path | str, *,
                 }
                 result = audit | features
                 if split != "prediction":
+                    # Scores create the label only; baseline.feature_frame selects just the predictors.
                     result["home_win"] = int(target["home_points"] > target["away_points"])
                 rows.append(result)
         rows.sort(key=lambda row: (row["season"], datetime.fromisoformat(row["cutoff"]), row["game_id"]))
