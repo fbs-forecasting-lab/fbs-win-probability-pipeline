@@ -149,4 +149,4 @@ restricted course/reference material, or dependencies, which retain their own
 terms. Obtain data through authorized access; do not redistribute CFBD data.
 The offline example generates fictional data locally.
 
-Contact: **Hampton Abbott**, [securehabits@proton.me](mailto:securehabits@proton.me).
+Contact: **Hampton Abbott**, [habbott1@charlotte.edu](mailto:habbott1@charlotte.edu).
