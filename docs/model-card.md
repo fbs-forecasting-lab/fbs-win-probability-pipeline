@@ -1,5 +1,22 @@
 # Retrospective Demo Logistic Baseline
 
+## PM-06 monitoring candidate (not deployed)
+
+The new private monitoring adapter verifies this protected model's producer,
+runtime and artifact hashes without deserializing or scoring it. It compares
+weekly features with the exact original training CSV and reuses existing
+probability metrics only when explicit later outcomes meet chronological-window,
+identity and coverage checks. Holdout results below remain retrospective reference
+evaluation, not newly measured rolling performance. No outcomes are selected in
+the proposed smoke, so rolling performance remains pending. Distribution changes
+request investigation, not automatic retraining or model replacement. Human
+review records confer no forecast approval; historical availability stays unknown
+and every unapproved flag remains false. See the
+[monitoring contract](monitoring-contract.md) and
+[verification summary](cloud-monitoring-verification.md) for local evidence and
+unverified cloud behavior. Existing model settings and predecessor sources are
+unchanged.
+
 ## PM-04 cloud execution path (AWS verified November 20, 2026)
 
 The private training/inference adapters reuse this exact scaler, model,

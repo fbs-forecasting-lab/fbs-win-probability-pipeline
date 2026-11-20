@@ -71,8 +71,9 @@ conflict rejection, and one CFBD attempt across three invocations. See the
 [sanitized verification summary](cloud-ingestion-verification.md). No automatic schedule exists. S3 remains the existing private data
 store, and the existing local notebook/CLIs remain retrospective demonstrations.
 The notebook's graded cloud path will need to initiate cloud operations rather
-than perform their data processing itself. Operational approval, alerts and
-monitoring remain unfinished; cloud modeling is
+than perform their data processing itself. Operational approval and deployed
+monitoring remain unfinished; the PM-06 monitoring candidate is described below.
+Cloud modeling is
 separately verified in PM-04C below. This ingestion adapter alone
 does not complete the serverless lifecycle.
 
@@ -162,6 +163,32 @@ Every dataset/model remains retrospective and unapproved for point-in-time
 forecasting. API keys stay outside Git; joblib files must come from trusted
 sources. MIT covers original code, not third-party data or restricted material.
 
-In-season features, The Odds API benchmarking, weather inputs, drift monitoring,
-and serverless automation remain future work. See the
+## Prepared private monitoring (PM-06; not deployed)
+
+The monitoring adapter verifies an explicit weekly summary, protected model and
+training reference. It measures quality and feature distributions, and joins
+predictions to explicitly selected later outcomes in an evaluation-only branch.
+It reuses existing normalization/provenance and probabilistic metrics; it neither
+fits nor reloads/executes the model. Immutable private reports, content-derived
+alerts and a separate allowlisted stakeholder draft retain source hashes,
+thresholds, sample sizes and pending/insufficient/failed states.
+
+A separate review function appends acknowledgment, investigation and disposition
+records bound to an exact alert and prior transition hash. Private IAM invocation
+attests the configured human identity; this is not independent human login or
+permission to retrain/publish. Report/review roles write only isolated monitoring
+domains and cannot invoke predecessors. Existing retrospective flags persist.
+
+The fourteen-resource candidate includes two functions/roles/log groups/async
+configs, a disabled failure-event rule and permission, and four alarms with no
+actions. Execution-history inspection detects application failure objects even
+when Lambda succeeded. Expected withheld processing stays distinct from failure.
+Automatic rule activation, notifications and public hosting are excluded.
+Offline tests and read-only template/IAM validation have passed; new-handler AWS
+Linux execution, deployed replay and later-outcome performance remain unverified.
+See the [contract](monitoring-contract.md), [runbook](cloud-monitoring-runbook.md)
+and [verification summary](cloud-monitoring-verification.md).
+
+In-season features, The Odds API benchmarking, weather inputs, operational
+monitoring/approval and further automation remain future work. See the
 [major-function guide](major-functions.md) for contracts and failure conditions.

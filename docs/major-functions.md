@@ -1,7 +1,8 @@
 # Major-function guide
 
 PM-03 cloud preparation was deployed and verified in recovery-only mode on
-November 20, 2026. Cloud training/inference and operational approval remain unfinished:
+November 20, 2026. Cloud modeling and weekly scoring were separately verified
+below; operational approval remains unfinished:
 
 | Function | Inputs → outputs | Validation/failure boundary |
 | --- | --- | --- |
@@ -51,6 +52,25 @@ bounded cloud results, scoped listing recovery and remaining withheld approval.
 For a first pass through the model and its call sequence, start with the
 [code-reading guide](code-reading-guide.md), then use this page for detailed
 inputs, outputs, and failure conditions.
+
+## Private monitoring and human review (PM-06; prepared, not deployed)
+
+| Function | Inputs → outputs | Validation/failure boundary |
+| --- | --- | --- |
+| `monitor_contract.validate_report` / `validate_review` | Explicit versioned references, windows or review transition → canonical request | Fixed fields, hashes, observation chronology, retrospective consent, human identity attestation and simulation marker |
+| `cloud_monitoring.inputs` / `model_evidence` / `later_outcomes` | Explicit weekly/model/later-capture references → verified features, predictions, training reference and separate outcomes | Full producer/artifact provenance, runtime identity and source timing; no model deserialization or automatic data request |
+| `monitoring_metrics.quality` / `distributions` / `performance` | Verified counts/features and predictions/later labels → quality, distribution indicators and windowed metrics | Invalid values, constant/small/empty features, game/team/kickoff identity and 30-label/80% coverage gate; existing probabilistic metrics reused |
+| `cloud_monitoring.report_run` / `handler` | Explicit report → immutable private report, allowlisted draft and completion | Request/policy/code claim, conditional writes, checked replay; sanitized failure with durable alert attempt and Lambda exception |
+| `cloud_monitoring.execution_run` | Approved existing execution ARN → failure evidence/alerts | Reads actual history, including successful Lambda tasks returning failure objects; no workflow start; withheld is not failed |
+| `monitor_storage.alert` / `publish` / `completion` | Evidence/artifact bytes → hash-verified immutable alert/report | Exact-key optional probes, conditional publication and readback; conflicting bytes and damaged completed bundles fail |
+| `cloud_review.review_run` / `handler` | Exact alert/previous review hashes plus human-attested action → next numbered review | Acknowledge → investigate → close; monotonic time, explicit disposition, simulation isolation, safe replay; no approval or retraining action |
+| `monitoring_view.stakeholder` / `render` | Private report → sanitized JSON/HTML draft | Strict public-field allowlist and escaping; omits raw/private identities; no publication |
+
+See the [monitoring contract](monitoring-contract.md),
+[runbook](cloud-monitoring-runbook.md) and
+[verification summary](cloud-monitoring-verification.md). These handlers have
+offline/read-only validation only. Missing labels remain pending; retrospective
+holdout evaluation and later outcome windows are distinct.
 
 These are implemented names, not proposed services. Paths are relative to the
 repository root. CLI entry points expose `main(argv=None)` and return nonzero on

@@ -41,6 +41,16 @@ features rather than silently invent timestamps or claim leakage-safe training.
 
 ## Normalization Controls
 
+PM-06's [monitoring contract](monitoring-contract.md) keeps later outcome captures
+in an evaluation-only branch. It requires explicit source/capture hashes, a later
+observation than the scoring snapshot and forecast cutoff, and an as-of bound.
+Game/team/season/week/kickoff identities must match; revised schedules are not
+silently relabeled. Outcomes never enter feature construction. Missing labels
+remain pending, and rolling windows require sufficient coverage before metrics.
+Neither distribution indicators, measured outcomes nor a human acknowledgment
+change historical-availability or approval flags, or authorize retraining.
+The monitor is prepared but not deployed; no prospective performance is verified.
+
 - Select source manifests explicitly. Verify versions, raw hash, row count,
   and recomputed coverage before processing. Never automatically choose the
   newest snapshot for a historical prediction.

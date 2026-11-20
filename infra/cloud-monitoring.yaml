@@ -1,0 +1,667 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Private monitoring/review with immutable alerts, disabled event rule, and non-delivering alarms. No pipeline or model mutation.",
+  "Parameters": {
+    "ProjectBucket": {
+      "Type": "String"
+    },
+    "ProjectPrefix": {
+      "Type": "String",
+      "Default": "initial-demo"
+    },
+    "CodeBucket": {
+      "Type": "String"
+    },
+    "CodeKey": {
+      "Type": "String"
+    },
+    "ModelId": {
+      "Type": "String",
+      "AllowedPattern": "[0-9a-f]{64}"
+    },
+    "TrainingTokenSha256": {
+      "Type": "String",
+      "AllowedPattern": "[0-9a-f]{64}"
+    },
+    "ApprovedModelReference": {
+      "Type": "String"
+    },
+    "ApprovedReviewer": {
+      "Type": "String",
+      "Default": "Hampton Abbott"
+    },
+    "WeeklyStateMachineArn": {
+      "Type": "String"
+    },
+    "AllowAlertSimulation": {
+      "Type": "String",
+      "Default": "false",
+      "AllowedValues": [
+        "false",
+        "true"
+      ]
+    }
+  },
+  "Resources": {
+    "MonitorLogs": {
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/fbs-pipeline-monitoring",
+        "RetentionInDays": 14
+      }
+    },
+    "MonitorRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "fbs-pipeline-monitoring-execution",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "ScopedMonitoring",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetBucketPublicAccessBlock"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/weekly/runs/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-ingestion/runs/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/monitoring/runs/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/monitoring/alerts/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/monitoring/executions/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-modeling/models/${ModelId}/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-modeling/training/${TrainingTokenSha256}/claim.json"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-modeling/training/${TrainingTokenSha256}/complete.json"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/raw/cfbd/games/season=2021/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/raw/cfbd/games/season=2022/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/raw/cfbd/games/season=2023/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/raw/cfbd/games/season=2024/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/raw/cfbd/games/season=2025/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/raw/cfbd/games/season=2026/*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:ListBucket"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}"
+                  },
+                  "Condition": {
+                    "StringLike": {
+                      "s3:prefix": [
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/monitoring/runs/*"
+                        },
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/monitoring/executions/*"
+                        },
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/monitoring/alerts/*"
+                        },
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/weekly/runs/*"
+                        },
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/raw/cfbd/games/season=2026/*"
+                        }
+                      ]
+                    },
+                    "NumericLessThanEquals": {
+                      "s3:max-keys": "1"
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:PutObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/monitoring/runs/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/monitoring/executions/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/monitoring/alerts/*/alert.json"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Deny",
+                  "Action": [
+                    "s3:PutObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/monitoring/runs/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/monitoring/executions/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/monitoring/alerts/*/alert.json"
+                    }
+                  ],
+                  "Condition": {
+                    "StringNotEquals": {
+                      "s3:if-none-match": "*"
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "states:DescribeExecution",
+                    "states:GetExecutionHistory"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:states:${AWS::Region}:${AWS::AccountId}:execution:fbs-weekly-pipeline:*"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/fbs-pipeline-monitoring:*"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "Monitor": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "MonitorLogs"
+      ],
+      "Properties": {
+        "FunctionName": "fbs-pipeline-monitoring",
+        "Runtime": "python3.14",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "src.pipeline.cloud_monitoring.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "MonitorRole",
+            "Arn"
+          ]
+        },
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucket"
+          },
+          "S3Key": {
+            "Ref": "CodeKey"
+          }
+        },
+        "MemorySize": 1536,
+        "Timeout": 180,
+        "ReservedConcurrentExecutions": 1,
+        "EphemeralStorage": {
+          "Size": 512
+        },
+        "RuntimeManagementConfig": {
+          "UpdateRuntimeOn": "FunctionUpdate"
+        },
+        "Environment": {
+          "Variables": {
+            "FBS_S3_BUCKET": {
+              "Ref": "ProjectBucket"
+            },
+            "FBS_S3_PREFIX": {
+              "Ref": "ProjectPrefix"
+            },
+            "WEEKLY_STATE_MACHINE_ARN": {
+              "Ref": "WeeklyStateMachineArn"
+            },
+            "APPROVED_MODEL_REFERENCE": {
+              "Ref": "ApprovedModelReference"
+            },
+            "ALLOW_SYNTHETIC_MONITORING": "false",
+            "OPENBLAS_NUM_THREADS": "1",
+            "OMP_NUM_THREADS": "1",
+            "ALLOW_ALERT_SIMULATION": {
+              "Ref": "AllowAlertSimulation"
+            }
+          }
+        }
+      }
+    },
+    "MonitorAsync": {
+      "Type": "AWS::Lambda::EventInvokeConfig",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "Monitor"
+        },
+        "Qualifier": "$LATEST",
+        "MaximumRetryAttempts": 0,
+        "MaximumEventAgeInSeconds": 60
+      }
+    },
+    "ReviewLogs": {
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/fbs-monitoring-review",
+        "RetentionInDays": 14
+      }
+    },
+    "ReviewRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "fbs-monitoring-review-execution",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "ScopedMonitoring",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetBucketPublicAccessBlock"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/monitoring/alerts/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/monitoring/review-tokens/*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:ListBucket"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}"
+                  },
+                  "Condition": {
+                    "StringLike": {
+                      "s3:prefix": [
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/monitoring/alerts/*/reviews/*"
+                        },
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/monitoring/review-tokens/*"
+                        }
+                      ]
+                    },
+                    "NumericLessThanEquals": {
+                      "s3:max-keys": "1"
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:PutObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/monitoring/alerts/*/reviews/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/monitoring/review-tokens/*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Deny",
+                  "Action": [
+                    "s3:PutObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/monitoring/alerts/*/reviews/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/monitoring/review-tokens/*"
+                    }
+                  ],
+                  "Condition": {
+                    "StringNotEquals": {
+                      "s3:if-none-match": "*"
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/fbs-monitoring-review:*"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "Review": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "ReviewLogs"
+      ],
+      "Properties": {
+        "FunctionName": "fbs-monitoring-review",
+        "Runtime": "python3.14",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "src.pipeline.cloud_review.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "ReviewRole",
+            "Arn"
+          ]
+        },
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucket"
+          },
+          "S3Key": {
+            "Ref": "CodeKey"
+          }
+        },
+        "MemorySize": 512,
+        "Timeout": 60,
+        "ReservedConcurrentExecutions": 1,
+        "EphemeralStorage": {
+          "Size": 512
+        },
+        "RuntimeManagementConfig": {
+          "UpdateRuntimeOn": "FunctionUpdate"
+        },
+        "Environment": {
+          "Variables": {
+            "FBS_S3_BUCKET": {
+              "Ref": "ProjectBucket"
+            },
+            "FBS_S3_PREFIX": {
+              "Ref": "ProjectPrefix"
+            },
+            "APPROVED_REVIEWER": {
+              "Ref": "ApprovedReviewer"
+            }
+          }
+        }
+      }
+    },
+    "ReviewAsync": {
+      "Type": "AWS::Lambda::EventInvokeConfig",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "Review"
+        },
+        "Qualifier": "$LATEST",
+        "MaximumRetryAttempts": 0,
+        "MaximumEventAgeInSeconds": 60
+      }
+    },
+    "FailureRule": {
+      "Type": "AWS::Events::Rule",
+      "Properties": {
+        "Name": "fbs-monitoring-workflow-failures",
+        "State": "DISABLED",
+        "Description": "Prepared failure detection; enable only after separately approved verification. No delivery subscriptions.",
+        "EventPattern": {
+          "source": [
+            "aws.states"
+          ],
+          "detail-type": [
+            "Step Functions Execution Status Change"
+          ],
+          "detail": {
+            "stateMachineArn": [
+              {
+                "Ref": "WeeklyStateMachineArn"
+              }
+            ],
+            "status": [
+              "FAILED",
+              "TIMED_OUT",
+              "ABORTED"
+            ]
+          }
+        },
+        "Targets": [
+          {
+            "Id": "Monitor",
+            "Arn": {
+              "Fn::GetAtt": [
+                "Monitor",
+                "Arn"
+              ]
+            },
+            "RetryPolicy": {
+              "MaximumRetryAttempts": 0,
+              "MaximumEventAgeInSeconds": 60
+            }
+          }
+        ]
+      }
+    },
+    "FailurePermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "Monitor"
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "events.amazonaws.com",
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "FailureRule",
+            "Arn"
+          ]
+        },
+        "SourceAccount": {
+          "Ref": "AWS::AccountId"
+        }
+      }
+    },
+    "FailedAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmName": "fbs-weekly-execution-failures",
+        "AlarmDescription": "Investigation only; no automatic retraining, invocation or notification delivery.",
+        "Namespace": "AWS/States",
+        "MetricName": "ExecutionsFailed",
+        "Dimensions": [
+          {
+            "Name": "StateMachineArn",
+            "Value": {
+              "Ref": "WeeklyStateMachineArn"
+            }
+          }
+        ],
+        "Statistic": "Sum",
+        "Period": 60,
+        "EvaluationPeriods": 1,
+        "DatapointsToAlarm": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "ActionsEnabled": false,
+        "AlarmActions": [],
+        "OKActions": [],
+        "InsufficientDataActions": []
+      }
+    },
+    "TimeoutAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmName": "fbs-weekly-execution-timeouts",
+        "AlarmDescription": "Investigation only; no automatic retraining, invocation or notification delivery.",
+        "Namespace": "AWS/States",
+        "MetricName": "ExecutionsTimedOut",
+        "Dimensions": [
+          {
+            "Name": "StateMachineArn",
+            "Value": {
+              "Ref": "WeeklyStateMachineArn"
+            }
+          }
+        ],
+        "Statistic": "Sum",
+        "Period": 60,
+        "EvaluationPeriods": 1,
+        "DatapointsToAlarm": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "ActionsEnabled": false,
+        "AlarmActions": [],
+        "OKActions": [],
+        "InsufficientDataActions": []
+      }
+    },
+    "MonitorErrorsAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmName": "fbs-monitoring-errors",
+        "AlarmDescription": "Investigation only; no automatic retraining, invocation or notification delivery.",
+        "Namespace": "AWS/Lambda",
+        "MetricName": "Errors",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "Monitor"
+            }
+          }
+        ],
+        "Statistic": "Sum",
+        "Period": 60,
+        "EvaluationPeriods": 1,
+        "DatapointsToAlarm": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "ActionsEnabled": false,
+        "AlarmActions": [],
+        "OKActions": [],
+        "InsufficientDataActions": []
+      }
+    },
+    "ReviewErrorsAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmName": "fbs-monitoring-review-errors",
+        "AlarmDescription": "Investigation only; no automatic retraining, invocation or notification delivery.",
+        "Namespace": "AWS/Lambda",
+        "MetricName": "Errors",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "Review"
+            }
+          }
+        ],
+        "Statistic": "Sum",
+        "Period": 60,
+        "EvaluationPeriods": 1,
+        "DatapointsToAlarm": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "ActionsEnabled": false,
+        "AlarmActions": [],
+        "OKActions": [],
+        "InsufficientDataActions": []
+      }
+    }
+  }
+}
