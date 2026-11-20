@@ -1,6 +1,6 @@
 # Weekly cloud orchestration runbook (PM-05)
 
-**Local implementation and validation only; no PM-05 workload is deployed.**
+**Deployed and verified in AWS on November 20, 2026; operational publication withheld.**
 Read the [request/evidence contract](weekly-cloud-contract.md) and
 [verification summary](weekly-cloud-verification.md) before deployment review.
 
@@ -19,7 +19,7 @@ not a generalized future-season forecast system. Historical availability remains
 unknown. Technical eligibility and operational publication approval are separate;
 all completed runs currently end withheld/unapproved, including zero-row runs.
 
-## Proposed resources and permissions
+## Deployed resources and permissions
 
 Region us-east-1; stack `fbs-weekly-pipeline`; eight new resources:
 
@@ -44,7 +44,9 @@ explicit protected model/claim/completion and original approved dataset/preparat
 Only `initial-demo/weekly/runs/` permits worker writes, with conditional creation.
 Only the existing ingestion function can be invoked. No secret access, model/data
 overwrite, deletion, bucket-setting mutation, Athena query or training permission
-is added. Prefix-conditioned list probes use MaxKeys=1; 403 stays fatal.
+is added. Prefix-conditioned list probes cover weekly/ingestion ledgers and the
+already readable raw season prefixes 2021–2026 with MaxKeys=1. Other prefixes,
+other buckets and larger listings remain denied; 403 stays fatal.
 
 The recurring schedule is Tuesday 12:00 UTC with a fixed explicit request and
 execution name, not a moving week/latest lookup. Its universal StartExecution
@@ -69,22 +71,26 @@ The packager reuses the modeling packager's exact dependency/native checks and
 source allowlist approach. Output must be a new ignored directory. It excludes
 only dependency tests/bytecode/command entry points, keeps runtime libraries and
 licenses, and enforces Lambda's 250 MiB uncompressed limit. Actual new worker
-Linux imports, durations and end-to-end behavior still need the approved cloud
-smoke; previous PM-04 execution is not proof for this new workflow.
+Linux imports, durations and end-to-end behavior subsequently passed the bounded
+PM-05C smoke; previous PM-04 execution alone was not proof for this workflow.
 
-## Concrete proposal (awaiting approval)
+## Approved deployment and recovery records
 
-The final ignored proposal and approval hashes are in
-`data/processed/pm05-readiness-20261120-final/`. Exact account/bucket/profile,
+The original ignored proposal and approval hashes remain in
+`data/processed/pm05-readiness-20261120-final/`. Corrected hashes, preserved prior
+template, call trace and IAM simulations are in
+`data/processed/pm05c-recovery-20261120/`. Exact account/bucket/profile,
 parameters, reviewed artifact location and six smoke events are private there.
 Artifact key: `initial-demo/cloud-artifacts/cloud-weekly/<ZIP_SHA256>.zip` in
 `<FBS_S3_BUCKET>`. The schedule stays disabled. No existing resource/permission
-changes are proposed. Recompute proposal/template/ZIP/dependency/implementation
+changes were made beyond the approved worker raw-listing correction. For future
+approved work, recompute proposal/template/ZIP/dependency/implementation
 hashes and source equality before any approved write.
 
 Read-only service access and official coverage support Step Functions on the
 active Free plan; Scheduler metadata access also succeeded. No billing
-investigation was reopened. Resource creation and execution remain unverified.
+investigation was reopened. Resource creation and execution subsequently passed
+the bounded recovery verification below.
 Use existing credits/allowances only; stop if an upgrade is required. No Paid-plan
 activation, purchase, subscription or Organizations enrollment is authorized.
 Billable scope is bounded workflow transitions, Lambda runtime/requests, S3
@@ -114,7 +120,7 @@ aws stepfunctions start-execution --region us-east-1 \
   --input file://"$REVIEW/replay-event.json"
 ```
 
-### Proposed smoke scope
+### Original smoke scope (executed with scoped recovery)
 
 | Execution | Worker-call limit | Expected evidence |
 | --- | ---: | --- |
@@ -146,6 +152,45 @@ probabilities, code/runtime versions, invocation counts and source/object metada
 before/after replay. Verify no model-fit/query start and no duplicate capture.
 Record actual values, not historical metric substitutions. Keep private detailed
 evidence ignored and publish only a sanitized summary.
+
+## Observed recovery and execution
+
+PM-05B's first execution stopped during preparation after two worker calls, with
+no ingestion invocation or fetch. Raw-manifest optional reads required a listing
+probe absent from the initial policy. The execution and four prior run objects
+remain preserved. PM-05C added only the six readable raw season prefixes to the
+existing bucket/max-keys-one allowance, without changing object permissions,
+application ZIP, runtime, requests, tokens, model references, cutoff or schedule.
+Nineteen focused tests, 258 full offline tests, template checks and 94 exact-context
+IAM simulations passed. No additional permission mismatch was found.
+
+The semantic change-set guard accepts only the direct WeeklyRole.Policies change
+and the reviewed dependent Weekly.Role, WorkflowRole.Policies and
+Workflow.Definition/RoleArn reevaluations, all Modify/Replacement=False. It rejects
+additions, deletions, replacements, other direct changes and broader permissions.
+The saved change set was executed once. Physical identities, actual policy and
+six allowed raw probes were verified before restoring concurrency to one.
+
+Recovery resumed preparation with the original run token under a distinct
+execution name. The six recovery events used 3/1/1/1/4/4 worker calls: resume,
+completed replay, conflict, missing history, cutoff equality and fresh Week 13.
+That is six additional executions and 14 calls, or **seven executions and 16
+calls cumulatively**. Exactly one ingestion invocation and one CFBD HTTP attempt
+occurred; there were zero Athena queries and zero fits. No stage was refetched
+or retrained to force success.
+
+Resume and completed replay each produced 59 technical rows/predictions; cutoff
+equality produced zero/zero; fresh Week 13 produced 53/53. Processing completions
+were withheld with workflow_completed=true and 69 verified linked hashes.
+Conflict and missing history were expected failed executions. Original sources,
+protected datasets/models, predecessor configuration and bucket settings stayed
+unchanged. Completed replay preserved bytes/metadata without repeated external
+work. Fresh precheck and retrieval were 22:15:17.181688Z and 22:15:28.666663Z on
+November 20, before the unchanged 23:59 cutoff.
+
+The worker remains Active with concurrency one and the schedule DISABLED. See
+the [verification summary](weekly-cloud-verification.md) for all actual counts,
+exclusion reasons, runtime/memory and remaining operational limitations.
 
 ## Failure and recovery
 

@@ -1,6 +1,6 @@
 # Weekly cloud request and evidence contract (PM-05)
 
-**Implemented locally; deployment and end-to-end cloud verification are pending.**
+**AWS-verified November 20, 2026; operational publication remains withheld.**
 The [runbook](weekly-cloud-runbook.md) describes the concrete proposal and limits.
 
 ## Explicit version-one request
@@ -104,3 +104,10 @@ There is no Task retry policy. Failed stages stop the workflow; pending work at
 the bound remains incomplete and requires reviewed recovery. Local clients start
 the explicit execution and inspect progress; they do not perform preparation or
 prediction. Alerts may request investigation, never automatic retraining.
+
+The bounded PM-05C verification exercised distinct Week 13 scoring with the same
+model, immutable replay, both request refusals and a zero-row cutoff outcome.
+Recovery retained original requests/tokens and the failed execution; only the
+reviewed raw season listing allowance changed. See the
+[verification summary](weekly-cloud-verification.md). This does not activate the
+disabled schedule, approve later requests or establish operational eligibility.

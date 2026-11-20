@@ -162,7 +162,7 @@ train-only fitting and model reload without changing these safeguards; it made
 no new CFBD request or Athena query. See the
 [modeling runbook](cloud-modeling-runbook.md).
 
-## Weekly technical eligibility (PM-05; not deployed)
+## Weekly technical eligibility (PM-05C; AWS verified November 20, 2026)
 
 The weekly contract pins season/week, source versions, model, forecast cutoff and
 stable run identity. Source observations and any known publication times must
@@ -179,3 +179,10 @@ withholds operational publication even when rows are technically eligible. Weekl
 inference verifies the original model and unchanged training/holdout/aggregate
 hashes, with separate new scoring-input provenance and no fit. Alerts may request
 review, never automatic retraining. See the [weekly contract](weekly-cloud-contract.md).
+
+Cloud verification preserved these controls: the cutoff-equality event produced
+zero eligible rows and zero predictions, and the distinct Week 13 input produced
+53 retrospective predictions with the same protected model and no fit. All
+processing completions remained withheld/unapproved; no source publication time
+was invented. The schedule stays disabled. See the
+[dated verification](weekly-cloud-verification.md).

@@ -131,8 +131,8 @@ Ingestion and recovery-only preparation are unchanged. See the
 
 ## Boundaries and planned work
 
-PM-05 adds a [locally implemented weekly workflow](weekly-cloud-runbook.md), not
-yet deployed: Standard Step Functions owns bounded cloud stage progress, with a
+PM-05 adds an [AWS-verified weekly workflow](weekly-cloud-runbook.md) as of
+November 20, 2026: Standard Step Functions owns bounded cloud stage progress, with a
 new Lambda worker and a disabled fixed-request weekly schedule. Explicit capture/
 history/model/cutoff identities feed existing normalization and Python feature
 building, then trusted saved-model scoring without fitting. Original recovery-only
@@ -142,7 +142,15 @@ match the original model. Stage receipts and a verified summary preserve replay.
 Technical pre-kickoff selection never promotes operational approval: current runs
 finish withheld/unapproved. See the [contract](weekly-cloud-contract.md) for cutoff,
 revision, stale-input and failure boundaries. No query or automatic training is
-introduced, and the new end-to-end path still needs approved cloud verification.
+introduced. Scoped recovery preserved the original failed execution and added
+only raw season listing probes with max-keys one. All physical identities and
+predecessors were preserved. The bounded verification used seven executions and
+16 worker calls cumulatively, one ingestion invocation/CFBD attempt, zero queries
+and zero fits. Week 12 replay produced 59 retrospective predictions, cutoff
+equality produced zero, and fresh Week 13 produced 53. Completed replay preserved
+bytes/metadata without repeating external work. See the
+[verification summary](weekly-cloud-verification.md) for evidence and limits;
+operational publication remains withheld and the schedule remains disabled.
 
 The fixed 2026 Week 5 demonstration is historical as of October 2026. September
 rehearsal metrics describe saved bytes. A fresh pull can change completion or

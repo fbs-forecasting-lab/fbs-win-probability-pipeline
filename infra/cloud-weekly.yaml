@@ -152,6 +152,24 @@
                         },
                         {
                           "Fn::Sub": "${ProjectPrefix}/cloud-ingestion/runs/*"
+                        },
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/raw/cfbd/games/season=2021/*"
+                        },
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/raw/cfbd/games/season=2022/*"
+                        },
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/raw/cfbd/games/season=2023/*"
+                        },
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/raw/cfbd/games/season=2024/*"
+                        },
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/raw/cfbd/games/season=2025/*"
+                        },
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/raw/cfbd/games/season=2026/*"
                         }
                       ]
                     },

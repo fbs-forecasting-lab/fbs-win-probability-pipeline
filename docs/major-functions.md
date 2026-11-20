@@ -38,14 +38,15 @@ separately from synthetic/local tests. The deployment-only
 metadata, encryption, four access blocks and real policy status/absence; it is
 outside the Lambda package and never modifies settings.
 
-The locally implemented PM-05 weekly interface is documented in the
+The PM-05 weekly interface, AWS-verified on November 20, 2026, is documented in the
 [weekly contract](weekly-cloud-contract.md) and [runbook](weekly-cloud-runbook.md):
 `weekly_contract.validate`/`identity` bind explicit requests; `row_reasons` selects
 technical rows; `cloud_weekly.scoring_reference` guards ingestion ownership;
 `prepare_week` reuses normalization/building; `score_week` verifies/reloads the
 original model for distinct scoring input; `advance`/`handler` publish and verify
 durable stages. It does not change existing training, recovery or saved-sample
-functions. Cloud execution of this new workflow is pending approval.
+functions. The [verification summary](weekly-cloud-verification.md) records the
+bounded cloud results, scoped listing recovery and remaining withheld approval.
 
 For a first pass through the model and its call sequence, start with the
 [code-reading guide](code-reading-guide.md), then use this page for detailed
