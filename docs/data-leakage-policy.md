@@ -143,7 +143,7 @@ replay and cutoff refusal. That execution evidence does not establish historical
 availability or approve forecasts. New query creation is explicitly denied in
 the current recovery-only deployment.
 
-## Cloud modeling (PM-04; not yet deployed)
+## Cloud modeling (PM-04C; AWS verified November 20, 2026)
 
 The training adapter verifies the pinned preparation completion and all six
 dataset hashes before reusing the existing train-only scaler/logistic fit.
@@ -157,5 +157,7 @@ All results keep retrospective mode and false availability/predictor/forecasting
 approval. A valid cloud model or probability does not establish historical source
 availability or operational eligibility. The saved Week 12 split remains a saved
 snapshot; a hypothetical vector remains hypothetical. No later capture or source
-substitution is used to improve sample coverage. See the
+substitution is used to improve sample coverage. The bounded AWS run verified
+train-only fitting and model reload without changing these safeguards; it made
+no new CFBD request or Athena query. See the
 [modeling runbook](cloud-modeling-runbook.md).

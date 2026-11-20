@@ -18,7 +18,7 @@ scoped IAM, source coverage, verified recovery and its remaining limitations.
 Current deployment mode and IAM both block new query creation; subsequent weekly
 preparation requires deliberate reviewed reconfiguration, not another invocation.
 
-## Cloud modeling (PM-04; local checks passed, not deployed)
+## Cloud modeling (PM-04C; AWS verified November 20, 2026)
 
 | Function | Inputs → outputs | Validation/failure boundary |
 | --- | --- | --- |
@@ -31,8 +31,12 @@ preparation requires deliberate reviewed reconfiguration, not another invocation
 
 These adapters preserve the local functions below. See the
 [modeling runbook](cloud-modeling-runbook.md) for IAM, runtime/package evidence,
-replay/recovery and the proposed cloud smoke test. Real-data cloud model results
-are pending approval and are not inferred from synthetic tests.
+replay/recovery and the completed bounded cloud smoke test. The
+[verification summary](cloud-modeling-verification.md) records actual AWS results
+separately from synthetic/local tests. The deployment-only
+`deployment_preflight.inspect_private_bucket` helper checks owner-scoped bucket
+metadata, encryption, four access blocks and real policy status/absence; it is
+outside the Lambda package and never modifies settings.
 
 For a first pass through the model and its call sequence, start with the
 [code-reading guide](code-reading-guide.md), then use this page for detailed

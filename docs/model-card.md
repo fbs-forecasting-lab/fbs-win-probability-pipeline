@@ -1,22 +1,45 @@
 # Retrospective Demo Logistic Baseline
 
-## PM-04 cloud execution path (implemented; deployment pending)
+## PM-04 cloud execution path (AWS verified November 20, 2026)
 
 The private training/inference adapters reuse this exact scaler, model,
-predictors, chronological splits and evaluation implementation. Their proposed
-input is the verified PM-03D cloud dataset: 2,194 training rows, 740 holdout rows
+predictors, chronological splits and evaluation implementation. Their verified
+input was the PM-03D cloud dataset: 2,194 training rows, 740 holdout rows
 and 59 saved 2026 Week 12 prediction rows. They require the exact preparation
 completion hash before fitting and trusted trainer provenance/artifact hashes
 before model deserialization. Training-only scaling, holdout isolation and the
 training-derived constant comparison remain unchanged.
 
-New cloud metrics and hypothetical probabilities are **not yet observed**.
-The historical metrics and September samples below remain dated local results,
-not promised results for a new cloud model. Production fitting/evaluation and
-independently invoked model reload/inference will run in AWS only after separate
-approval. Coefficient interpretation includes training means/scales and conditional
-log-odds associations, without causal claims. All availability/approval flags
-remain retrospective/false. See the [cloud modeling runbook](cloud-modeling-runbook.md).
+The approved PM-04C smoke completed inside AWS Linux x86_64 with Python 3.14.10:
+one fit across two training invocations, followed by four independent inference
+invocations. The scaler fitted 2,194 training rows only. Newly measured holdout
+metrics were:
+
+| Metric | Cloud model | Constant baseline |
+| --- | ---: | ---: |
+| Brier score | 0.21061287148858282 | 0.24163577488303326 |
+| Log loss | 0.6096025525960278 | 0.6763272181260667 |
+| Accuracy | 0.6648648648648648 | 0.5918918918918918 |
+
+Both ten-bin calibration tables and coefficient/scaling interpretation were
+published. All nine model artifact hashes and completion provenance passed.
+Replay preserved bytes/metadata without refitting; independent trusted reload
+produced 59 saved predictions identical to the training sample. The hypothetical
+vector `(0.2, 7, 1)` produced home probability 0.662422294285731 and away
+probability 0.33757770571426904. Invalid vectors and receipt hashes were rejected;
+the latter stopped before deserialization. No CFBD request or Athena query was
+made. These measurements equal the historical holdout results but were computed
+anew inside AWS; the September examples below remain dated local observations.
+
+Training used 2,135.64 ms plus 6,888.02 ms cold initialization, with maximum
+reported memory 314 MiB (317 MiB on replay) out of 1,536 MiB configured.
+Saved-sample inference used 1,955.57 ms plus 6,916.07 ms initialization, with
+312 MiB maximum reported memory out of 1,024 MiB configured. These bounded
+measurements do not establish load capacity. Coefficients describe conditional
+associations, not causal effects. Availability/approval flags remain
+retrospective/false; no historical publication time or operational forecast
+approval was established. See the [verification summary](cloud-modeling-verification.md)
+and [cloud modeling runbook](cloud-modeling-runbook.md).
 
 This local Initial Demo baseline estimates the probability that the designated
 home team wins a retained regular-season FBS–FBS game. It is a reconstructed

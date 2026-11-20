@@ -100,7 +100,7 @@ backfills for 2021–2025 are preserved alongside the original 2026 Week 12 capt
 CLI local-history defaults and notebook S3-history behavior above are unchanged. See the
 [preparation runbook](cloud-preparation-runbook.md) for scope and refusals.
 
-## Prepared cloud modeling slice (PM-04; not deployed)
+## Verified cloud modeling slice (PM-04C; November 20, 2026)
 
 `cloud_modeling.training_handler` reads the explicitly pinned preparation
 completion and six S3 dataset files, verifies their hashes and reuses the fixed
@@ -118,9 +118,13 @@ Only the trainer can write models; inference writes only its result prefix.
 
 Two Python 3.14 x86_64 Lambdas use an S3-backed ZIP under the measured 250 MiB
 uncompressed limit after excluding bundled dependency tests/bytecode. There are
-no public endpoints or always-running servers. Local synthetic tests and static
-native/package checks passed; real-data AWS training/evaluation/inference are
-**pending separate deployment approval**, with no new CFBD/Athena work needed.
+no public endpoints or always-running servers. The approved AWS Linux smoke
+verified real-data training/evaluation, independent saved-model inference and
+immutable replay: one fit, two training and four inference invocations, with
+zero CFBD requests or Athena queries. All nine model artifacts were verified;
+59 saved predictions matched the training sample. This is a bounded execution,
+not an operational forecasting or scheduling system. See the
+[verification summary](cloud-modeling-verification.md) for actual metrics and limits.
 Ingestion and recovery-only preparation are unchanged. See the
 [modeling runbook](cloud-modeling-runbook.md) for exact scope and limitations.
 

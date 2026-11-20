@@ -1,11 +1,11 @@
 # Cloud baseline training and inference (PM-04)
 
-**Implemented and tested locally; cloud execution is pending deployment approval.**
+**Deployed and verified in AWS Linux on November 20, 2026 (PM-04C).**
 The verified ingestion and recovery-only preparation deployments are unchanged.
 No real project dataset was trained or scored on the controlling computer.
 Local model tests use fictional synthetic fixtures only.
-The [local verification summary](cloud-modeling-verification.md) separates
-completed checks from cloud evidence still required.
+The [verification summary](cloud-modeling-verification.md) separates local checks
+from the completed bounded cloud smoke test and remaining operational limitations.
 
 ## Architecture and trust boundary
 
@@ -98,19 +98,20 @@ Twenty dependencies are pinned separately in `infra/cloud-modeling-requirements.
 the project's normal requirements are unchanged. Static checks verified 250
 ELF64 Linux x86_64 native files and a maximum referenced GLIBC symbol version
 2.27, compatible with the intended AL2023 ABI baseline. Static checks are not
-dynamic-link/import proof. Docker's service was unavailable, so Linux import,
-memory, cold-start and runtime performance still require the approved AWS smoke
-test. No macOS model check is presented as Linux execution.
+dynamic-link/import proof. Docker's service was unavailable locally. The subsequent
+approved AWS smoke test verified imports and execution on Linux x86_64 with Python
+3.14.10, including actual cold-start, duration and memory measurements below.
+No macOS model check is presented as Linux execution.
 
-Training proposes 1,536 MiB memory / 180 seconds; inference 1,024 MiB / 90 seconds.
+Training uses 1,536 MiB memory / 180 seconds; inference 1,024 MiB / 90 seconds.
 Both use 512 MiB temporary storage, reserved concurrency one, zero async retries,
 and single-thread numeric libraries. Runtime updates occur on function update;
 verify both functions' runtime-version ARNs match before fitting/inference.
 The existing loader requires actual Python/library version equality on reload;
-never bypass it. The measured deployment region has 398 unreserved executions
-available, so two reserved slots fit the observed quota.
+never bypass it. The predeployment region check had 398 unreserved executions
+available; the two reserved slots fit that observed quota.
 
-## Concrete deployment proposal (not authorized yet)
+## Approved deployment (executed November 20, 2026)
 
 Region `us-east-1`; stack `fbs-cloud-modeling`. Eight new resources: the two
 functions, roles `fbs-model-training-execution`/`fbs-model-inference-execution`,
@@ -149,7 +150,7 @@ The measured Linux dependency directory can be reused with `--dependencies-dir`;
 the packager verifies the exact pinned closure and native headers. It refuses
 existing output directories and packages exceeding the uncompressed limit.
 
-After a separate approval, recompute proposal/template/ZIP hashes and source
+For any separately approved subsequent deployment, recompute proposal/template/ZIP hashes and source
 equality. Check proposed names, stable token, bucket privacy, predecessor settings
 and quota without changing them. Upload with `s3api put-object --if-none-match '*'`
 to the proposal's exact key; stream/hash the whole ZIP on readback (it exceeds
@@ -169,7 +170,7 @@ aws cloudformation wait stack-create-complete --region us-east-1 \
 Record both functions' code hashes, architecture, runtime versions, environment,
 concurrency and exact role policies. There are no automatic workload invocations.
 
-### Proposed bounded smoke test
+### Bounded smoke procedure (all six checks passed November 20)
 
 Maximum **two training invocations and four inference invocations**, with at most
 **one fit**, **zero CFBD requests and zero Athena queries**:
@@ -206,6 +207,55 @@ all artifact hashes, six holdout metrics, both calibration tables, coefficient
 interpretation, saved/hypothetical outputs, and one fit-start across training and
 replay. Verify originals and bucket privacy/settings remain unchanged. Publish
 only a sanitized summary. Real-data training/inference must stay in AWS.
+
+### Observed AWS execution
+
+The reviewed ZIP was uploaded once with conditional creation and verified on
+readback. All eight stack resources reached CREATE_COMPLETE. Both functions used
+the reviewed code hash and matching `python:3.14.mainline.v118` runtime versions;
+their deployed inline policies matched the approved template. No application,
+dependency or infrastructure artifact changed during recovery of the controller.
+
+Exactly two training and four inference invocations completed, with one
+CloudWatch `model_fit_start`, zero CFBD requests and zero Athena queries.
+Training/evaluation used 2,194/740 rows and independent inference scored 59 saved
+Week 12 rows. All nine model artifacts, three inference artifacts and completion
+receipts passed integrity checks. The training replay preserved all 12 model and
+ledger objects' bytes and metadata. Independent saved predictions matched the
+training sample byte-for-byte. Both invalid-input checks passed, including
+receipt-hash rejection before deserialization.
+
+| Invocation | Duration (ms) | Init (ms) | Max memory reported (MiB) |
+| --- | ---: | ---: | ---: |
+| Training | 2135.64 | 6888.02 | 314 |
+| Training replay | 934.12 | warm | 317 |
+| Saved-sample inference | 1955.57 | 6916.07 | 312 |
+| Hypothetical inference | 416.87 | warm | 312 |
+| Invalid vector | 1.64 | warm | 312 |
+| Invalid receipt hash | 82.16 | warm | 312 |
+
+These are Lambda REPORT measurements; memory is the reported execution-environment
+high-water mark. Cold-start billed durations were 9024 ms for training and 8872 ms
+for inference. These six calls establish this bounded run, not a capacity benchmark.
+Both functions remain Active with reserved concurrency one; neither is disabled.
+Source objects, original dataset hashes, ingestion/preparation configuration,
+bucket encryption and public-access blocks remained unchanged.
+
+The first PM-04B read-only preflight stopped on `NoSuchBucketPolicy` before any
+upload, deployment or invocation. Its evidence remains preserved. The corrected
+local controller uses `deployment_preflight.inspect_private_bucket`, which records
+only that exact response as policy absence without fabricating PolicyStatus.
+Owner-scoped reads, encryption and all four true public-access blocks remain
+mandatory; a public policy, access error or malformed required response fails.
+Six focused tests and the full 239-test offline suite passed. This deployment-only
+helper is outside the reviewed Lambda ZIP and does not change its implementation
+hash. Private controller configuration and detailed execution evidence remain ignored.
+
+See the [verification summary](cloud-modeling-verification.md) for the newly
+measured evaluation, calibration, interpretation and probability results. No
+personal-payment activation, upgrade, purchase, subscription or Organizations
+enrollment occurred; the preflight confirmed the existing active Free plan with
+eligible credits. Continuing storage/log/request usage is not unlimited free usage.
 
 ### Failure, recovery and cleanup
 
