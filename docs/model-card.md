@@ -51,6 +51,14 @@ false; unknown availability stays unknown, with no invented publication time.
 
 ## Inputs and Feature Rationale
 
+PM-05's separate weekly scoring adapter is implemented locally, not yet deployed.
+It reuses this saved model without fitting, verifies unchanged train/holdout/
+aggregate hashes, and records the new week/source/features/cutoff separately from
+model training provenance. This does not relax saved-sample inference's original
+dataset binding or approve operational publication. Technically eligible weekly
+predictions remain withheld retrospective examples; zero eligible rows remain
+zero. See the [weekly contract](weekly-cloud-contract.md).
+
 The input is `data/processed/demo-features-v1/`, dataset ID
 `8ecf7cf50b5f4ae68bde2ad902370b7528d327ed0919b5fed7a1211447c7e5c5`.
 Its report SHA-256 is

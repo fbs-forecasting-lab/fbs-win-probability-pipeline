@@ -1,0 +1,510 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "PM-05 bounded private weekly scoring with disabled schedule; no retraining or Athena.",
+  "Parameters": {
+    "ProjectBucket": {
+      "Type": "String"
+    },
+    "ProjectPrefix": {
+      "Type": "String",
+      "Default": "initial-demo"
+    },
+    "CodeBucket": {
+      "Type": "String"
+    },
+    "CodeKey": {
+      "Type": "String"
+    },
+    "DatasetId": {
+      "Type": "String",
+      "AllowedPattern": "[0-9a-f]{64}"
+    },
+    "PreparationId": {
+      "Type": "String",
+      "AllowedPattern": "[0-9a-f]{64}"
+    },
+    "ModelId": {
+      "Type": "String",
+      "AllowedPattern": "[0-9a-f]{64}"
+    },
+    "TrainingTokenSha256": {
+      "Type": "String",
+      "AllowedPattern": "[0-9a-f]{64}"
+    },
+    "ApprovedModelReference": {
+      "Type": "String"
+    },
+    "ApprovedTrainingReference": {
+      "Type": "String"
+    },
+    "IngestionFunctionArn": {
+      "Type": "String"
+    },
+    "ScheduleInput": {
+      "Type": "String"
+    },
+    "ScheduleRunName": {
+      "Type": "String",
+      "AllowedPattern": "[a-z0-9-]{8,64}"
+    }
+  },
+  "Resources": {
+    "WeeklyLogs": {
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/fbs-weekly-pipeline",
+        "RetentionInDays": 14
+      }
+    },
+    "WeeklyRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "fbs-weekly-pipeline-execution",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "ScopedWeekly",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetBucketPublicAccessBlock"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/raw/cfbd/games/season=2021/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/raw/cfbd/games/season=2022/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/raw/cfbd/games/season=2023/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/raw/cfbd/games/season=2024/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/raw/cfbd/games/season=2025/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/raw/cfbd/games/season=2026/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-ingestion/runs/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/weekly/runs/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/datasets/${DatasetId}/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-preparation/runs/${PreparationId}/complete.json"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-modeling/models/${ModelId}/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-modeling/training/${TrainingTokenSha256}/claim.json"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-modeling/training/${TrainingTokenSha256}/complete.json"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:ListBucket"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}"
+                  },
+                  "Condition": {
+                    "StringLike": {
+                      "s3:prefix": [
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/weekly/runs/*"
+                        },
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/cloud-ingestion/runs/*"
+                        }
+                      ]
+                    },
+                    "NumericLessThanEquals": {
+                      "s3:max-keys": "1"
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:PutObject"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/weekly/runs/*"
+                  }
+                },
+                {
+                  "Effect": "Deny",
+                  "Action": [
+                    "s3:PutObject"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/weekly/runs/*"
+                  },
+                  "Condition": {
+                    "StringNotEquals": {
+                      "s3:if-none-match": "*"
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "lambda:InvokeFunction"
+                  ],
+                  "Resource": {
+                    "Ref": "IngestionFunctionArn"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/fbs-weekly-pipeline:*"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "Weekly": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "WeeklyLogs"
+      ],
+      "Properties": {
+        "FunctionName": "fbs-weekly-pipeline",
+        "Runtime": "python3.14",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "src.pipeline.cloud_weekly.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "WeeklyRole",
+            "Arn"
+          ]
+        },
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucket"
+          },
+          "S3Key": {
+            "Ref": "CodeKey"
+          }
+        },
+        "MemorySize": 1536,
+        "Timeout": 300,
+        "EphemeralStorage": {
+          "Size": 512
+        },
+        "ReservedConcurrentExecutions": 1,
+        "RuntimeManagementConfig": {
+          "UpdateRuntimeOn": "FunctionUpdate"
+        },
+        "Environment": {
+          "Variables": {
+            "FBS_S3_BUCKET": {
+              "Ref": "ProjectBucket"
+            },
+            "FBS_S3_PREFIX": {
+              "Ref": "ProjectPrefix"
+            },
+            "APPROVED_MODEL_REFERENCE": {
+              "Ref": "ApprovedModelReference"
+            },
+            "APPROVED_TRAINING_REFERENCE": {
+              "Ref": "ApprovedTrainingReference"
+            },
+            "INGESTION_FUNCTION_ARN": {
+              "Ref": "IngestionFunctionArn"
+            },
+            "OPENBLAS_NUM_THREADS": "1",
+            "OMP_NUM_THREADS": "1",
+            "MKL_NUM_THREADS": "1",
+            "NUMEXPR_NUM_THREADS": "1"
+          }
+        }
+      }
+    },
+    "WeeklyAsync": {
+      "Type": "AWS::Lambda::EventInvokeConfig",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "Weekly"
+        },
+        "Qualifier": "$LATEST",
+        "MaximumRetryAttempts": 0,
+        "MaximumEventAgeInSeconds": 60
+      }
+    },
+    "WorkflowRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "fbs-weekly-workflow-execution",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "states.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "ScopedWeekly",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "lambda:InvokeFunction"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Weekly",
+                      "Arn"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "Workflow": {
+      "Type": "AWS::StepFunctions::StateMachine",
+      "Properties": {
+        "StateMachineName": "fbs-weekly-pipeline",
+        "StateMachineType": "STANDARD",
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "WorkflowRole",
+            "Arn"
+          ]
+        },
+        "Definition": {
+          "StartAt": "Initialize",
+          "TimeoutSeconds": 1800,
+          "States": {
+            "Initialize": {
+              "Type": "Pass",
+              "Parameters": {
+                "request.$": "$",
+                "polls": 0
+              },
+              "Next": "Advance"
+            },
+            "Advance": {
+              "Type": "Task",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "Weekly",
+                  "Arn"
+                ]
+              },
+              "InputPath": "$.request",
+              "ResultPath": "$.progress",
+              "TimeoutSeconds": 310,
+              "Next": "Outcome"
+            },
+            "Outcome": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.progress.state",
+                  "StringEquals": "pending",
+                  "Next": "Budget"
+                },
+                {
+                  "Variable": "$.progress.state",
+                  "StringEquals": "withheld",
+                  "Next": "Finished"
+                },
+                {
+                  "Variable": "$.progress.state",
+                  "StringEquals": "completed",
+                  "Next": "Finished"
+                }
+              ],
+              "Default": "Failed"
+            },
+            "Budget": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.polls",
+                  "NumericGreaterThanEquals": 7,
+                  "Next": "PollLimit"
+                }
+              ],
+              "Default": "Increment"
+            },
+            "Increment": {
+              "Type": "Pass",
+              "Parameters": {
+                "request.$": "$.request",
+                "polls.$": "States.MathAdd($.polls, 1)"
+              },
+              "Next": "Wait"
+            },
+            "Wait": {
+              "Type": "Wait",
+              "Seconds": 15,
+              "Next": "Advance"
+            },
+            "Finished": {
+              "Type": "Succeed",
+              "OutputPath": "$.progress"
+            },
+            "Failed": {
+              "Type": "Fail",
+              "Error": "WeeklyStageFailed",
+              "CausePath": "$.progress.message"
+            },
+            "PollLimit": {
+              "Type": "Fail",
+              "Error": "WeeklyPollLimit",
+              "Cause": "Pending work preserved; no automatic restart or fresh token."
+            }
+          }
+        }
+      }
+    },
+    "ScheduleRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "fbs-weekly-schedule-execution",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "scheduler.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "ScopedWeekly",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "states:StartExecution"
+                  ],
+                  "Resource": {
+                    "Ref": "Workflow"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "Schedule": {
+      "Type": "AWS::Scheduler::Schedule",
+      "Properties": {
+        "Name": "fbs-weekly-pipeline",
+        "Description": "Disabled fixed-week request; review explicit week/cutoff/token before enabling. Never auto-roll or retrain.",
+        "State": "DISABLED",
+        "ScheduleExpression": "cron(0 12 ? * TUE *)",
+        "ScheduleExpressionTimezone": "UTC",
+        "FlexibleTimeWindow": {
+          "Mode": "OFF"
+        },
+        "Target": {
+          "Arn": "arn:aws:scheduler:::aws-sdk:sfn:startExecution",
+          "RoleArn": {
+            "Fn::GetAtt": [
+              "ScheduleRole",
+              "Arn"
+            ]
+          },
+          "Input": {
+            "Fn::Sub": [
+              "{\"StateMachineArn\":\"${Workflow}\",\"Name\":\"${RunName}\",\"Input\":${EncodedInput}}",
+              {
+                "RunName": {
+                  "Ref": "ScheduleRunName"
+                },
+                "EncodedInput": {
+                  "Ref": "ScheduleInput"
+                }
+              }
+            ]
+          },
+          "RetryPolicy": {
+            "MaximumRetryAttempts": 0,
+            "MaximumEventAgeInSeconds": 60
+          }
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "WorkflowArn": {
+      "Value": {
+        "Ref": "Workflow"
+      }
+    },
+    "WeeklyFunction": {
+      "Value": {
+        "Ref": "Weekly"
+      }
+    }
+  }
+}

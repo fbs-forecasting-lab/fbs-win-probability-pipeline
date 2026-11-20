@@ -161,3 +161,21 @@ substitution is used to improve sample coverage. The bounded AWS run verified
 train-only fitting and model reload without changing these safeguards; it made
 no new CFBD request or Athena query. See the
 [modeling runbook](cloud-modeling-runbook.md).
+
+## Weekly technical eligibility (PM-05; not deployed)
+
+The weekly contract pins season/week, source versions, model, forecast cutoff and
+stable run identity. Source observations and any known publication times must
+precede cutoff; weekly schedule observations older than 24 hours are stale.
+Scheduled kickoff must strictly follow cutoff, including after UTC-offset
+normalization. Completed, scheduled-started, TBD and missing-history rows are
+excluded/quarantined with reasons. Selected prior schedule evidence can reject a
+game moved later after an earlier recorded start. Original evidence is immutable.
+
+These are technical row checks, not proof of actual kickoff, historical completion
+or publication. Unknown timestamps are never invented from capture time. Current
+models/sources stay retrospective and unapproved; completed processing explicitly
+withholds operational publication even when rows are technically eligible. Weekly
+inference verifies the original model and unchanged training/holdout/aggregate
+hashes, with separate new scoring-input provenance and no fit. Alerts may request
+review, never automatic retraining. See the [weekly contract](weekly-cloud-contract.md).

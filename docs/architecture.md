@@ -71,8 +71,9 @@ conflict rejection, and one CFBD attempt across three invocations. See the
 [sanitized verification summary](cloud-ingestion-verification.md). No automatic schedule exists. S3 remains the existing private data
 store, and the existing local notebook/CLIs remain retrospective demonstrations.
 The notebook's graded cloud path will need to initiate cloud operations rather
-than perform their data processing itself. Cloud model training/inference,
-operational approval, alerts and monitoring remain unfinished; this adapter alone
+than perform their data processing itself. Operational approval, alerts and
+monitoring remain unfinished; cloud modeling is
+separately verified in PM-04C below. This ingestion adapter alone
 does not complete the serverless lifecycle.
 
 ## Verified cloud normalization and Athena slice (PM-03D)
@@ -129,6 +130,19 @@ Ingestion and recovery-only preparation are unchanged. See the
 [modeling runbook](cloud-modeling-runbook.md) for exact scope and limitations.
 
 ## Boundaries and planned work
+
+PM-05 adds a [locally implemented weekly workflow](weekly-cloud-runbook.md), not
+yet deployed: Standard Step Functions owns bounded cloud stage progress, with a
+new Lambda worker and a disabled fixed-request weekly schedule. Explicit capture/
+history/model/cutoff identities feed existing normalization and Python feature
+building, then trusted saved-model scoring without fitting. Original recovery-only
+Athena preparation and exact saved-sample inference remain unchanged. New scoring
+provenance is distinct from training provenance; train/holdout/aggregate bytes must
+match the original model. Stage receipts and a verified summary preserve replay.
+Technical pre-kickoff selection never promotes operational approval: current runs
+finish withheld/unapproved. See the [contract](weekly-cloud-contract.md) for cutoff,
+revision, stale-input and failure boundaries. No query or automatic training is
+introduced, and the new end-to-end path still needs approved cloud verification.
 
 The fixed 2026 Week 5 demonstration is historical as of October 2026. September
 rehearsal metrics describe saved bytes. A fresh pull can change completion or
