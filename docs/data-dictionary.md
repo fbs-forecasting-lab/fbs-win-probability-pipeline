@@ -1,5 +1,15 @@
 # CFBD Game and Demo Dataset Dictionary
 
+PM-03 also serializes the typed normalized columns below as one JSON object per
+line for Athena. Nulls remain JSON null, booleans remain booleans, and timestamps
+remain UTC strings. `start_epoch_us` is derived integer UTC microseconds for
+lossless SQL chronology checks, not a model input. The `selection_id` partition identifies exactly one source
+version per season; it is provenance, never a predictor. CSV/quality/exclusion
+semantics and baseline dataset columns are unchanged. SQL eligibility indicators
+and separate `home_win` labels support parity checks, not new predictors. This
+cloud slice was deployed and verified in recovery-only mode on November 20, 2026;
+its dataset remains retrospective and unapproved. See the [runbook](cloud-preparation-runbook.md).
+
 Normalization schema version **1** produces one table per explicit source
 manifest. It is a validated game/outcome table, not a model feature matrix.
 Source fields beyond the 16 below remain available in the unchanged raw snapshot.

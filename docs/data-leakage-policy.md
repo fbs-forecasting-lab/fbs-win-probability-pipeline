@@ -124,3 +124,21 @@ The November 20 cloud verification captured 70 records and preserved these limit
 through replay and conflict rejection. Successful AWS execution establishes the
 capture mechanism, not point-in-time forecasting approval. See the
 [sanitized verification summary](cloud-ingestion-verification.md).
+
+## Cloud preparation (PM-03D; deployed and verified in recovery-only mode)
+
+One explicitly hashed snapshot per season is isolated in a deterministic query
+partition. SQL does not combine all versions as independent games; target
+outcomes enter labels only. Missing history is an explicit exclusion, not zero
+strength or imputation. Capture-receipt verification proves origin and bytes,
+not historical availability. Legacy uploads cannot satisfy a cloud-source
+requirement.
+
+All four retrospective/unapproved flags are unchanged. `forecast_cutoff`
+rejects observations/publications at or after that instant; earlier observation
+still cannot approve operational use. The operational path fails closed. See the
+[preparation runbook](cloud-preparation-runbook.md) for future evidence needs.
+November 20 AWS recovery verified actual Athena/Python parity, publication,
+replay and cutoff refusal. That execution evidence does not establish historical
+availability or approve forecasts. New query creation is explicitly denied in
+the current recovery-only deployment.

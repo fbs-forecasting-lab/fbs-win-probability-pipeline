@@ -1,0 +1,25 @@
+{
+  "compatibility_version": 1,
+  "identity_source_sha256": {
+    "cloud_ingestion.py": "0b1335dd49ee42e091623b51d4efde7a78fad7414e2ded793a47cd0aaa427650",
+    "cloud_preparation.py": "e6b309a2c638db39178daf92edf9f5619cb0aed229361d6ac2ce70b7cb980faa",
+    "dataset.py": "4b19a4e1c613d63cdf9f7409b51bb8ed8b9e38546d105e5f98f9f213b5130f5e",
+    "games.py": "0dd58bee8e742cf3741e2aebe4a5683f1daf1477f3adbe681c0ce43ab29e812f",
+    "preparation_contract.py": "623059b3a8a388648569f8ae11744360dd44cac865916eb4ecb5e3415cb860b4",
+    "prior_season_features.sql": "3fdc01a5f896cc91d47b3a845b7dfac1be7f42006234a021ae034047d76ce94b",
+    "run_contract.py": "c81fdb3fdb26592a615ded8e3f6fe381966c7a27ff09e42d6d0d7ef4db1e7791",
+    "s3_storage.py": "787bfe1021c3c56603a6aca740698ced4379a2aad6f3872fb27cdee458f82725",
+    "storage.py": "ebb9360df0fed7c4a8195903326ba3c9f64f89f028228dd02b7d32487381f945"
+  },
+  "runtime_source_sha256": {
+    "cloud_ingestion.py": "0b1335dd49ee42e091623b51d4efde7a78fad7414e2ded793a47cd0aaa427650",
+    "cloud_preparation.py": "884089f2bae45d3996984d31f3cfd2bf60543f5c5d41ec14429fee3b28f5b18c",
+    "dataset.py": "4b19a4e1c613d63cdf9f7409b51bb8ed8b9e38546d105e5f98f9f213b5130f5e",
+    "games.py": "0dd58bee8e742cf3741e2aebe4a5683f1daf1477f3adbe681c0ce43ab29e812f",
+    "preparation_contract.py": "a34f8b85df0500b538ce177537fbfbca8d9e0624903906985f08eb9105ec671b",
+    "prior_season_features.sql": "3fdc01a5f896cc91d47b3a845b7dfac1be7f42006234a021ae034047d76ce94b",
+    "run_contract.py": "c81fdb3fdb26592a615ded8e3f6fe381966c7a27ff09e42d6d0d7ef4db1e7791",
+    "s3_storage.py": "787bfe1021c3c56603a6aca740698ced4379a2aad6f3872fb27cdee458f82725",
+    "storage.py": "ebb9360df0fed7c4a8195903326ba3c9f64f89f028228dd02b7d32487381f945"
+  }
+}

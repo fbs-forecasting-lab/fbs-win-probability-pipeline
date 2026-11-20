@@ -1,5 +1,23 @@
 # Major-function guide
 
+PM-03 cloud preparation was deployed and verified in recovery-only mode on
+November 20, 2026. Cloud training/inference and operational approval remain unfinished:
+
+| Function | Inputs → outputs | Validation/failure boundary |
+| --- | --- | --- |
+| `preparation_contract.validate` | Explicit six-source request → canonical selection | Required seasons, hashes, manifest names, permissions and receipt references |
+| `preparation_contract.implementation_hash` | Pinned original/corrected source hashes → original v1 implementation identity | All runtime files must match the reviewed compatibility record; no caller identity override |
+| `cloud_preparation.load_sources` / `verify_origin` | S3 references → verified cloud-temp manifests and lineage | Raw/manifest/checkpoint/receipt integrity; full-season history; operational refusal |
+| `cloud_preparation.prepare_run` / `handler` | Selection → pending query or verified completed dataset receipt | Private bucket, existing normalizer/builder, immutable publication, stable query identity |
+| `cloud_preparation.compare_sql` | Athena rows + reference dataset → parity evidence | Every target, split, exclusion, prior count, eligible predictor and label must match |
+| `cloud_preparation.query_rows` | Bound query ID → paginated rows | Fixed columns and 20,000-row limit |
+
+`prior_season_features.sql` computes existing Y-1 features over one explicit
+partition. See the [preparation runbook](cloud-preparation-runbook.md) for artifacts,
+scoped IAM, source coverage, verified recovery and its remaining limitations.
+Current deployment mode and IAM both block new query creation; subsequent weekly
+preparation requires deliberate reviewed reconfiguration, not another invocation.
+
 For a first pass through the model and its call sequence, start with the
 [code-reading guide](code-reading-guide.md), then use this page for detailed
 inputs, outputs, and failure conditions.

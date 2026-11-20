@@ -71,16 +71,41 @@ conflict rejection, and one CFBD attempt across three invocations. See the
 [sanitized verification summary](cloud-ingestion-verification.md). No automatic schedule exists. S3 remains the existing private data
 store, and the existing local notebook/CLIs remain retrospective demonstrations.
 The notebook's graded cloud path will need to initiate cloud operations rather
-than perform their data processing itself. Athena transformations, cloud model
-training/inference, operational eligibility, alerts and monitoring are still
-unimplemented; this adapter alone does not complete the serverless lifecycle.
+than perform their data processing itself. Cloud model training/inference,
+operational approval, alerts and monitoring remain unfinished; this adapter alone
+does not complete the serverless lifecycle.
+
+## Verified cloud normalization and Athena slice (PM-03D)
+
+`cloud_preparation.handler` selects six explicitly hashed S3 snapshots, verifies
+capture lineage when required, and runs existing normalization and the dataset
+serializer in Lambda temporary storage. It publishes immutable normalized,
+quality, exclusion and provenance artifacts. One injected Athena partition
+contains only the selected versions. SQL computes the three Y-1 predictors,
+labels and eligibility; all targets must match the Python reference before the
+six baseline-compatible files are published. Durable query identity supports
+recovery; completed replays verify all bytes. A pinned compatibility record
+preserves the original selection across the reviewed whitespace-verification fix.
+
+The Lambda, scoped role, Glue database/table and bounded Athena workgroup are in
+`infra/cloud-preparation.yaml`. AWS Linux recovery passed on November 20, 2026:
+all six cloud sources were verified, actual Athena results passed parity for
+3,065 targets, and the published dataset contains 2,194 train, 740 holdout and
+59 prediction rows. Four recovery invocations reused the original successful
+query with no new query or CFBD fetch; replay and both refusal checks passed.
+The function is enabled at concurrency one in recovery-only mode, with query
+creation explicitly denied. New weekly preparation requires deliberate reviewed
+configuration/IAM changes and separate authorization. Five full-season cloud
+backfills for 2021–2025 are preserved alongside the original 2026 Week 12 capture.
+CLI local-history defaults and notebook S3-history behavior above are unchanged. See the
+[preparation runbook](cloud-preparation-runbook.md) for scope and refusals.
 
 ## Boundaries and planned work
 
 The fixed 2026 Week 5 demonstration is historical as of October 2026. September
 rehearsal metrics describe saved bytes. A fresh pull can change completion or
 kickoff fields and therefore prediction eligibility; it cannot recreate the old
-snapshot. No automatic week rollover or production deployment is implemented.
+snapshot. No automatic week rollover or complete production forecasting system is implemented.
 
 Prior-season chronology does not prove historical publication availability.
 Every dataset/model remains retrospective and unapproved for point-in-time

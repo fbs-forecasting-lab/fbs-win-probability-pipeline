@@ -1,0 +1,541 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "PM-03 preparation only: explicit S3 sources, normalization and Athena parity. No training or capture.",
+  "Parameters": {
+    "ProjectBucket": {
+      "Type": "String",
+      "AllowedPattern": "[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]"
+    },
+    "ProjectPrefix": {
+      "Type": "String",
+      "Default": "initial-demo",
+      "AllowedPattern": "[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*"
+    },
+    "FunctionName": {
+      "Type": "String",
+      "Default": "fbs-data-preparation",
+      "AllowedPattern": "[a-zA-Z0-9-_]{1,64}"
+    },
+    "DatabaseName": {
+      "Type": "String",
+      "Default": "fbs_preparation",
+      "AllowedPattern": "[a-z][a-z0-9_]{0,62}"
+    },
+    "WorkgroupName": {
+      "Type": "String",
+      "Default": "fbs-data-preparation",
+      "AllowedPattern": "[A-Za-z0-9._-]{1,128}"
+    },
+    "CodeBucket": {
+      "Type": "String"
+    },
+    "CodeKey": {
+      "Type": "String"
+    }
+  },
+  "Resources": {
+    "Logs": {
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${FunctionName}"
+        },
+        "RetentionInDays": 14
+      }
+    },
+    "ExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": {
+          "Fn::Sub": "${FunctionName}-execution"
+        },
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "PreparationOnly",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetBucketPublicAccessBlock",
+                    "s3:GetBucketLocation"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/raw/cfbd/games/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-ingestion/runs/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-preparation/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/datasets/*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:PutObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-preparation/runs/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-preparation/queryable/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/datasets/*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Deny",
+                  "Action": "s3:PutObject",
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-preparation/runs/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-preparation/queryable/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/datasets/*"
+                    }
+                  ],
+                  "Condition": {
+                    "StringNotEquals": {
+                      "s3:if-none-match": "*"
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:ListBucket"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}"
+                  },
+                  "Condition": {
+                    "StringLike": {
+                      "s3:prefix": [
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/raw/cfbd/games/*"
+                        },
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/cloud-ingestion/runs/*"
+                        },
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/cloud-preparation/*"
+                        },
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/datasets/*"
+                        }
+                      ]
+                    },
+                    "NumericLessThanEquals": {
+                      "s3:max-keys": "1"
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:ListBucket"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}"
+                  },
+                  "Condition": {
+                    "StringLike": {
+                      "s3:prefix": [
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/cloud-preparation/queryable/*"
+                        },
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/cloud-preparation/athena-results/*"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:PutObject",
+                    "s3:AbortMultipartUpload",
+                    "s3:ListMultipartUploadParts"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-preparation/athena-results/*"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "athena:GetQueryExecution",
+                    "athena:GetQueryResults"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${WorkgroupName}"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "athena:GetDataCatalog"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:datacatalog/AwsDataCatalog"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "glue:GetDatabase",
+                    "glue:GetTable",
+                    "glue:GetPartitions",
+                    "glue:GetPartition"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${DatabaseName}/selected_games"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${FunctionName}:*"
+                  }
+                },
+                {
+                  "Effect": "Deny",
+                  "Action": [
+                    "athena:StartQueryExecution"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${WorkgroupName}"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "Preparation": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "Logs",
+        "SelectedGames",
+        "Workgroup"
+      ],
+      "Properties": {
+        "FunctionName": {
+          "Ref": "FunctionName"
+        },
+        "Runtime": "python3.14",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "src.pipeline.cloud_preparation.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "ExecutionRole",
+            "Arn"
+          ]
+        },
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucket"
+          },
+          "S3Key": {
+            "Ref": "CodeKey"
+          }
+        },
+        "Timeout": 180,
+        "MemorySize": 1024,
+        "EphemeralStorage": {
+          "Size": 1024
+        },
+        "ReservedConcurrentExecutions": 1,
+        "Environment": {
+          "Variables": {
+            "FBS_S3_BUCKET": {
+              "Ref": "ProjectBucket"
+            },
+            "FBS_S3_PREFIX": {
+              "Ref": "ProjectPrefix"
+            },
+            "PREPARATION_DATABASE": {
+              "Ref": "DatabaseName"
+            },
+            "PREPARATION_WORKGROUP": {
+              "Ref": "WorkgroupName"
+            },
+            "PREPARATION_RECOVERY_ONLY": "true"
+          }
+        }
+      }
+    },
+    "AsyncPolicy": {
+      "Type": "AWS::Lambda::EventInvokeConfig",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "Preparation"
+        },
+        "Qualifier": "$LATEST",
+        "MaximumRetryAttempts": 0,
+        "MaximumEventAgeInSeconds": 60
+      }
+    },
+    "Database": {
+      "Type": "AWS::Glue::Database",
+      "Properties": {
+        "CatalogId": {
+          "Ref": "AWS::AccountId"
+        },
+        "DatabaseInput": {
+          "Name": {
+            "Ref": "DatabaseName"
+          }
+        }
+      }
+    },
+    "SelectedGames": {
+      "Type": "AWS::Glue::Table",
+      "Properties": {
+        "CatalogId": {
+          "Ref": "AWS::AccountId"
+        },
+        "DatabaseName": {
+          "Ref": "Database"
+        },
+        "TableInput": {
+          "Name": "selected_games",
+          "TableType": "EXTERNAL_TABLE",
+          "PartitionKeys": [
+            {
+              "Name": "selection_id",
+              "Type": "string"
+            }
+          ],
+          "Parameters": {
+            "EXTERNAL": "TRUE",
+            "classification": "json",
+            "projection.enabled": "true",
+            "projection.selection_id.type": "injected",
+            "storage.location.template": {
+              "Fn::Join": [
+                "",
+                [
+                  "s3://",
+                  {
+                    "Ref": "ProjectBucket"
+                  },
+                  "/",
+                  {
+                    "Ref": "ProjectPrefix"
+                  },
+                  "/cloud-preparation/queryable/selection_id=${selection_id}/"
+                ]
+              ]
+            }
+          },
+          "StorageDescriptor": {
+            "Columns": [
+              {
+                "Name": "id",
+                "Type": "bigint"
+              },
+              {
+                "Name": "season",
+                "Type": "bigint"
+              },
+              {
+                "Name": "week",
+                "Type": "bigint"
+              },
+              {
+                "Name": "season_type",
+                "Type": "string"
+              },
+              {
+                "Name": "start_date",
+                "Type": "string"
+              },
+              {
+                "Name": "start_time_tbd",
+                "Type": "boolean"
+              },
+              {
+                "Name": "completed",
+                "Type": "boolean"
+              },
+              {
+                "Name": "neutral_site",
+                "Type": "boolean"
+              },
+              {
+                "Name": "home_id",
+                "Type": "bigint"
+              },
+              {
+                "Name": "home_team",
+                "Type": "string"
+              },
+              {
+                "Name": "home_classification",
+                "Type": "string"
+              },
+              {
+                "Name": "home_points",
+                "Type": "bigint"
+              },
+              {
+                "Name": "away_id",
+                "Type": "bigint"
+              },
+              {
+                "Name": "away_team",
+                "Type": "string"
+              },
+              {
+                "Name": "away_classification",
+                "Type": "string"
+              },
+              {
+                "Name": "away_points",
+                "Type": "bigint"
+              },
+              {
+                "Name": "source_snapshot_id",
+                "Type": "string"
+              },
+              {
+                "Name": "source_raw_sha256",
+                "Type": "string"
+              },
+              {
+                "Name": "source_row_index",
+                "Type": "bigint"
+              },
+              {
+                "Name": "retrieved_at",
+                "Type": "string"
+              },
+              {
+                "Name": "historical_availability_status",
+                "Type": "string"
+              },
+              {
+                "Name": "historical_available_at",
+                "Type": "string"
+              },
+              {
+                "Name": "approved_for_predictor_use",
+                "Type": "boolean"
+              },
+              {
+                "Name": "start_epoch_us",
+                "Type": "bigint"
+              }
+            ],
+            "Location": {
+              "Fn::Sub": "s3://${ProjectBucket}/${ProjectPrefix}/cloud-preparation/queryable/"
+            },
+            "InputFormat": "org.apache.hadoop.mapred.TextInputFormat",
+            "OutputFormat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+            "SerdeInfo": {
+              "SerializationLibrary": "org.apache.hive.hcatalog.data.JsonSerDe"
+            }
+          }
+        }
+      }
+    },
+    "Workgroup": {
+      "Type": "AWS::Athena::WorkGroup",
+      "Properties": {
+        "Name": {
+          "Ref": "WorkgroupName"
+        },
+        "RecursiveDeleteOption": false,
+        "WorkGroupConfiguration": {
+          "EnforceWorkGroupConfiguration": true,
+          "PublishCloudWatchMetricsEnabled": false,
+          "BytesScannedCutoffPerQuery": 134217728,
+          "EngineVersion": {
+            "SelectedEngineVersion": "Athena engine version 3"
+          },
+          "ResultConfiguration": {
+            "OutputLocation": {
+              "Fn::Sub": "s3://${ProjectBucket}/${ProjectPrefix}/cloud-preparation/athena-results/"
+            },
+            "ExpectedBucketOwner": {
+              "Ref": "AWS::AccountId"
+            },
+            "EncryptionConfiguration": {
+              "EncryptionOption": "SSE_S3"
+            }
+          }
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "FunctionName": {
+      "Value": {
+        "Ref": "Preparation"
+      }
+    },
+    "Workgroup": {
+      "Value": {
+        "Ref": "Workgroup"
+      }
+    },
+    "Database": {
+      "Value": {
+        "Ref": "Database"
+      }
+    }
+  }
+}

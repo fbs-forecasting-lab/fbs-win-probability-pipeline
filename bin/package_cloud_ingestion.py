@@ -33,14 +33,15 @@ def validate_template():
     return template
 
 
-def build(output):
+def build(output, *, source_files=SOURCE_FILES, template_validator=validate_template,
+          archive_name="cloud-ingestion.zip"):
     if sys.version_info[:2] != (3, 14):
         raise ValueError("Use the project's Python 3.14 environment.")
     out = Path(output).absolute()
     allowed = ROOT / "data/processed"
     if any(p.is_symlink() for p in (out, *out.parents)) or not out.resolve().is_relative_to(allowed.resolve()) or out.resolve() == allowed.resolve():
         raise ValueError("Select a new non-symlink output directory beneath data/processed.")
-    validate_template()
+    template_validator()
     out.mkdir(parents=True, exist_ok=False)
     target = out / "dependencies"
     subprocess.run([sys.executable, "-m", "pip", "install", "--disable-pip-version-check",
@@ -52,9 +53,9 @@ def build(output):
     expected = dict(line.split('==') for line in (ROOT / "infra/cloud-ingestion-requirements.txt").read_text().splitlines())
     if versions != expected:
         raise ValueError("Installed package closure does not match the pinned lightweight requirements.")
-    zip_path = out / "cloud-ingestion.zip"
+    zip_path = out / archive_name
     with zipfile.ZipFile(zip_path, "x", compression=zipfile.ZIP_DEFLATED) as archive:
-        for name in SOURCE_FILES:
+        for name in source_files:
             archive.write(ROOT / name, name)
         for path in sorted(target.rglob('*')):
             if path.is_file():
@@ -66,7 +67,7 @@ def build(output):
         if any(n.startswith(('numpy/','pandas/','scipy/','sklearn/','jupyter/','tests/','data/','src/models/')) or '/.env' in n for n in names):
             raise ValueError("Unexpected private or training contents in package.")
     (out / "package-report.json").write_text(json.dumps({"runtime":"python3.14", "platform":"manylinux2014_x86_64",
-        "versions":versions,"source_files":SOURCE_FILES,"zip_bytes":zip_path.stat().st_size,
+        "versions":versions,"source_files":source_files,"zip_bytes":zip_path.stat().st_size,
         "uncompressed_bytes":sum(i.file_size for i in zipfile.ZipFile(zip_path).infolist()),
         "deployed":False}, indent=2)+'\n')
     print(f"Package: {zip_path.relative_to(ROOT)}")
