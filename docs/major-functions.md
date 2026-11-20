@@ -12,7 +12,7 @@ failure. See the [architecture](architecture.md) for the full flow.
 
 | Function | Inputs and outputs | Validation / important failures |
 | --- | --- | --- |
-| `src.ingestion.cfbd.fetch_games(season, week=None)` | Season and optional week → `GamesResponse` containing original bytes, request parameters, retrieval time, HTTP status | Requires CFBD key from environment or project `.env`; validates parameters; bounded HTTP retries, timeout, authentication/rate-limit/server failures are sanitized. Makes real network calls. |
+| `src.ingestion.cfbd.fetch_games(season, week=None)` | Season and optional week (optional explicit `api_key` and bounded `max_attempts`) → `GamesResponse` containing original bytes, request parameters, retrieval time, HTTP status | Requires an explicit key or the existing environment/project `.env` lookup; validates parameters; bounded HTTP retries, timeout, authentication/rate-limit/server failures are sanitized. Makes real network calls. |
 | `src.ingestion.storage.parse_games(raw_response)` | Bytes → list of game objects | Rejects malformed JSON, non-object rows, and non-JSON numeric constants. |
 | `coverage_report(records)` | Game objects → field/null/classification/duplicate counts | Describes coverage; does not approve leakage or repair rows. |
 | `save_snapshot(result, output_dir=None)` | `GamesResponse` → `(raw_path, manifest_path)` | Preserves bytes, records SHA-256 and coverage; exclusive publication refuses overwrite. Manifest is published last; an orphan raw file is incomplete after failure. |
@@ -101,3 +101,39 @@ The fixed Week 5 sample is historical. Fetching it again can remove completed
 rows from prediction eligibility and cannot reproduce the September snapshot.
 Use saved artifacts for historical reproduction, and treat prior rehearsal
 counts as dated observations rather than guarantees for a fresh request.
+
+## Cloud capture (PM-02C; deployed and verified)
+
+- `src.pipeline.run_contract.validate(event)` checks version, season, optional
+  week and token before external calls; returns the canonical request, token
+  hash and request hash. Unknown fields, secrets in extra fields, invalid types
+  and unsafe tokens fail without exposing the event.
+- `src.pipeline.cloud_ingestion.handler(event, context)` validates deployment
+  settings, uses execution-role S3/Secrets Manager clients, and returns a
+  structured safe receipt. It never loads `.env`, accepts raw event data, or
+  executes the model. One configured secret contains the API key only.
+- `capture_run(event, store, get_secret, *, fetch=fetch_games, clock=now)` performs
+  private-bucket preflight, atomic S3 token claim, at most one HTTP attempt, a
+  durable capture checkpoint, and the existing `S3Store.upload_raw` flow. It
+  verifies both final objects before publishing success. All injectable
+  dependencies support offline tests; none are supplied through event payloads.
+- `CloudS3Store._get` resolves optional absence with an exact-key, one-result
+  prefix-scoped list probe. Listing and GET denials remain errors; it does not
+  convert 403 to absence or change the original CLI store.
+- `create_once` uses `IfNoneMatch="*"`; 412 means another claim won, whereas
+  409/timeouts are ambiguous failures, never unconditional retries. Claim/capture
+  receipts and source objects cannot be overwritten.
+- `unpack_capture` runs the existing snapshot verifier on recovered cloud-temp
+  files; `verified_facts` reads back the final raw/manifest bytes. Completed-token
+  replay verifies those facts and the receipt without fetching or reading a key.
+- `bin/package_cloud_ingestion.py` builds only the allowlisted source and pinned
+  ingestion dependency closure for Python 3.14/Linux x86_64. Dataset/model imports
+  in `S3Store` are lazy, keeping the raw-transfer path lightweight. No project-wide
+  dependency versions or model behavior were changed.
+
+Requests, durable states, interruption limits, permissions and command references
+are in the [cloud ingestion runbook](cloud-ingestion-runbook.md). The
+[sanitized verification summary](cloud-ingestion-verification.md) records the
+November 20 AWS Linux capture, replay and conflict checks.
+Athena, cloud training/inference, scheduling and monitoring are not implemented
+by these functions.

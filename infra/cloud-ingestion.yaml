@@ -1,0 +1,296 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Cloud CFBD capture foundation; existing private bucket and secret only.",
+  "Parameters": {
+    "ProjectBucket": {
+      "Type": "String",
+      "AllowedPattern": "[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]"
+    },
+    "ProjectPrefix": {
+      "Type": "String",
+      "Default": "initial-demo",
+      "AllowedPattern": "[A-Za-z0-9][A-Za-z0-9_-]*(/[A-Za-z0-9][A-Za-z0-9_-]*)*",
+      "MaxLength": 400
+    },
+    "CfbdSecretArn": {
+      "Type": "String",
+      "AllowedPattern": "arn:[a-z0-9-]+:secretsmanager:[a-z0-9-]+:[0-9]{12}:secret:[A-Za-z0-9/_+=.@-]+"
+    },
+    "SecretKmsKeyArn": {
+      "Type": "String",
+      "Default": "",
+      "Description": "Only for a customer-managed secret encryption key."
+    },
+    "BucketKmsKeyArn": {
+      "Type": "String",
+      "Default": "",
+      "Description": "Only when existing bucket objects require a customer-managed key."
+    },
+    "CodeBucket": {
+      "Type": "String",
+      "Description": "Existing application-code artifact bucket; not a data upload."
+    },
+    "CodeKey": {
+      "Type": "String",
+      "Description": "Immutable application ZIP object key."
+    },
+    "FunctionName": {
+      "Type": "String",
+      "Default": "fbs-cloud-ingestion",
+      "AllowedPattern": "[A-Za-z0-9_-]{1,54}"
+    }
+  },
+  "Conditions": {
+    "SecretKms": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "SecretKmsKeyArn"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "BucketKms": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "BucketKmsKeyArn"
+            },
+            ""
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "Logs": {
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${FunctionName}"
+        },
+        "RetentionInDays": 14
+      }
+    },
+    "ExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "ProjectCaptureOnly",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetBucketPublicAccessBlock"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject",
+                    "s3:PutObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/raw/cfbd/games/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-ingestion/runs/*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:ListBucket"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}"
+                  },
+                  "Condition": {
+                    "StringLike": {
+                      "s3:prefix": [
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/raw/cfbd/games/*"
+                        },
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/cloud-ingestion/runs/*"
+                        }
+                      ]
+                    },
+                    "NumericLessThanEquals": {
+                      "s3:max-keys": "1"
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "secretsmanager:GetSecretValue"
+                  ],
+                  "Resource": {
+                    "Ref": "CfbdSecretArn"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${FunctionName}:*"
+                  }
+                },
+                {
+                  "Fn::If": [
+                    "SecretKms",
+                    {
+                      "Effect": "Allow",
+                      "Action": "kms:Decrypt",
+                      "Resource": {
+                        "Ref": "SecretKmsKeyArn"
+                      },
+                      "Condition": {
+                        "StringEquals": {
+                          "kms:ViaService": {
+                            "Fn::Sub": "secretsmanager.${AWS::Region}.${AWS::URLSuffix}"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "Ref": "AWS::NoValue"
+                    }
+                  ]
+                },
+                {
+                  "Fn::If": [
+                    "BucketKms",
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "kms:Decrypt",
+                        "kms:GenerateDataKey"
+                      ],
+                      "Resource": {
+                        "Ref": "BucketKmsKeyArn"
+                      },
+                      "Condition": {
+                        "StringEquals": {
+                          "kms:ViaService": {
+                            "Fn::Sub": "s3.${AWS::Region}.${AWS::URLSuffix}"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "Ref": "AWS::NoValue"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "RoleName": {
+          "Fn::Sub": "${FunctionName}-execution"
+        }
+      }
+    },
+    "Ingestion": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": "Logs",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "FunctionName"
+        },
+        "Runtime": "python3.14",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "src.pipeline.cloud_ingestion.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "ExecutionRole",
+            "Arn"
+          ]
+        },
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucket"
+          },
+          "S3Key": {
+            "Ref": "CodeKey"
+          }
+        },
+        "Timeout": 180,
+        "MemorySize": 512,
+        "EphemeralStorage": {
+          "Size": 512
+        },
+        "ReservedConcurrentExecutions": 1,
+        "Environment": {
+          "Variables": {
+            "FBS_S3_BUCKET": {
+              "Ref": "ProjectBucket"
+            },
+            "FBS_S3_PREFIX": {
+              "Ref": "ProjectPrefix"
+            },
+            "CFBD_SECRET_ARN": {
+              "Ref": "CfbdSecretArn"
+            }
+          }
+        }
+      }
+    },
+    "AsyncPolicy": {
+      "Type": "AWS::Lambda::EventInvokeConfig",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "Ingestion"
+        },
+        "Qualifier": "$LATEST",
+        "MaximumRetryAttempts": 0,
+        "MaximumEventAgeInSeconds": 60
+      }
+    }
+  },
+  "Outputs": {
+    "FunctionName": {
+      "Value": {
+        "Ref": "Ingestion"
+      }
+    },
+    "LedgerPrefix": {
+      "Value": {
+        "Fn::Sub": "${ProjectPrefix}/cloud-ingestion/runs/"
+      }
+    }
+  }
+}

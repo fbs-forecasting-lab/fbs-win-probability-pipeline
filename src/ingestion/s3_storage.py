@@ -17,14 +17,22 @@ from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
 from dotenv import dotenv_values
 
-from src.features import dataset, games
+from src.features import games
 from src.ingestion.storage import PROJECT_ROOT
-from src.models.baseline import DATA_FILES, BaselineError, load_dataset, read_json, require_demo
 
 MAX_OBJECT_BYTES = 64 * 1024 * 1024
 PUBLIC_BLOCK_FLAGS = ("BlockPublicAcls", "IgnorePublicAcls", "BlockPublicPolicy", "RestrictPublicBuckets")
 SDK_CONFIG = Config(connect_timeout=5, read_timeout=30,
                     retries={"mode": "standard", "total_max_attempts": 3})
+
+
+def __getattr__(name):
+    # Preserve the existing dataset filename export without importing model
+    # dependencies on the raw-only Lambda path.
+    if name == "DATA_FILES":
+        from src.models.baseline import DATA_FILES
+        return DATA_FILES
+    raise AttributeError(name)
 
 
 class S3StorageError(ValueError):
@@ -221,6 +229,8 @@ class S3Store:
             S3StorageError: If local validation fails, the bucket is not fully private, remote content
                 conflicts, or an AWS operation fails (sanitized message).
         """
+        from src.models.baseline import BaselineError, load_dataset
+
         try:
             data = load_dataset(directory, allow_retrospective_demo=allow_retrospective_demo)
             report = (Path(directory) / "dataset_report.json").read_bytes()
@@ -252,6 +262,9 @@ class S3Store:
             S3StorageError: If permission is missing, the ID is invalid, an object is missing or tampered
                 with, validation fails, existing local files conflict, or an AWS operation fails.
         """
+        from src.features import dataset
+        from src.models.baseline import DATA_FILES, BaselineError, load_dataset, read_json, require_demo
+
         try:
             require_demo(allow_retrospective_demo)
         except BaselineError:
@@ -310,6 +323,8 @@ class S3Store:
             S3StorageError: If arguments are invalid, the season's snapshot is not in S3, verification
                 fails, existing local files conflict, or an AWS operation fails.
         """
+        from src.features import dataset
+
         if type(season) is not int or not 1869 <= season <= 9999:
             raise S3StorageError("Season must be an integer year.")
         if not isinstance(manifest_name, str) or not re.fullmatch(r"[0-9a-f]{32}\.manifest\.json", manifest_name):

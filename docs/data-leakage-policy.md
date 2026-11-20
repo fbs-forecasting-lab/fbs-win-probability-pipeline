@@ -103,3 +103,24 @@ publication evidence, historical versions and revision handling, and operational
 cutoffs before making leakage-safe claims. Temporal splits and outcome-isolation
 tests alone do not establish historical availability or predictive performance.
 See [data-dictionary.md](data-dictionary.md) for exact current validation rules.
+
+## Cloud capture observation evidence (PM-02C; ingestion verified)
+
+The cloud adapter records claim start, API retrieval/observation, failure and
+completion times separately. Request identity explicitly includes the requested
+season and optional week. A durable capture checkpoint and final object hashes
+allow retries to reuse exactly the same observation; a token never means
+"whatever is latest." Claim expiry diagnoses interruption and does not grant
+permission to refetch or overwrite. See the [runbook](cloud-ingestion-runbook.md).
+
+These times do not define forecast issuance time or prove historical publication
+availability. The existing manifest format still has unknown availability, null
+`available_at`, and `approved_for_predictor_use=false`. Receipts retain all
+retrospective/unapproved status flags. Prospective capture evidence must not
+retroactively certify September backtests. Operational cutoff selection,
+reschedules, and source-version eligibility remain separate implementation work.
+
+The November 20 cloud verification captured 70 records and preserved these limits
+through replay and conflict rejection. Successful AWS execution establishes the
+capture mechanism, not point-in-time forecasting approval. See the
+[sanitized verification summary](cloud-ingestion-verification.md).

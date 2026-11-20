@@ -55,6 +55,26 @@ publishing locally. No model training happens in S3.
 - `bin/synthetic_demo.py`: generates fictional fixtures and runs the local core
   with no credentials or network. It does not emulate S3 or duplicate the model.
 
+## Verified cloud ingestion slice (PM-02C)
+
+`src/pipeline/cloud_ingestion.py` is a thin Lambda adapter around the existing
+fetch/save/raw-upload functions. It obtains one API key through the execution
+role from Secrets Manager, uses cloud-local temporary files, and records an
+immutable S3 claim/capture/completion ledger. Same-token retries never refetch;
+recovery publishes only the original checkpoint. See the
+[deployment and recovery runbook](cloud-ingestion-runbook.md).
+
+The Python 3.14 Lambda, scoped role, bounded logs and retry configuration are
+defined in `infra/cloud-ingestion.yaml`. This ingestion slice was **deployed and
+verified in AWS on November 20, 2026**: 70 records captured, identical replay,
+conflict rejection, and one CFBD attempt across three invocations. See the
+[sanitized verification summary](cloud-ingestion-verification.md). No automatic schedule exists. S3 remains the existing private data
+store, and the existing local notebook/CLIs remain retrospective demonstrations.
+The notebook's graded cloud path will need to initiate cloud operations rather
+than perform their data processing itself. Athena transformations, cloud model
+training/inference, operational eligibility, alerts and monitoring are still
+unimplemented; this adapter alone does not complete the serverless lifecycle.
+
 ## Boundaries and planned work
 
 The fixed 2026 Week 5 demonstration is historical as of October 2026. September

@@ -42,6 +42,12 @@ def _api_key() -> str:
     key = os.environ.get("CFBD_API_KEY", "").strip()
     if not key:
         raise CFBDError("Set CFBD_API_KEY in the environment or the project .env file.")
+    return _validate_key(key)
+
+
+def _validate_key(key):
+    if not isinstance(key, str) or not key:
+        raise CFBDError("CFBD_API_KEY is missing or invalid.")
     if not key.isascii() or any(char.isspace() or ord(char) < 32 or ord(char) == 127 for char in key):
         raise CFBDError("CFBD_API_KEY has an invalid format; check its configuration.")
     return key
@@ -63,7 +69,8 @@ def _retry_delay(retry_after: str | None, attempt: int) -> float:
     return max(0.0, delay)
 
 
-def fetch_games(season: int, week: int | None = None) -> GamesResponse:
+def fetch_games(season: int, week: int | None = None, *, api_key: str | None = None,
+                max_attempts: int = MAX_ATTEMPTS) -> GamesResponse:
     """Request one regular-season FBS games snapshot from the College Football Data API.
 
     Makes a real HTTPS request using the CFBD key from the environment or project ``.env``.
@@ -73,6 +80,8 @@ def fetch_games(season: int, week: int | None = None) -> GamesResponse:
     Args:
         season: Season year.
         week: Optional nonnegative week; ``None`` requests the whole regular season.
+        api_key: Explicit execution-role secret; None preserves the existing local key lookup.
+        max_attempts: Bounded HTTP attempts; the cloud adapter uses one to avoid refetches.
 
     Returns:
         GamesResponse with the original response bytes, request parameters, UTC retrieval time, and
@@ -86,12 +95,14 @@ def fetch_games(season: int, week: int | None = None) -> GamesResponse:
         raise CFBDError("Season must be an integer year between 1869 and 9999.")
     if week is not None and (type(week) is not int or week < 0):
         raise CFBDError("Week must be a nonnegative integer when supplied.")
-    key = _api_key()
+    if type(max_attempts) is not int or not 1 <= max_attempts <= MAX_ATTEMPTS:
+        raise CFBDError("HTTP attempts must be between 1 and 3.")
+    key = _api_key() if api_key is None else _validate_key(api_key)
     parameters = {"year": season, "seasonType": "regular", "classification": "fbs"}
     if week is not None:
         parameters["week"] = week
 
-    for attempt in range(MAX_ATTEMPTS):
+    for attempt in range(max_attempts):
         retry_after = None
         try:
             response = requests.get(
@@ -133,8 +144,8 @@ def fetch_games(season: int, week: int | None = None) -> GamesResponse:
                     return GamesResponse(raw, parameters, retrieved_at, status)
             finally:
                 response.close()
-        if attempt == MAX_ATTEMPTS - 1:
-            raise CFBDError(f"{message}; stopped after {MAX_ATTEMPTS} attempts.") from None
+        if attempt == max_attempts - 1:
+            raise CFBDError(f"{message}; stopped after {max_attempts} attempts.") from None
         time.sleep(_retry_delay(retry_after, attempt))
     raise AssertionError("Unreachable retry state")
 
