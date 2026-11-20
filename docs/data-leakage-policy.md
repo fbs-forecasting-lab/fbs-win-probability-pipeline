@@ -142,3 +142,20 @@ November 20 AWS recovery verified actual Athena/Python parity, publication,
 replay and cutoff refusal. That execution evidence does not establish historical
 availability or approve forecasts. New query creation is explicitly denied in
 the current recovery-only deployment.
+
+## Cloud modeling (PM-04; not yet deployed)
+
+The training adapter verifies the pinned preparation completion and all six
+dataset hashes before reusing the existing train-only scaler/logistic fit.
+Holdout outcomes are used only for evaluation, with no tuning/refit. The constant
+comparison uses training labels. Model metadata and coefficient interpretation
+retain the training/scaling context. Independent inference reloads only a model
+from the protected trainer domain after claim/completion/companion-hash checks;
+hashes alone do not authorize arbitrary serialized objects.
+
+All results keep retrospective mode and false availability/predictor/forecasting
+approval. A valid cloud model or probability does not establish historical source
+availability or operational eligibility. The saved Week 12 split remains a saved
+snapshot; a hypothetical vector remains hypothetical. No later capture or source
+substitution is used to improve sample coverage. See the
+[modeling runbook](cloud-modeling-runbook.md).

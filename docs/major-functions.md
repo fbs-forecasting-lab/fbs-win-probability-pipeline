@@ -18,6 +18,22 @@ scoped IAM, source coverage, verified recovery and its remaining limitations.
 Current deployment mode and IAM both block new query creation; subsequent weekly
 preparation requires deliberate reviewed reconfiguration, not another invocation.
 
+## Cloud modeling (PM-04; local checks passed, not deployed)
+
+| Function | Inputs → outputs | Validation/failure boundary |
+| --- | --- | --- |
+| `model_contract.validate` / `identities` | Explicit training or model reference → validated request and stable identities | No latest/URLs/serialized payloads; three finite hypothetical features and explicit permission |
+| `cloud_modeling.verify_dataset` | Pinned preparation receipt and dataset → verified cloud-temp copy | Completed cloud provenance and all six hashes before fitting |
+| `cloud_modeling.train_run` / `training_handler` | Fixed training request → verified nine-file model bundle and completion | Existing baseline fit/evaluation; claim/checkpoint; no completed replay retraining or conflicting writes |
+| `cloud_modeling.trusted_model` | Explicit trusted model/receipt → verified reloaded pipeline | Producer domain, claim, code/dataset/runtime and every hash checked before deserialization |
+| `cloud_modeling.infer_run` / `inference_handler` | Trusted model + saved batch or hypothetical vector → probabilities/context | Exact dataset for batch; existing prediction functions; complementary finite probabilities; immutable batch outputs |
+| `cloud_modeling.interpretation` | Fitted pipeline → coefficient/scaling explanation | Training means/scales, standardized/original-unit associations; no causal claims |
+
+These adapters preserve the local functions below. See the
+[modeling runbook](cloud-modeling-runbook.md) for IAM, runtime/package evidence,
+replay/recovery and the proposed cloud smoke test. Real-data cloud model results
+are pending approval and are not inferred from synthetic tests.
+
 For a first pass through the model and its call sequence, start with the
 [code-reading guide](code-reading-guide.md), then use this page for detailed
 inputs, outputs, and failure conditions.

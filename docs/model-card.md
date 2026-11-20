@@ -1,5 +1,23 @@
 # Retrospective Demo Logistic Baseline
 
+## PM-04 cloud execution path (implemented; deployment pending)
+
+The private training/inference adapters reuse this exact scaler, model,
+predictors, chronological splits and evaluation implementation. Their proposed
+input is the verified PM-03D cloud dataset: 2,194 training rows, 740 holdout rows
+and 59 saved 2026 Week 12 prediction rows. They require the exact preparation
+completion hash before fitting and trusted trainer provenance/artifact hashes
+before model deserialization. Training-only scaling, holdout isolation and the
+training-derived constant comparison remain unchanged.
+
+New cloud metrics and hypothetical probabilities are **not yet observed**.
+The historical metrics and September samples below remain dated local results,
+not promised results for a new cloud model. Production fitting/evaluation and
+independently invoked model reload/inference will run in AWS only after separate
+approval. Coefficient interpretation includes training means/scales and conditional
+log-odds associations, without causal claims. All availability/approval flags
+remain retrospective/false. See the [cloud modeling runbook](cloud-modeling-runbook.md).
+
 This local Initial Demo baseline estimates the probability that the designated
 home team wins a retained regular-season FBS–FBS game. It is a reconstructed
 historical experiment, not a refreshed live forecast or an approved point-in-time
@@ -158,7 +176,9 @@ validated in inference too. Home probability is selected by class label 1,
 not by assuming a fixed probability-array column. Away probability is 1 minus
 home probability. Empty prediction batches produce a header-only CSV and count 0.
 
-Only load trusted models generated locally by this project. Joblib uses
+Only load trusted models produced by this project. The cloud adapter additionally
+requires the protected trainer write domain, explicit completion/claim hashes,
+fixed dataset/code identity and all companion hashes before loading. Joblib uses
 pickle-based deserialization and can execute code. Hash checks detect changes;
 they do not make an untrusted model safe. The loader verifies all companion
 artifact hashes before deserialization and requires the recorded library

@@ -1,0 +1,454 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "PM-04 private baseline training and independently invoked saved-model inference; no endpoints or schedules.",
+  "Parameters": {
+    "ProjectBucket": {
+      "Type": "String",
+      "AllowedPattern": "[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]"
+    },
+    "ProjectPrefix": {
+      "Type": "String",
+      "Default": "initial-demo",
+      "AllowedPattern": "[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*"
+    },
+    "CodeBucket": {
+      "Type": "String"
+    },
+    "CodeKey": {
+      "Type": "String"
+    },
+    "DatasetId": {
+      "Type": "String",
+      "AllowedPattern": "[0-9a-f]{64}"
+    },
+    "PreparationId": {
+      "Type": "String",
+      "AllowedPattern": "[0-9a-f]{64}"
+    },
+    "PreparationSha256": {
+      "Type": "String",
+      "AllowedPattern": "[0-9a-f]{64}"
+    }
+  },
+  "Resources": {
+    "TrainingLogs": {
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/fbs-model-training",
+        "RetentionInDays": 14
+      }
+    },
+    "TrainingRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "fbs-model-training-execution",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "TrainingOnly",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetBucketPublicAccessBlock",
+                    "s3:GetBucketLocation"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/datasets/${DatasetId}/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-preparation/runs/${PreparationId}/complete.json"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-modeling/models/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-modeling/training/*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:PutObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-modeling/training/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-modeling/models/*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Deny",
+                  "Action": [
+                    "s3:PutObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-modeling/training/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-modeling/models/*"
+                    }
+                  ],
+                  "Condition": {
+                    "StringNotEquals": {
+                      "s3:if-none-match": "*"
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:ListBucket"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}"
+                  },
+                  "Condition": {
+                    "StringLike": {
+                      "s3:prefix": [
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/cloud-modeling/training/*"
+                        },
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/cloud-modeling/models/*"
+                        }
+                      ]
+                    },
+                    "NumericLessThanEquals": {
+                      "s3:max-keys": "1"
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/fbs-model-training:*"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "Training": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "TrainingLogs"
+      ],
+      "Properties": {
+        "FunctionName": "fbs-model-training",
+        "Runtime": "python3.14",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "src.pipeline.cloud_modeling.training_handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "TrainingRole",
+            "Arn"
+          ]
+        },
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucket"
+          },
+          "S3Key": {
+            "Ref": "CodeKey"
+          }
+        },
+        "MemorySize": 1536,
+        "Timeout": 180,
+        "EphemeralStorage": {
+          "Size": 512
+        },
+        "ReservedConcurrentExecutions": 1,
+        "RuntimeManagementConfig": {
+          "UpdateRuntimeOn": "FunctionUpdate"
+        },
+        "Environment": {
+          "Variables": {
+            "FBS_S3_BUCKET": {
+              "Ref": "ProjectBucket"
+            },
+            "FBS_S3_PREFIX": {
+              "Ref": "ProjectPrefix"
+            },
+            "APPROVED_DATASET_ID": {
+              "Ref": "DatasetId"
+            },
+            "APPROVED_PREPARATION_ID": {
+              "Ref": "PreparationId"
+            },
+            "APPROVED_PREPARATION_SHA256": {
+              "Ref": "PreparationSha256"
+            },
+            "OPENBLAS_NUM_THREADS": "1",
+            "OMP_NUM_THREADS": "1",
+            "MKL_NUM_THREADS": "1",
+            "NUMEXPR_NUM_THREADS": "1"
+          }
+        }
+      }
+    },
+    "TrainingAsync": {
+      "Type": "AWS::Lambda::EventInvokeConfig",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "Training"
+        },
+        "Qualifier": "$LATEST",
+        "MaximumRetryAttempts": 0,
+        "MaximumEventAgeInSeconds": 60
+      }
+    },
+    "InferenceLogs": {
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/fbs-model-inference",
+        "RetentionInDays": 14
+      }
+    },
+    "InferenceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "fbs-model-inference-execution",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "InferenceOnly",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetBucketPublicAccessBlock",
+                    "s3:GetBucketLocation"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/datasets/${DatasetId}/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-preparation/runs/${PreparationId}/complete.json"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-modeling/models/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-modeling/training/*/complete.json"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-modeling/training/*/claim.json"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-modeling/inference/*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:PutObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-modeling/inference/*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Deny",
+                  "Action": [
+                    "s3:PutObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}/${ProjectPrefix}/cloud-modeling/inference/*"
+                    }
+                  ],
+                  "Condition": {
+                    "StringNotEquals": {
+                      "s3:if-none-match": "*"
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:ListBucket"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${ProjectBucket}"
+                  },
+                  "Condition": {
+                    "StringLike": {
+                      "s3:prefix": [
+                        {
+                          "Fn::Sub": "${ProjectPrefix}/cloud-modeling/inference/*"
+                        }
+                      ]
+                    },
+                    "NumericLessThanEquals": {
+                      "s3:max-keys": "1"
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/fbs-model-inference:*"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "Inference": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "InferenceLogs"
+      ],
+      "Properties": {
+        "FunctionName": "fbs-model-inference",
+        "Runtime": "python3.14",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "src.pipeline.cloud_modeling.inference_handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "InferenceRole",
+            "Arn"
+          ]
+        },
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucket"
+          },
+          "S3Key": {
+            "Ref": "CodeKey"
+          }
+        },
+        "MemorySize": 1024,
+        "Timeout": 90,
+        "EphemeralStorage": {
+          "Size": 512
+        },
+        "ReservedConcurrentExecutions": 1,
+        "RuntimeManagementConfig": {
+          "UpdateRuntimeOn": "FunctionUpdate"
+        },
+        "Environment": {
+          "Variables": {
+            "FBS_S3_BUCKET": {
+              "Ref": "ProjectBucket"
+            },
+            "FBS_S3_PREFIX": {
+              "Ref": "ProjectPrefix"
+            },
+            "APPROVED_DATASET_ID": {
+              "Ref": "DatasetId"
+            },
+            "APPROVED_PREPARATION_ID": {
+              "Ref": "PreparationId"
+            },
+            "APPROVED_PREPARATION_SHA256": {
+              "Ref": "PreparationSha256"
+            },
+            "OPENBLAS_NUM_THREADS": "1",
+            "OMP_NUM_THREADS": "1",
+            "MKL_NUM_THREADS": "1",
+            "NUMEXPR_NUM_THREADS": "1"
+          }
+        }
+      }
+    },
+    "InferenceAsync": {
+      "Type": "AWS::Lambda::EventInvokeConfig",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "Inference"
+        },
+        "Qualifier": "$LATEST",
+        "MaximumRetryAttempts": 0,
+        "MaximumEventAgeInSeconds": 60
+      }
+    }
+  },
+  "Outputs": {
+    "TrainingFunction": {
+      "Value": {
+        "Ref": "Training"
+      }
+    },
+    "InferenceFunction": {
+      "Value": {
+        "Ref": "Inference"
+      }
+    }
+  }
+}

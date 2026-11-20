@@ -100,6 +100,30 @@ backfills for 2021–2025 are preserved alongside the original 2026 Week 12 capt
 CLI local-history defaults and notebook S3-history behavior above are unchanged. See the
 [preparation runbook](cloud-preparation-runbook.md) for scope and refusals.
 
+## Prepared cloud modeling slice (PM-04; not deployed)
+
+`cloud_modeling.training_handler` reads the explicitly pinned preparation
+completion and six S3 dataset files, verifies their hashes and reuses the fixed
+baseline implementation inside Lambda. Immutable token claims/checkpoints
+prevent completed replay or interrupted publication from retraining. Nine model,
+evaluation, calibration, interpretation and provenance artifacts precede the
+completion receipt. Scaler/model fitting stays train-only; metrics are newly
+computed, not copied from historical examples.
+
+`cloud_modeling.inference_handler` independently reloads a trusted published
+model after verifying its producer claim, completion hash and all companion
+artifacts. It either batch-scores the exact saved prediction split or accepts
+three validated hypothetical features through private IAM-authorized invocation.
+Only the trainer can write models; inference writes only its result prefix.
+
+Two Python 3.14 x86_64 Lambdas use an S3-backed ZIP under the measured 250 MiB
+uncompressed limit after excluding bundled dependency tests/bytecode. There are
+no public endpoints or always-running servers. Local synthetic tests and static
+native/package checks passed; real-data AWS training/evaluation/inference are
+**pending separate deployment approval**, with no new CFBD/Athena work needed.
+Ingestion and recovery-only preparation are unchanged. See the
+[modeling runbook](cloud-modeling-runbook.md) for exact scope and limitations.
+
 ## Boundaries and planned work
 
 The fixed 2026 Week 5 demonstration is historical as of October 2026. September
