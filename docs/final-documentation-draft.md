@@ -2,6 +2,8 @@
 
 Prepared November 21, 2026. This is source for the December 1 PDF, not the final PDF or a claim that every requirement is complete. SageMaker/EC2 training compliance, genuine alert review, publication and final release verification remain open; see [readiness checklist](final-readiness.md).
 
+A [four-page REVIEW DRAFT](final-documentation-review.md) and [offline build/QA guide](final-review-build.md) now provide a compact two-page core plus required appendices. Generated PDFs remain ignored and are not final submissions. The [genuine monitoring-review packet](monitoring-review-packet.md) awaits actual review; it is not an attestation.
+
 ## README core (target one-half to one page)
 
 FBS Win Probability Pipeline is a UNC Charlotte DTSC 3601/3602 project estimating the designated home team's win probability for FBS football. It preserves versioned API captures and SHA-256 receipts in private S3, normalizes/excludes invalid games, constructs prior-season features, and fits a standardized logistic regression on 2022–2024 with an untouched 2025 holdout. Binary classification produces P(home wins), with the away probability equal to one minus it.

@@ -32,6 +32,8 @@ region-bound role/image, dataset/report, job and output identities. Its
 created. This is a local execution-contract class, not a deployed producer.
 See [managed-training readiness](managed-training-readiness.md).
 
+PM-10 records all remaining inline omissions in [inline-docstring-review.md](inline-docstring-review.md): four classes and 127 module-level functions/class methods. Source bindings are preserved; this inventory is not a producer patch.
+
 ## Existing function docstring excerpts
 
 The [major-function guide](major-functions.md) covers implemented inputs, outputs, validation and failure conditions. These are actual docstrings, not proposed names.

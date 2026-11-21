@@ -58,18 +58,21 @@ reviewer text, alert details, model references and secret values. Source age is
 explicitly the saved report's age, not current freshness. No JavaScript/external
 asset or automatic refresh is required.
 
-Minimal proposed publication is **GitHub Pages from the public repository**,
-after content approval and hosting/settings verification. Copy only the approved
-HTML into `docs/public-monitoring/index.html` in a separately approved publication
-change; choose main `/docs` Pages source only after normal integration. Proposed
-URL is `https://fbs-forecasting-lab.github.io/fbs-win-probability-pipeline/public-monitoring/`;
-it is **not published or verified now**. Recheck any existing Pages configuration
-before changing it; do not replace another site. This requires no AWS resource,
-data-bucket policy/ACL/public-access change or public inference endpoint.
-Approval must cover the exact reviewed HTML hash and Pages setting. Afterward
-verify unauthenticated visibility and absence of excluded fields. Revoke the
-publication source on accidental disclosure; preserve private evidence and
-never expose the source bucket. No publication ran during PM-08.
+PM-10 verified hosting read-only: GitHub reports `has_pages=false`, Pages GET
+404 under admin access, and no `gh-pages` branch. The locally rendered presentation
+candidate makes unavailable rolling metrics explicit without changing the original
+report or renderer. [Content/publication review](monitoring-publication-review.md)
+records the exact HTML SHA-256, layouts and rollback.
+
+The updated minimal proposal is **GitHub Pages from a dedicated `gh-pages` branch
+root**, containing only approved `public-monitoring/index.html` and `.nojekyll`.
+This supersedes the earlier main/docs proposal and avoids hosting the whole docs
+folder. The proposed URL remains
+`https://fbs-forecasting-lab.github.io/fbs-win-probability-pipeline/public-monitoring/`.
+Nothing is published/configured now. Explicit approval must cover the exact
+candidate hash, branch/tree, Pages settings/build, public verification and rollback
+(disable the new site, preserve branch/history/evidence). Recheck settings/content
+drift first; no S3 public-access change or public inference endpoint is proposed.
 
 ## 3. Delivery, truthful review and recurring inputs
 

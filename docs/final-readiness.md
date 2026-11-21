@@ -43,16 +43,16 @@ Prior cloud evidence below is historical PM-02–PM-07 evidence, not new workloa
 | Feature interpretation — S p.5 | verified complete for baseline | PM-04 coefficients/scales and [draft](final-documentation-draft.md) domain hypotheses | Explain conditional/correlated/noncausal signs, not standalone rankings |
 | Input/distribution monitoring — S p.5 | verified complete for saved observations | [PM-06C](cloud-monitoring-verification.md): quality and distribution warnings with sample sizes | No claim that a drift indicator proves concept drift or authorizes retraining |
 | Rolling performance monitoring — S p.5, I/M | partially complete | Implemented chronological outcome join/coverage gates, offline tests; 53 saved labels pending | Genuine later outcomes/coverage and measured windows require a new bounded capture proposal; never fill missing metrics with zero |
-| Human or LLM review of model health — S p.5 | partially complete | Genuine report and constrained LLM facts exist; only simulated alert has review transitions | Truthful review of genuine findings still needed; no independent human login/incident closure requirement is invented |
+| Human or LLM review of model health — S p.5 | partially complete | Genuine report and constrained LLM facts exist; [PM-10 review packet](monitoring-review-packet.md) prepared; only simulated alert has recorded review transitions | Hampton must actually review findings; this packet is not an acknowledgment/investigation/closure. No independent-login requirement is invented |
 | Weekly automatic execution — W/M | partially complete | [PM-05C](weekly-cloud-verification.md), PM-07C manual bounded orchestration | Fixed schedule tokens/cutoff are unsuitable for recurring weeks; retain disabled until a fresh-request planner, time guard, budgets and safe replay are reviewed |
 | Failure detection and external alert delivery — S p.5 / M | partially complete | Application-failure inspection and error alarm verified; rule/actions disabled | Detection works; automatic delivery/notification is unverified. No evidence all lecture notification examples are mandatory. No activation in PM-08 |
-| Public monitoring dashboard — M p.2 | partially complete | New scalar-only static candidate with 53 pending labels, no private identities | User content approval, hosting/settings verification and publication approval; no bucket public-access changes |
+| Public monitoring dashboard — M p.2 | partially complete | [PM-10 content review](monitoring-publication-review.md): desktop/narrow previews; no Pages site configured; 53 pending labels and unavailable rolling metrics explicit | Exact HTML content/publication approval and public verification remain; no bucket-access changes |
 | Sportsbook benchmark — M/I | verified complete for probability comparison; partially complete for outcome evaluation | PM-07C: one credit, five/53 aligned games, immutable replay | Limited coverage; later outcomes/paired performance remain deferred; no superiority claim |
 | Point-in-time operational forecasts — W/I/M | partially complete | Cutoff/source/hash safeguards verified; unknown publication times remain flagged | Historical publication/revision evidence and operational approval remain unresolved; all false/retrospective flags persist |
 | README/install/contact/license/examples — D p.1, S p.5 | verified complete for offline reviewer path | Fresh Python 3.14 installation and isolated synthetic quickstart; MIT/full copy; human team/contact | Recheck candidate/main instructions after approved integration |
-| Classes/major functions/docstrings — D p.1 | partially complete | [class inventory](class-reference.md), [major functions](major-functions.md), actual docstring excerpts | Some hashed cloud classes/functions lack inline docstrings. External contracts close navigation gaps; inline changes need provenance compatibility/repackaging review |
+| Classes/major functions/docstrings — D p.1 | partially complete | [class inventory](class-reference.md), [major functions](major-functions.md), four-page review PDF source with actual docstring excerpts | [PM-10 inventory](inline-docstring-review.md): four classes and 127 functions/methods lack inline docstrings; a coordinated provenance-compatible documentation patch remains |
 | Deployable final code on main — S p.5, D | needs verification | All PM-02–PM-07 commits are ancestors of this candidate | Main remains at `b524cf0`; normal reviewed integration, no PR/merge in PM-08 |
-| Final documentation PDF — D p.1 | partially complete | [unfinished source draft](final-documentation-draft.md) includes complete MIT text and tutorials | Resolve above gaps, class appendix, citations/bibliography balance (S p.6), typeset/render/check PDF; due December 1 **10 a.m. ET** |
+| Final documentation PDF — D p.1 | partially complete | [Four-page REVIEW DRAFT source](final-documentation-review.md), full MIT/license and 22 classes; every page visually inspected; [build guide](final-review-build.md) | Content/remaining gaps, bibliography balance and final submission approval remain; this is not final publication. Due December 1 **10 a.m. ET** |
 | Final PPTX/demo — P p.1 | missing final artifact | [five-minute outline](final-demo-outline.md) | Readiness closure, slide production/rehearsal and attendance; PPTX due December 1 **9 a.m. ET**; one minute Q&A |
 
 ## Received suggestion disposition (R p.1; advisory)
@@ -126,3 +126,41 @@ troubleshooting examples, and corrected the cloud/runtime comparison using
 receipt-verified historical metadata. No deployed producer bytes, package, model,
 application test or final published artifact changed; 365 passing tests remain
 historical PM-09A evidence and were not rerun for these documentation edits.
+
+## PM-10 independent review work — newly completed November 21, 2026
+
+Started clean on `feature/final-readiness` at `547171d`; no earlier PM-10 source
+or ignored preview was found. The actual Final Documentation instruction PDF was
+read again: PDF, short README and class/function guide with docstrings, tutorials,
+well-commented shared code, full license, no keys, approximately two pages. The
+review keeps a two-page core plus required tutorial/license/docstring appendices
+rather than deleting required content. All four rendered pages were inspected;
+links/text/license/classes and output refusal were checked. Generated previews,
+private source bindings and evidence remain ignored; reproducible sources are in Git.
+
+| Scope / authority | Current disposition and dependency |
+| --- | --- |
+| Professor: named SageMaker/EC2 training; serverless execution — S/A | **Unchanged:** named-service execution remains missing. Hampton says professor email and existing AWS request have no response. No new access/workload call or exemption is claimed. Preserve PM-09A image/source/proposal bindings. |
+| Professor: documentation, classes/docstrings, tutorial and code — D | REVIEW DRAFT prepared, not final. Inline omissions have an explicit source-byte compatibility plan; final bibliography/content and submission review remain. |
+| Professor: monitoring/performance and human or LLM review — S | Existing technical evidence remains; genuine review packet is prepared only. Pending outcomes do not become measured performance. No human-review transition or personal attestation was created. |
+| Submitted commitments: public monitoring, recurring weekly operation, market benchmark — W/M/I | Candidate static page is locally reviewed and hosting absence verified; publication awaits exact content/hosting approval. Schedules/delivery remain disabled, planner/cutoff/budgets unresolved. Market outcome evaluation still lacks paired outcomes. |
+| Optional improvements: model alternatives, additional/in-season predictors, broader CV/configuration — R/W | Reasoned deferrals stand. No optional feature or service is added. Documentation improvements do not reopen completed coursework or peer reviews. |
+
+Read-only GitHub settings: public repository, default main, admin visibility of
+`has_pages=false` and Pages GET 404; proposed isolated publication branch absent.
+[Publication proposal](monitoring-publication-review.md) pins the new review HTML
+hash and proposes only `gh-pages` root with one HTML file and `.nojekyll`, replacing
+the earlier main/docs suggestion. Nothing was hosted or activated. Desktop/narrow
+checks covered original and candidate, preserved date/status and no external assets.
+
+[Review packet](monitoring-review-packet.md): quarantine 10/65 (15.3846%, threshold
+10%); win-rate feature PSI 0.2529945485983902 (threshold 0.20; 2,194 versus 53 rows);
+zero matched/53 pending labels, null window metrics. Known facts, hypotheses,
+unanswered questions and proportionate actions are separate. These are preserved
+November 20 observations, not new PM-10 measurements or Hampton's review actions.
+
+No application/deployed producer changed, no unchanged application suite was
+rerun, and historical PM-09A tests remain labeled historical. No AWS workload,
+provider request, quota duplicate, deployment, publication, hosting setting,
+schedule, human-review transition, PR or merge occurred. Final PPTX production
+and rehearsal remain later steps; earlier confirmed submissions remain complete.
