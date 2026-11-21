@@ -109,7 +109,10 @@ Neither proves when a historical source value was published or available.
 All current datasets and models remain `retrospective_demo` with forecasting
 approval false. The [leakage policy](data-leakage-policy.md) explains this limit.
 
-Training and inference run locally. S3 stores and transfers private data;
-`week_refresh` and `s3_demo` orchestrate those operations. Monitoring, sportsbook
-comparison, serverless deployment, and operational forecasting are future work.
-The public reading/running path above does not require those future components.
+The offline example and historical `week_refresh`/`s3_demo` workflows run training
+and inference locally. Separate cloud adapters have verified ingestion, Athena
+preparation, Lambda training/inference, weekly scoring, private monitoring and
+bounded explanation/sportsbook comparison. Operational forecasting remains
+unapproved. The [readiness checklist](final-readiness.md) records the unresolved
+SageMaker/EC2 training requirement, disabled recurrence/delivery and pending
+outcomes. The public synthetic reading/running path requires no cloud access.

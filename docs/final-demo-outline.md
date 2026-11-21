@@ -1,0 +1,30 @@
+# Final demonstration outline — five-minute hard stop
+
+Source: Final Demo Presentation p.1. PPTX due December 1, 2026 at 9 a.m. Eastern;
+attendance required, presentation order randomized; one additional minute Q&A.
+This is an outline, not slides or a rehearsed final presentation. Resolve the
+[readiness gaps](final-readiness.md) before claiming the final system is complete.
+
+| Time | Material / rubric coverage | Evidence and boundary |
+| --- | --- | --- |
+| 0:00–0:40 | Stakeholders and need: understandable FBS win probabilities; fans/analysts/data engineers | Submitted stakeholder statement; no betting-profit claim |
+| 0:40–1:10 | Market research and contribution: reproducible cloud lifecycle, monitoring, timestamped benchmark | Submitted research pp.1–2; do not claim superiority over literature |
+| 1:10–2:15 | Method: API → private S3 receipts → normalization → Athena/Python parity → chronological features → training | Architecture and PM-02/03 records; named-service training must be resolved, not relabeled Lambda |
+| 2:15–3:15 | Output/evaluation: held-out comparison, calibration and model interpretation; independent API reload | PM-04 measured counts/metrics, three features; reproducible pinned inputs and actual run evidence, no fresh fit required |
+| 3:15–4:15 | Monitoring/explanation/market: pending labels, warnings, constrained factual summary, five/53 overlap | PM-06/07 evidence and prepared scalar view; distinguish private candidate from approved publication, simulations from genuine review |
+| 4:15–4:45 | Limitations: unknown historical availability, pending outcomes, limited coverage, prior-season-only features and disabled recurrence | Keep every retrospective/unapproved flag; no operational forecast claim |
+| 4:45–5:00 | Conclusion: what was verified, release state and next evidence needed | Explicitly name any remaining compliance gap; stop at 5:00 |
+
+Use large readable text and one clear architecture image/table per slide where
+useful. A live demo or video is optional, not mandatory. Prefer preserved verified
+AWS screenshots/receipts with private identifiers hidden; do not spend another
+provider/training allowance for presentation polish. A local controller may
+observe/initiate only newly approved cloud work, not perform graded computation
+locally. The offline synthetic example is reviewer onboarding, not cloud proof.
+
+Before the final PPTX: choose approved evidence, confirm every rubric item appears,
+confirm all contributors without inventing roles, rehearse to 4:45–5:00, test the
+presentation computer and fallback video/images, verify links/access, and submit
+the PPTX actually used in class. Do not expose credentials, full resource names,
+raw data or private stakeholder artifacts. Reserve the question minute for named
+service compliance, leakage limitations and pending market outcomes.

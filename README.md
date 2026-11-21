@@ -125,6 +125,13 @@ this repository does not automatically roll forward to a new forecast week.
 
 ## Design, limitations, and navigation
 
+The [final-readiness checklist](docs/final-readiness.md) distinguishes course
+requirements, project commitments and remaining release gaps. The
+[release proposal](docs/release-proposal.md), [unfinished documentation source](docs/final-documentation-draft.md)
+and [class/docstring reference](docs/class-reference.md) are review material,
+not proof of final submission or deployed SageMaker training. Cloud PM-02–PM-08
+work remains on the feature release candidate until approved integration into main.
+
 The three predictors are prior-season home-minus-away win percentage,
 prior-season home-minus-away average scoring margin, and home-field status.
 Target-game final scores are labels only, never predictor inputs. The scaler and logistic

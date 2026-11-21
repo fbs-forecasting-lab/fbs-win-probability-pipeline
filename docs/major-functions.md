@@ -141,6 +141,30 @@ establish current AWS connectivity.
 
 ## Orchestration and examples
 
+`cloud_weekly.WeeklyStore` binds the approved original training/model references
+and isolates weekly artifacts. `checked_stage(store, base)` loads a completion
+and verifies each referenced hash; `publish_stage(store, base, artifacts, facts)`
+publishes immutable artifacts before its completion. `advance(event, store,
+invoke_capture)` performs one missing stage and returns `pending`, or a verified
+withheld completion; validation/stage exceptions become `state=failed` objects,
+so orchestration must inspect state rather than Lambda Errors alone. See the
+[weekly contract](weekly-cloud-contract.md). Existing inline docstring omissions
+are listed in the [complete class reference](class-reference.md), with provenance
+compatibility constraints rather than casual changes to hashed producer bytes.
+
+New PM-08 **local candidates**, not deployed integrations:
+
+- `managed_training.run(dataset_dir, model_dir, attempt_file, dataset_id,
+  report_sha256, *, allow_retrospective_demo=False)` verifies pinned File-channel
+  data and a fresh exclusive attempt/output, then delegates to `train_baseline`.
+  Failed identity, consumed attempt or nonempty output refuses a fit. It neither
+  changes the protected model nor creates a trusted cloud-modeling receipt.
+- `public_monitoring.build_view(report_bytes, expected_sha256)` extracts only
+  validated dated scalars from a verified report; `render(view)` validates the
+  fixed schema and emits escaped static HTML. Private fields are not copied;
+  unknown states/fields, invalid measurements or changed safeguards fail. No
+  upload, current-health claim or recurring delivery occurs.
+
 - `src.pipeline.week_refresh.discover_history(root)` reads the **local** reference
   dataset report and finds its five 2021–2025 manifest paths.
   `history_sources(report)` extracts the expected history metadata;
