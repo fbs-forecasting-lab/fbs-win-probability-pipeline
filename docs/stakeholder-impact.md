@@ -5,8 +5,12 @@
 
 > This page reproduces the team's Project Impact and Stakeholders assignment and
 > describes the project's intended goals. The current repository is a
-> retrospective demonstration; real-time updating and serverless deployment are
-> planned rather than implemented. See the [README](../README.md) for current status.
+> retrospective demonstration. Bounded cloud ingestion, preparation, modeling,
+> weekly processing and private monitoring have been verified; automatic delivery
+> and operational forecasting remain disabled/unapproved. PM-07 explanation and
+> sportsbook adapters are implemented locally but not externally verified. The
+> original assignment text below describes intended benefits, not proven outcomes.
+> See the [README](../README.md) for current status.
 
 ## Impact
 

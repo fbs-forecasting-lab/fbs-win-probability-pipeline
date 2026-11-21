@@ -209,3 +209,27 @@ are in the [cloud ingestion runbook](cloud-ingestion-runbook.md). The
 November 20 AWS Linux capture, replay and conflict checks.
 Athena, cloud training/inference, scheduling and monitoring are not implemented
 by these functions.
+
+## Stakeholder explanation and moneyline comparison (PM-07; prepared only)
+
+These functions have offline tests and read-only template/IAM checks, not new
+external-integration or deployed-runtime verification. The
+[contract](stakeholder-insights-contract.md), [runbook](cloud-stakeholder-runbook.md)
+and [verification record](cloud-stakeholder-verification.md) state the access,
+timing, replay and publication limits.
+
+| Implemented function | Inputs → outputs | Important validation / failure conditions |
+| --- | --- | --- |
+| `insights_contract.validate(event)` | Exact versioned explain/capture/benchmark event → canonical request | Explicit demo consent, stable token, hashed references, bounded dates, fixed bookmaker and explicit unique event/team IDs; no prompt/key/unknown fields |
+| `cloud_explanation.verified_facts(store, ref)` | Monitoring completion/report hashes → sanitized fact catalog | Checks producer implementation, claim, all artifacts and unchanged flags; no unrestricted source text is sent |
+| `explanation_facts.catalog(report)` / `validate_selection(text, facts)` | Verified scalars → exact fact sentences; bounded provider selection → ordered sentences | Unknown/nonfinite facts, unsupported output fields, duplicate IDs, missing mandatory limits/status/performance or unavailable measurements presented as numbers fail |
+| `cloud_explanation.provider_call(client, facts)` / `run(event, store, client)` | Allowlisted facts → bounded real Converse response → private artifacts/completion | Fixed direct regional model, single attempt, byte/token/time limits, usage and response validation; invalid/provider failure means explanation unavailable, never fabricated prose |
+| `odds.fetch_moneylines(request, api_key)` / `manifest(response)` | Bounded current NCAAF request and in-memory credential → exact bytes and receipt | One HTTPS attempt, no redirects/retries/history endpoint; bounded response; no key, URL or error-body disclosure |
+| `markets.implied(price, odds_format)` / `fair_probabilities(home, away, odds_format)` | Finite American/decimal prices → implied and proportional two-way probabilities | Rejects unsupported/nonfinite prices; retains overround and complementary probabilities; no betting-return claim |
+| `markets.normalize(raw, manifest)` | Hash-bound current response → market rows and exclusions | Exact event/bookmaker/team identities, two-way matching outcomes and market-level timestamps; duplicate/malformed/untimestamped rows excluded |
+| `markets.compare(predictions, markets, event_map, bookmaker, forecast_cutoff, model_observed_at, market_observed_at, as_of, windows, outcomes)` | Verified saved predictions, explicit mappings and timed markets → coverage, differences, paired evaluation | Fixed shared cohort; retrieval/update/model observation before original cutoff before kickoff; current odds cannot backfill old forecasts; missing labels/coverage leave metrics unavailable |
+| `cloud_benchmark.capture(request, store, get_key, fetch=...)` / `market_input(store, reference)` | Fixed request → immutable raw/manifest/normalized artifacts; explicit capture → independently verified rows | Secret refusal before HTTP; at-most-once capture; validates producer claim, hashes and repeated normalization before comparison |
+| `cloud_benchmark.benchmark(request, store)` | Pinned weekly/model/market/outcome references → private comparison artifacts | Reuses monitor source/model verification and later-outcome checks; `HeadObject` supplies recorded prediction observation time; never fits/reloads/scores the model |
+| `cloud_explanation.handler` / `cloud_benchmark.handler` | Private Lambda event and reviewed environment → safe result | Rejects unapproved model/configuration and missing market-secret configuration; no public endpoint, predecessor invocation or approval action |
+| `InsightsStore`, `claim`, `external_once`, `replay` | Scoped S3 client, request identity and callback → immutable attempt/checkpoint/completion | Four public-access blocks, exact-key max-one probes, conditional writes; code/request conflict and access denial fail; ambiguous attempt cannot refetch; completed replay verifies hashes |
+| `bin/package_cloud_stakeholder.py` | New ignored output and pinned dependency directory → reviewed ZIP | Reuses predecessor packager, allowlists 37 project files, validates eight-resource template and refuses overwrite |

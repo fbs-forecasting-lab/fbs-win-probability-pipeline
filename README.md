@@ -13,13 +13,17 @@ FBS college-football game.
 Implemented: versioned game snapshots, SHA-256 integrity checks, normalization,
 prior-season features, chronological dataset splits, logistic regression,
 holdout evaluation against a constant home-win-rate baseline, saved-model
-prediction, and explicit private-S3 transfers. Training runs locally. The
-notebook and command-line workflows reuse the same functions.
+prediction, and explicit private-S3 transfers. The notebook and command-line
+workflows reuse the same functions. Bounded AWS executions have also verified
+cloud ingestion, preparation, modeling, weekly orchestration and private
+monitoring; schedules, delivery and operational publication remain disabled.
 
 This is a **retrospective demonstration, not an approved live forecast**.
-Historical publication times have not been verified. In-season features,
-sportsbook benchmarking, drift monitoring, and serverless deployment remain
-planned rather than implemented.
+Historical publication times have not been verified. In-season features remain
+planned. [Stakeholder explanation and sportsbook adapters](docs/stakeholder-insights-contract.md)
+are implemented and tested offline; their external calls are not yet verified.
+Market access and cutoff-aligned comparison evidence remain gaps. See the
+[readiness record](docs/cloud-stakeholder-verification.md) for the exact limits.
 
 ## Install
 
@@ -137,7 +141,7 @@ who created a file.
 - [Architecture](docs/architecture.md) and [major-function guide](docs/major-functions.md)
 - [Data dictionary](docs/data-dictionary.md) and [leakage policy](docs/data-leakage-policy.md)
 - [Model card](docs/model-card.md) and [storage guidance](data/README.md)
-- `src/`: ingestion, features, models, evaluation, orchestration; `src/monitoring/` is a placeholder
+- `src/`: ingestion, features, models, evaluation and orchestration; private cloud monitoring lives in `src/pipeline/`
 - `tests/`: offline verification; `notebooks/`: the real demonstration
 
 ## License and contact

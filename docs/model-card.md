@@ -288,3 +288,26 @@ chronology check is not availability proof. Future point-in-time forecasting
 needs that evidence and an operational cutoff policy; see
 [data-leakage-policy.md](data-leakage-policy.md). No live predictive-performance
 or leakage-safe-backtesting claim is made.
+
+## Stakeholder explanation and market comparison (PM-07; not externally verified)
+
+The explanation adapter reads verified monitoring facts; it does not calculate
+authoritative metrics or change the model. A bounded Amazon Nova Micro call can
+select/order exact allowlisted sentences. Invalid or unavailable provider output
+leaves the factual report intact with explanation unavailable. Pending labels
+and historical holdout references remain distinct; no provider statement grants
+forecast approval, closes an alert or authorizes retraining.
+
+The sportsbook adapter treats proportional-overround-adjusted two-way moneylines
+as a separate benchmark, never a predictor, target or tuning input. Explicit
+game/team orientation and model/market observations before the same verified
+cutoff are required. Paired Brier/log-loss results, when supported by later
+labels, use the same eligible bookmaker/game cohort and existing coverage
+thresholds. Missing markets or outcomes do not imply model superiority.
+
+Only synthetic adapter tests and read-only AWS checks have run. No PM-07 provider
+request or real odds capture has occurred. Project market credentials/quota and
+eligible timestamp-aligned evidence remain gaps; newly retrieved current odds
+cannot backfill the saved Week 13 cutoff. All retrospective/unapproved flags
+persist. See the [contract](stakeholder-insights-contract.md) and
+[verification record](cloud-stakeholder-verification.md).

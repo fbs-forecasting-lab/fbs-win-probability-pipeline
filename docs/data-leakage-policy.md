@@ -199,3 +199,32 @@ zero eligible rows and zero predictions, and the distinct Week 13 input produced
 processing completions remained withheld/unapproved; no source publication time
 was invented. The schedule stays disabled. See the
 [dated verification](weekly-cloud-verification.md).
+
+## Explanation and market timing (PM-07; local implementation)
+
+The explanation adapter sends only an allowlisted factual catalog from verified
+monitoring artifacts. Its provider selects exact fact sentences; it cannot
+introduce metrics, replace probabilities, change pending/failed states or approve
+publication. LLM output is not an authoritative measurement or availability
+attestation. Invalid responses leave explanation unavailable without a generated
+fallback claim. No external call has been verified for this new adapter.
+
+Sportsbook observations are benchmarks only, isolated from predictors, labels,
+fitting and model selection. An explicit provider-event/CFBD-game map must preserve
+home/away identity and kickoff. A market needs its own update timestamp and actual
+retrieval time; bookmaker-level metadata cannot replace a missing market update.
+Both retrieval and update must strictly precede the verified weekly cutoff.
+The model prediction object's recorded S3 observation time must also precede
+cutoff, which itself precedes scheduled kickoff. Equality is ineligible.
+
+S3 observation time and market retrieval establish recorded observation, not
+historical public availability. Neither an older quote timestamp nor later
+historical/closing-price API access proves the quote was available at an old
+cutoff. The saved Week 13 cutoff has passed: a fresh current capture yields no
+aligned pre-cutoff evidence for it. Paid historical access, fabricated markets
+and weaker eligibility are excluded. Later outcomes use the existing verified
+evaluation-only path; paired metrics require the exact same eligible games and
+coverage thresholds for model and bookmaker. Unknown labels remain pending.
+All original retrospective flags and withheld publication persist; genuine
+external market evidence remains unverified. See the
+[contract](stakeholder-insights-contract.md).

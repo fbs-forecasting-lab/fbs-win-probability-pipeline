@@ -71,8 +71,8 @@ conflict rejection, and one CFBD attempt across three invocations. See the
 [sanitized verification summary](cloud-ingestion-verification.md). No automatic schedule exists. S3 remains the existing private data
 store, and the existing local notebook/CLIs remain retrospective demonstrations.
 The notebook's graded cloud path will need to initiate cloud operations rather
-than perform their data processing itself. Operational approval and deployed
-monitoring remain unfinished; the PM-06 monitoring candidate is described below.
+than perform their data processing itself. Operational approval remains unfinished;
+bounded PM-06 monitoring verification is described below.
 Cloud modeling is
 separately verified in PM-04C below. This ingestion adapter alone
 does not complete the serverless lifecycle.
@@ -198,6 +198,41 @@ operational approval. The invocation allowance is exhausted.
 See the [contract](monitoring-contract.md), [runbook](cloud-monitoring-runbook.md)
 and [verification summary](cloud-monitoring-verification.md).
 
-In-season features, The Odds API benchmarking, weather inputs, operational
-monitoring/approval and further automation remain future work. See the
+In-season features, weather inputs, operational approval and further automation
+remain future work. See the
 [major-function guide](major-functions.md) for contracts and failure conditions.
+
+## Stakeholder explanation and market adapters (PM-07; prepared only)
+
+`cloud_explanation.handler` verifies a selected immutable monitoring report and
+its producer claim/completion before constructing a scalar-allowlisted fact
+catalog. One bounded direct regional Bedrock Converse call to Amazon Nova Micro
+selects and orders fact identifiers. Only their exact trusted sentences reach
+the private output; provider prose cannot introduce numbers or approvals. Failed
+or invalid output leaves the factual report intact and explanation unavailable.
+Usage, response identity and configuration are recorded when actually returned.
+
+`cloud_benchmark.handler` separates current-moneyline capture from comparison.
+`odds.fetch_moneylines` is one bounded The Odds API request. `markets.normalize`
+verifies source bytes, two-way prices and market timestamps, then applies
+proportional overround removal. `markets.compare` matches explicit game/team/
+provider IDs, using one fixed bookmaker and the same eligible games. Model
+observation, market retrieval/update and kickoff must satisfy the original
+verified cutoff; current odds cannot backfill an old forecast. Separately verified
+later outcomes support paired evaluation only. No model is fitted or executed.
+
+`InsightsStore` reuses exact-key source reads, private-bucket checks and immutable
+publication. A durable attempt marker and response checkpoint prohibit duplicate
+provider work or silent refetch after interruption. Roles write only their own
+`stakeholder/` domains, cannot change models/reports/sources, and cannot invoke
+predecessors. No schedules, endpoints, notification delivery or approval action
+are added by the eight-resource candidate.
+
+Offline tests and read-only template/IAM validation passed. No new handler or
+external provider has run. Bedrock metadata supports the selected model; the
+market key/account quota is unverified and the saved Week 13 cutoff has passed.
+The [proposal/runbook](cloud-stakeholder-runbook.md) therefore separates one
+future genuine explanation smoke from a blocked market phase. The
+[contract](stakeholder-insights-contract.md) and
+[verification record](cloud-stakeholder-verification.md) distinguish implementation
+from external evidence. All retrospective flags and withheld publication persist.
