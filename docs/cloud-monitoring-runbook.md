@@ -8,6 +8,10 @@ execution and the remaining smoke checks have not run. Use the [contract](monito
 strict fields and the [verification summary](cloud-monitoring-verification.md)
 for completed evidence. This slice does not complete operational forecasting.
 
+PM-06C's approved recovery also stopped in read-only preflight, before enablement
+or invocation, due to an incorrect optional-field check in the new private wrapper.
+See the recovery notes below; no cloud retry has run.
+
 ## Concrete candidate
 
 The private proposal is
@@ -235,13 +239,40 @@ reference or run token changed. This correction has not enabled a cloud retry.
 
 The original failure, response and shutdown evidence remain in
 `data/processed/pm06b-deployment-20261120T233040Z/`. Its private recovery proposal
-records the controller hash and remaining bounds. Recovery requires approval to
+records the controller hash and remaining bounds. PM-06C approved recovery to
 recheck the original baselines/deployed state, restore only monitor/review
-concurrency to one and continue **step 2**, using the already published report.
+concurrency to one and continue **step 2**, using the already published report;
+that attempt stopped in preflight as described below.
 No new upload, stack update or repetition of step 1 is needed. At most six monitor
 and four review calls remain, preserving the original seven/four cumulative caps.
 Steps 2–11 are NOT RUN, including the negative-test alarm observation. Zero
 predecessor workloads and all disabled delivery settings remain mandatory.
+
+### PM-06C read-only preflight stop
+
+The new wrapper required a manual-mode `RuntimeVersionArn` from
+`GetRuntimeManagementConfig` even though the function uses `FunctionUpdate`.
+AWS documents that the management response has no usable manual ARN in this
+mode. The actual runtime identity remains in `GetFunctionConfiguration`'s
+`RuntimeVersionConfig`. The missing optional field caused a local `KeyError`
+before any function was restored or invoked. Only failure-shutdown calls ran,
+successfully reasserting concurrency zero for the two new functions. No upload,
+deployment, resource creation or permission change occurred.
+
+The private check now requires `FunctionUpdate`, accepts the documented absent/
+null management ARN and still compares the actual function runtime identity
+exactly with the preserved approved identity. No response or ARN is fabricated.
+Seven helper and three whole-guard offline tests passed; changed runtime or
+broader policy still fail. The original approved controller and application ZIP
+are unchanged. The failed preflight, tested wrapper and continuation baselines
+are retained in `data/processed/pm06c-recovery-20261121T015808Z/`.
+
+Further cloud work remains stopped under the failure rule, with six monitor and
+four review invocations still unused. After review of the local correction,
+continuation would rerun the read-only preflight, restore only those two functions
+and start at step 2. It must not repeat step 1, change tokens or exceed the
+original cumulative limits. Current S3 report/deployed-state re-verification is
+still incomplete; do not treat offline tests as cloud completion.
 
 If review steps are later resumed, evidence must describe authorized automated
 **simulated** smoke actions with actual invocation timestamps. The configured

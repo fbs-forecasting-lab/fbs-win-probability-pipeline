@@ -110,6 +110,42 @@ Organizations enrollment or personal payment was requested. Logs had no detected
 credential patterns, and no secret retrieval was needed. Raw reports, detailed
 logs, resource identifiers, packages and private proposals remain excluded from Git.
 
+## PM-06C recovery preflight — stopped before invocation
+
+On November 20, 2026 (Eastern time), the approved recovery attempt stopped in its
+read-only preflight. Original approval/recovery hashes, the corrected controller
+hash, all thirty packaged source files and twenty dependency pins matched. The
+new private recovery wrapper then incorrectly required `RuntimeVersionArn` from
+`GetRuntimeManagementConfig`. For `FunctionUpdate`, AWS documents that this
+manual-mode field is null; the SDK response omitted it. This caused a local
+`KeyError`, not an AWS invocation failure or evidence of runtime drift. See the
+[AWS API contract](https://docs.aws.amazon.com/lambda/latest/api/API_GetRuntimeManagementConfig.html).
+
+No function was enabled or invoked. The failure procedure reasserted reserved
+concurrency zero for **only** monitor and review, with successful shutdown
+responses. PM-06C added **zero monitor and zero review invocations**; cumulative
+totals remain one monitor and zero review. Original step 1 was not repeated;
+steps 2–11 are still NOT RUN. Full current deployed-state and preserved-S3-report
+verification did not finish, and no automatic cloud retry was attempted.
+
+The private wrapper was corrected locally: require `FunctionUpdate`, accept only
+the documented absent/null manual ARN, and still require the actual runtime ARN
+from `GetFunctionConfiguration` to equal the preserved reviewed runtime identity.
+It does not fabricate an ARN, suppress an AWS error, change runtime settings or
+permit a different runtime. Seven new runtime-metadata tests and three complete
+read-only-guard tests passed offline, including rejection of runtime and policy
+drift. The three approved display regressions also passed: **13 private offline
+checks**, separate from the prior 281-test project suite.
+
+This attempt changed no packaged application, original approved controller,
+template, dependency, IAM policy, artifact, request or token. There were no
+uploads, deployments, new resources, captures, queries, fits, inference calls or
+weekly executions. There were no upgrades, purchases, subscriptions or
+Organizations enrollment. The private failed preflight and tested continuation
+proposal are preserved under `data/processed/pm06c-recovery-20261121T015808Z/`.
+This path uses UTC; the attempt was on November 20 locally. Both functions remain
+disabled pending review.
+
 ## PM-06 local checks (historical implementation evidence)
 
 | Check | Result |
