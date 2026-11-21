@@ -6,72 +6,43 @@ are in ignored `data/processed/pm08-readiness-20261121/`. No old workload allowa
 can be reused. Preserve Free/Active status, eligible coverage and zero personal
 payment; stop if a required service needs paid activation or an upgrade.
 
-## 1. Named-service training closure — blocked candidate
+## 1. Named-service training closure — PM-09A local gates verified, CPU quota blocked
 
-Syllabus p.5 explicitly says SageMaker or EC2; the supplied newest serverless
-announcement does not establish an exemption for Lambda. Retain the verified
-Lambda implementation. Preferred resolution is **one on-demand SageMaker training
-job**, not a notebook server, hosted endpoint, tuning job or persistent EC2 host.
+Syllabus p.5 explicitly names SageMaker or EC2; Lambda has no established exemption.
+[PM-09A readiness](managed-training-readiness.md) supersedes the earlier unverified
+container and unresolved adapter proposal. Existing OrbStack now executes the
+immutable Linux x86_64 image; actual `train` launch, channel/output paths, failures,
+SIGTERM, native trusted reload and synthetic parity passed. All 23 focused tests
+passed inside that image; 365 offline tests passed on the host. No real-data local
+training or cloud job occurred.
 
-- Region `us-east-1`; job `fbs-final-training-20261121`; role
-  `fbs-final-managed-training`; private ECR repository `fbs-final-training`.
-- Prefer one `ml.m5.large`, 5 GiB volume, 300-second maximum runtime, retry zero,
-  Spot/warm pools/debugger/profiling disabled, network isolation enabled. Its
-  account quota is **zero**. A no-paid-upgrade quota resolution needs separate
-  approval; do not request it now. A positive GPU quota is not permission to use
-  a more expensive instance just to bypass this blocker. Any GPU alternative
-  needs a revised explicit cost/coverage review and bounded approval.
-- Read the existing PM-03D parity-verified dataset via a SageMaker `dataset` File
-  channel; exact dataset/report/preparation/model references are privately pinned.
-  Preserve 2,194 train / 740 holdout / 59 saved prediction rows. No API capture,
-  historical backfill, Athena query or current-model replacement.
-- `managed_training.run` checks the report/dataset, explicit demo consent, new
-  output and exclusive attempt marker before delegating to existing baseline
-  training/evaluation. No new model algorithm/settings or secrets are introduced.
-- Output only to a fresh private `initial-demo/final-readiness/managed-training/`
-  job prefix. The candidate yields the existing seven baseline artifacts and
-  managed-job evidence, **not automatically a trusted nine-artifact release**.
-  If the final demonstration must invoke this exact SageMaker-produced artifact,
-  a separately reviewed promotion/provenance adapter must bind the job/image/source,
-  interpretation/provenance companions and existing trusted inference contract.
-  Do not claim byte-equivalent coefficients alone establish producer trust.
+The preferred one-job plan stays `us-east-1`, `fbs-final-training-20261121`,
+one `ml.m5.large`, 5 GiB, training limit 300 seconds, network isolation, no Spot,
+profiling or configured service retries. Five small CPU quotas remain zero.
+Free/Active and $119.99 in remaining credits are independently evidenced; service
+inclusion/credits do not establish quota, job capacity or service execution.
+Do not seek execution approval until a Free-plan-compatible CPU quota/access
+resolution is authorized and established. No quota request, GPU substitution,
+region change or Paid activation was made.
 
-### Container and permission gates
+Exact input/request, scoped training/caller/native-inference policies and trust
+are prepared privately. Six validation documents had no Access Analyzer findings;
+18 IAM simulations matched. Policy validation is not deployed-role verification.
+The immutable base/image/source/dependency bindings and bounded execution plan
+are in [the detailed proposal](managed-training-readiness.md). The request omits
+the optional RetryStrategy (explicit zero is invalid); SDK resubmission is disabled
+and a durable consumed-directory journal prevents ambiguous-response retries.
+Infrastructure restart/exactly-once behavior remains a cloud observation, not a
+local-test guarantee. SIGTERM grace/upload time means 300 seconds is not a total
+billable wall-clock cap.
 
-The candidate Dockerfile reuses the reviewed Linux ZIP and new entrypoint.
-It requires an immutable reviewed `public.ecr.aws/lambda/python:3.14` base digest,
-then overrides the Lambda entrypoint with the SageMaker training module. No pip
-install/network or key retrieval occurs inside the isolated job. The new image
-must be built and run in compatible Linux x86_64 before approval; Docker's local
-daemon was unavailable in prior packaging evidence. No image digest or successful
-Linux execution is invented. The local build context can be hashed, but is not a
-deployable verified image.
-
-Offline SDK shape validation caught that `RetryStrategy.MaximumRetryAttempts=0`
-is invalid (the optional strategy's minimum is one). The corrected nonexecutable
-request template omits that strategy; explicit SDK resubmission remains forbidden.
-Confirm required service-level no-retry behavior before approval rather than
-claiming an unexecuted job verified it. The exact dataset report hash is now bound
-from preserved, hash-verified model metadata; only the image/role/quota/runtime
-and final promotion/retry gates remain unresolved. No job was submitted.
-
-Proposed role: SageMaker service trust restricted to account/source job, exact
-six input `GetObject` resources and dataset-prefix listing, conditional output
-scope, exact ECR pull resources plus required registry authorization, scoped
-CloudWatch logs. No CFBD/odds secret, Bedrock, Athena, predecessor invocation or
-protected model writes. A fully resolved image/role policy and CreateTrainingJob
-request require a new baseline and read-only IAM/service validation before cloud
-approval. Scope is one role, one repository/image upload and one job/fit;
-maximum 300 seconds, no retry or fresh-name rerun on ambiguity. No endpoint or
-recurring resource is proposed. Model output remains quarantined/private until
-integrity, counts, holdout metrics, actual runtime and intended API lineage pass.
-
-Official contracts: [managed training](https://docs.aws.amazon.com/sagemaker/latest/dg/train-model.html),
-[File channel/container layout](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo-running-container.html),
-[CreateTrainingJob](https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateTrainingJob.html)
-and [Free-plan service scope](https://docs.aws.amazon.com/accounts/latest/reference/supported-services-sign-up-new.html).
-Service inclusion and accessible metadata do not prove a particular instance can
-run under this account or that usage consumes no credits.
+The image uses Python 3.14.10 versus the protected model's 3.14.2. The minimum
+native adapter verifies an independently approved SageMaker job/receipt/archive
+before unchanged baseline deserialization/prediction. It requires a separate new
+inference bridge with the same image, not a forged Lambda claim or runtime-check
+relaxation. The proposal bounds this to three synchronous future invocations and
+keeps predecessor deployments/model references unchanged. Its result-bound receipt
+hash can only be populated after the single genuine job. No bridge was deployed.
 
 ## 2. Static public monitoring — content ready locally, hosting unverified
 

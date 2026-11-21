@@ -26,6 +26,12 @@ Source inventory for the final documentation. Existing deployed source bytes are
 | `DemoError` | [src/pipeline/s3_demo.py:36](../src/pipeline/s3_demo.py) | Typed validation/stage exception; callers stop rather than continue with invalid evidence. | A demo stage failed; the message names the stage and never includes secrets. |
 | `RefreshError` | [src/pipeline/week_refresh.py:52](../src/pipeline/week_refresh.py) | Typed validation/stage exception; callers stop rather than continue with invalid evidence. | A refresh stage failed; the message names the stage and never includes secrets. |
 
+The additional PM-09A `managed_contract.TrainingSpec` dataclass pins account,
+region-bound role/image, dataset/report, job and output identities. Its
+`__post_init__` rejects invalid/wildcard paths and identities; no resource is
+created. This is a local execution-contract class, not a deployed producer.
+See [managed-training readiness](managed-training-readiness.md).
+
 ## Existing function docstring excerpts
 
 The [major-function guide](major-functions.md) covers implemented inputs, outputs, validation and failure conditions. These are actual docstrings, not proposed names.

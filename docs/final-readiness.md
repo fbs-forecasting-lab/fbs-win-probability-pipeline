@@ -36,7 +36,7 @@ Prior cloud evidence below is historical PM-02–PM-07 evidence, not new workloa
 | Earlier deliverables and peer reviews — user confirmation | verified complete | Confirmed by Hampton | None; no receipt audit |
 | API capture and private S3 — S p.5, A | verified complete | [PM-02C](cloud-ingestion-verification.md), [PM-07C](sportsbook-verification.md) | Preserve lineage/secret privacy; old allowances exhausted |
 | Athena or Redshift; joins/aggregation — S p.5 | verified complete | [PM-03D](cloud-preparation-verification.md): actual Athena results passed Python parity | Redshift is an alternative, not another required service; current preparation is recovery-only |
-| Train on SageMaker or EC2 — S p.5 | **missing** | [PM-04C](cloud-modeling-verification.md) proves Lambda training only | Named-service job, Linux container, CPU quota/cost/access, provenance verification; no source grants an exemption |
+| Train on SageMaker or EC2 — S p.5 | **missing** | [PM-04C](cloud-modeling-verification.md) proves Lambda training only | Actual named-service job remains missing. PM-09A Linux image/native lineage verified synthetically; CPU quota/access resolution and genuine cloud verification remain; no exemption established |
 | Fully cloud/serverless processing — S p.2, A | partially complete | Cloud ingestion/preparation/training/scoring verified; local notebook is optional historical path | Final graded controller/demo and named-service training closure; don't present local synthetic training as cloud execution |
 | Model execution through APIs — S p.2 | verified complete | PM-04C independently invoked private inference, integrity refusals | Public inference endpoint not explicitly required; future SageMaker-artifact promotion must preserve trusted reload if used in final API demo |
 | LLM API application and usefulness/failure assessment — S pp.2,5 | verified complete for bounded scope | [PM-07A](cloud-stakeholder-verification.md): genuine 257/42-token extractive summary, factual validation, offline failure tests | Final narrative distinguishes narrow extractive usefulness from unrestricted generation; failure tests are not invented provider incidents |
@@ -84,3 +84,24 @@ capacity, eligible GPU coverage or runtime success. No job, quota request,
 upgrade or new cloud resource was initiated. The preferred small CPU candidate
 is blocked; [the proposal](release-proposal.md) identifies the alternatives and
 missing image/runtime evidence without inventing successful installation in Linux.
+
+## PM-09A preparation update — newly executed November 21, 2026
+
+[Managed-training readiness](managed-training-readiness.md) records the exact
+current evidence and remaining decision. Existing OrbStack was started without
+installation/configuration changes; a digest-pinned Linux x86_64 image passed
+actual SageMaker-style launch/path/failure/SIGTERM checks on synthetic data.
+All 23 new focused tests passed on host and in that image; the full blocked-network
+suite passed **365 tests**. Native SageMaker provenance and independent reload are
+verified only with explicitly synthetic service evidence; actual job-origin
+verification and the syllabus's named-service execution remain missing.
+
+Read-only metadata confirms FREE/ACTIVE, $119.99 credits and five zero CPU training
+quotas. Existing bucket ownership/privacy/SSE-S3 and six-file input prefix are
+unchanged. Six IAM documents validated without findings; 18 exact-context policy
+simulations matched. None was attached. The smallest remaining access decision is
+whether to authorize a quota-one `ml.m5.large` request/support inquiry while
+retaining Free/zero personal payment; do not submit a job or upgrade. A separate
+native inference bridge is proposed because the new Python 3.14.10 image must not
+weaken the older protected model's exact-version/producer checks. No previous
+cloud workload, deployment, publication or activation was repeated.

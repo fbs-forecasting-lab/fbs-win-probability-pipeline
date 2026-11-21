@@ -271,3 +271,27 @@ timing, replay and publication limits.
 | `cloud_explanation.handler` / `cloud_benchmark.handler` | Private Lambda event and reviewed environment → safe result | Rejects unapproved model/configuration and missing market-secret configuration; no public endpoint, predecessor invocation or approval action |
 | `InsightsStore`, `claim`, `external_once`, `replay` | Scoped S3 client, request identity and callback → immutable attempt/checkpoint/completion | Four public-access blocks, exact-key max-one probes, conditional writes; code/request conflict and access denial fail; ambiguous attempt cannot refetch; completed replay verifies hashes |
 | `bin/package_cloud_stakeholder.py` | New ignored output and pinned dependency directory → reviewed ZIP | Reuses predecessor packager, allowlists 37 project files, validates eight-resource template and refuses overwrite |
+
+## Managed-training candidate and native trust bridge
+
+These are prepared/tested locally, not deployed. See
+[PM-09A evidence and gates](managed-training-readiness.md).
+
+- `managed_contract.TrainingSpec`, `build_training_request`, policy builders and
+  `validate_request` pin the six-file File channel, image, single CPU job and
+  fresh output namespace. `submit_once` requires the exact approved hash and
+  one-attempt client, durably consumes its directory before one API call and
+  refuses replacement filenames after ambiguous outcomes. Importing it never
+  creates a client or submits work.
+- `managed_training.main` accepts SageMaker's appended `train` argument, handles
+  SIGTERM, records sanitized failure and emits a completion only after the
+  unchanged baseline succeeds; `run` keeps its exclusive fit-attempt guard.
+- `managed_lineage.build_verified_receipt` verifies externally approved native
+  job evidence and bounded archive contents without deserializing.
+  `load_verified_model` checks the independently pinned receipt, producer,
+  runtime, input and output hashes before the existing trusted baseline loader.
+  `infer` reuses saved/vector prediction and checks saved CSV equality.
+- `managed_inference.run` is the new wrapper's dependency-injected read-only S3
+  path. `handler` binds approved keys/hash from protected configuration and
+  rejects bad pins/vectors before AWS access. No old training claim/model is
+  replaced; supporting the new origin in weekly scoring is outside this slice.
