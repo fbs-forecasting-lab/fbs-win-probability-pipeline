@@ -46,7 +46,7 @@ Prior cloud evidence below is historical PM-02–PM-07 evidence, not new workloa
 | Human or LLM review of model health — S p.5 | partially complete | Genuine report and constrained LLM facts exist; [PM-10 review packet](monitoring-review-packet.md) prepared; only simulated alert has recorded review transitions | Hampton must actually review findings; this packet is not an acknowledgment/investigation/closure. No independent-login requirement is invented |
 | Weekly automatic execution — W/M | partially complete | [PM-05C](weekly-cloud-verification.md), PM-07C manual bounded orchestration | Fixed schedule tokens/cutoff are unsuitable for recurring weeks; retain disabled until a fresh-request planner, time guard, budgets and safe replay are reviewed |
 | Failure detection and external alert delivery — S p.5 / M | partially complete | Application-failure inspection and error alarm verified; rule/actions disabled | Detection works; automatic delivery/notification is unverified. No evidence all lecture notification examples are mandatory. No activation in PM-08 |
-| Public monitoring dashboard — M p.2 | partially complete | [PM-10 content review](monitoring-publication-review.md): desktop/narrow previews; no Pages site configured; 53 pending labels and unavailable rolling metrics explicit | Exact HTML content/publication approval and public verification remain; no bucket-access changes |
+| Static public saved monitoring view — M p.2 | verified complete | [PM-11 publication](https://fbs-forecasting-lab.github.io/fbs-win-probability-pipeline/public-monitoring/): exact hash, unauthenticated HTTPS and desktop/narrow verification; [record](monitoring-publication-review.md) | Saved demonstration only. Recurrence, delivery, pending outcomes and operational approval remain separate gaps; no S3 access change |
 | Sportsbook benchmark — M/I | verified complete for probability comparison; partially complete for outcome evaluation | PM-07C: one credit, five/53 aligned games, immutable replay | Limited coverage; later outcomes/paired performance remain deferred; no superiority claim |
 | Point-in-time operational forecasts — W/I/M | partially complete | Cutoff/source/hash safeguards verified; unknown publication times remain flagged | Historical publication/revision evidence and operational approval remain unresolved; all false/retrospective flags persist |
 | README/install/contact/license/examples — D p.1, S p.5 | verified complete for offline reviewer path | Fresh Python 3.14 installation and isolated synthetic quickstart; MIT/full copy; human team/contact | Recheck candidate/main instructions after approved integration |
@@ -164,3 +164,27 @@ rerun, and historical PM-09A tests remain labeled historical. No AWS workload,
 provider request, quota duplicate, deployment, publication, hosting setting,
 schedule, human-review transition, PR or merge occurred. Final PPTX production
 and rehearsal remain later steps; earlier confirmed submissions remain complete.
+
+## PM-11 saved monitoring demonstration - November 21, 2026
+
+Published only the authorized static view at [https://fbs-forecasting-lab.github.io/fbs-win-probability-pipeline/public-monitoring/](https://fbs-forecasting-lab.github.io/fbs-win-probability-pipeline/public-monitoring/).
+Publication commit: `212a659ceda0a04b76d8917f6435bb0045d7ccb6` on isolated `gh-pages`; exact HTML SHA-256:
+`cd128621a8e5ca88b6ab1dac727546549b8845cf7cedca0efe5fda42f710d975`. The two-file root tree contains only the HTML and empty `.nojekyll`.
+GitHub automatically configured the approved branch-root site on first push;
+read-only verification accepted that exact state without replacing a configuration
+or triggering another build. Build commit, unauthenticated HTTP 200, downloaded
+hash, desktop/narrow layouts and absence of external assets were verified.
+
+Added only saved warning facts (10/65 TBD kickoffs, 15.38%, above-10% trigger;
+win-rate PSI 0.253, above-0.20 trigger, 2,194 training versus 53 scoring rows) and
+saved-demonstration labels/interpretation. The fixed November 20 report boundary,
+53 pending labels, unavailable metrics and all safeguards remain. No evidence
+was refreshed, and no human review or operational approval is inferred.
+
+Only static public-view delivery is complete. Disabled recurring scheduling,
+automated alert/event delivery, later-outcome performance, genuine review,
+SageMaker requirement/access and main integration remain unresolved as before.
+No instructor/quotas response was inferred or duplicate request made. No
+application test was rerun; verification was limited to actual content/hosting
+changes. PM-09A image/source/request/proposal bindings and deployed producers
+remain unchanged. See [publication verification](monitoring-publication-review.md).

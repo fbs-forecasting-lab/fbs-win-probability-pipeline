@@ -16,7 +16,9 @@ monitoring and bounded explanation/market comparison have historical AWS evidenc
 **Still unresolved:** the syllabus names SageMaker or EC2 training. Lambda has
 not been accepted as an exemption; the existing quota request is awaiting AWS
 and the professor has been emailed. A locally tested SageMaker candidate is not
-cloud execution. Schedules/delivery are disabled and no public dashboard is live.
+cloud execution. Schedules/delivery are disabled. A [public saved monitoring
+demonstration](https://fbs-forecasting-lab.github.io/fbs-win-probability-pipeline/public-monitoring/) is published separately; it is not current health or
+operational approval.
 
 ## Install and use - offline reviewer path
 
@@ -190,7 +192,7 @@ keeps the two-page core and appends required detail. The source audit is in
 [research references](research-references.md): South & Egros (2020),
 Coleman (2025), Gneiting & Raftery (2007), Kapoor & Narayanan (2023; final-text
 access limited) and Pedregosa et al. (2011). Bibliography balance, final layout,
-SageMaker/EC2 acceptance, genuine review, publication and release integration
+SageMaker/EC2 acceptance, genuine review, recurring delivery and release integration
 remain open. Earlier coursework/peer reviews remain complete.
 
 Final PDF/code: **December 1, 2026, 10 a.m. Eastern**. Presentation PPTX:

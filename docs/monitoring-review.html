@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Saved pipeline monitoring - content review</title>
+<title>Saved pipeline monitoring demonstration</title>
 <style>
 :root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5;color:#172c3d;background:#f3f6f8}
 *{box-sizing:border-box}body{margin:0}main{max-width:980px;margin:auto;padding:28px 24px 40px}
@@ -21,8 +21,8 @@ footer{border-top:1px solid #b7c8d4;padding-top:16px;margin-top:22px}.flags{disp
 </style>
 </head>
 <body><main>
-<div class="eyebrow">FBS FORECASTING LAB / CONTENT REVIEW DRAFT</div>
-<h1>Saved pipeline monitoring</h1>
+<div class="eyebrow">FBS FORECASTING LAB / SAVED DEMONSTRATION</div>
+<h1>Saved monitoring demonstration</h1>
 <p>This is a dated retrospective observation. It does not show current pipeline health or an approved live forecast.</p>
 <div class="banner"><strong>Operational approval withheld</strong>Saved retrospective observation; no operational forecast approval. No automatic updates, notifications or retraining occur.</div>
 <section class="panel" aria-labelledby="date-heading"><h2 id="date-heading">Report date</h2>
@@ -40,7 +40,10 @@ footer{border-top:1px solid #b7c8d4;padding-top:16px;margin-top:22px}.flags{disp
 <div><div>Log loss</div><p class="metric">Unavailable</p></div>
 <div><div>Accuracy</div><p class="metric">Unavailable</p></div>
 </div><p class="small">Rolling calibration is also unavailable. Historical holdout results are a separate reference, not measured rolling performance.</p></section>
-<section class="panel"><h2>Distribution observation</h2><p>Measured on the saved batch. Distribution differences are investigation indicators; they do not prove concept drift or authorize retraining.</p></section>
+<section class="panel" aria-labelledby="warnings-heading"><h2 id="warnings-heading">Saved warning measurements</h2>
+<h3>Quarantine warning</h3><p><strong>10/65 games (15.38%)</strong> were quarantined; warnings trigger above <strong>10%</strong>. The ten games had TBD kickoff times.</p>
+<h3>Win-rate distribution warning</h3><p><strong>PSI 0.253</strong> (population stability index); warnings trigger above <strong>0.20</strong>. Reference: <strong>2,194 training rows</strong>; comparison: <strong>53 scoring rows</strong>.</p>
+<p>These saved warnings call for investigation. They do not establish concept drift, predictive degradation or a need to retrain.</p></section>
 <section class="panel"><h2>Retrospective safeguards</h2><dl class="flags">
 <div><dt>Dataset mode</dt><dd><code>retrospective_demo</code></dd></div>
 <div><dt>Historical availability verified</dt><dd><code>false</code></dd></div>
@@ -48,5 +51,5 @@ footer{border-top:1px solid #b7c8d4;padding-top:16px;margin-top:22px}.flags{disp
 <div><dt>Predictor use approved</dt><dd><code>false</code></dd></div>
 <div><dt>Operational forecast approved</dt><dd><code>false</code></dd></div>
 </dl></section>
-<footer><p class="small">Prepared for content review on November 21, 2026 from the preserved monitoring report. This page contains aggregate counts and states only; no raw data, individual predictions, private resource identifiers or review attestations.</p></footer>
+<footer><p class="small">Saved demonstration prepared on November 21, 2026 from the preserved monitoring report. This page contains aggregate counts and states only; no raw data, individual predictions, private resource identifiers or review attestations.</p></footer>
 </main></body></html>

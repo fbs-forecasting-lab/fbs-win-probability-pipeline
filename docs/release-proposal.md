@@ -6,6 +6,10 @@ are in ignored `data/processed/pm08-readiness-20261121/`. No old workload allowa
 can be reused. Preserve Free/Active status, eligible coverage and zero personal
 payment; stop if a required service needs paid activation or an upgrade.
 
+**PM-11 update:** the separately authorized static monitoring publication is
+complete; its verification is linked below. This does not authorize training,
+recurrence, delivery, provider work or main integration.
+
 ## 1. Named-service training closure — PM-09A local gates verified, CPU quota blocked
 
 Syllabus p.5 explicitly names SageMaker or EC2; Lambda has no established exemption.
@@ -48,31 +52,25 @@ verified runtime mismatch; no Lambda claim is forged or runtime check relaxed. T
 keeps predecessor deployments/model references unchanged. Its result-bound receipt
 hash can only be populated after the single genuine job. No bridge was deployed.
 
-## 2. Static public monitoring — content ready locally, hosting unverified
+## 2. Static public monitoring - saved demonstration published in PM-11
 
-Candidate: ignored `public-view/index.html`, built from the verified PM-06 saved
-report and its recorded SHA-256 using `public_monitoring.build_view/render`.
-It contains only dated scalar counts, measurement states, pending labels and
-retrospective flags. It excludes private identifiers, raw data, game predictions,
-reviewer text, alert details, model references and secret values. Source age is
-explicitly the saved report's age, not current freshness. No JavaScript/external
-asset or automatic refresh is required.
+Public URL: [https://fbs-forecasting-lab.github.io/fbs-win-probability-pipeline/public-monitoring/](https://fbs-forecasting-lab.github.io/fbs-win-probability-pipeline/public-monitoring/).
+Publication commit: `212a659ceda0a04b76d8917f6435bb0045d7ccb6` on `gh-pages`; HTML SHA-256:
+`cd128621a8e5ca88b6ab1dac727546549b8845cf7cedca0efe5fda42f710d975`. Only `public-monitoring/index.html` and empty `.nojekyll` are in that
+isolated root tree. [Verification/review history](monitoring-publication-review.md)
+records before/after hosting evidence, authorized content diff and rollback.
 
-PM-10 verified hosting read-only: GitHub reports `has_pages=false`, Pages GET
-404 under admin access, and no `gh-pages` branch. The locally rendered presentation
-candidate makes unavailable rolling metrics explicit without changing the original
-report or renderer. [Content/publication review](monitoring-publication-review.md)
-records the exact HTML SHA-256, layouts and rollback.
+The approved first branch push automatically enabled legacy branch-root Pages;
+the resulting exact configuration/build was verified without replacing settings
+or sending an additional build trigger. Unauthenticated HTTPS was 200, served
+bytes matched, and desktop/narrow browser checks found no overflow or external
+assets. No S3 setting or private stakeholder report changed.
 
-The updated minimal proposal is **GitHub Pages from a dedicated `gh-pages` branch
-root**, containing only approved `public-monitoring/index.html` and `.nojekyll`.
-This supersedes the earlier main/docs proposal and avoids hosting the whole docs
-folder. The proposed URL remains
-`https://fbs-forecasting-lab.github.io/fbs-win-probability-pipeline/public-monitoring/`.
-Nothing is published/configured now. Explicit approval must cover the exact
-candidate hash, branch/tree, Pages settings/build, public verification and rollback
-(disable the new site, preserve branch/history/evidence). Recheck settings/content
-drift first; no S3 public-access change or public inference endpoint is proposed.
+Only the static saved-view commitment is complete. The fixed date, pending
+labels, unavailable rolling metrics, investigation-only warnings and false
+approval flags remain. No auto-refresh, delivery, review transition or operational
+forecasting is enabled. On accidental disclosure/wrong content, disable only the
+new Pages site and preserve branches/history/evidence; no rollback was required.
 
 ## 3. Delivery, truthful review and recurring inputs
 
@@ -123,5 +121,6 @@ Finish the source draft, class appendix, bibliography/citation check and PDF
 render/link/length QA after gaps close. Then create about five slides and rehearse
 the [five-minute outline](final-demo-outline.md), with no repeated live workload
 unless separately budgeted. PDF/code due December 1 at 10 a.m. ET; PPTX at 9 a.m.
-No slides, final PDF, resource deployment, uploads, publication, activation, API
-invocation, new training job or query was performed in this preparation round.
+The original preparation round performed no slides, final PDF, resource deployment,
+uploads, publication, activation, API invocation, new training job or query.
+The separately authorized PM-11 static publication is recorded in section 2.

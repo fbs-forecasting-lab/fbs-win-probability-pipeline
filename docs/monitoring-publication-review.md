@@ -1,6 +1,53 @@
-# Monitoring content review and proposed publication
+# Saved monitoring publication - verification and review history
 
-**PM-10 proposal only - no hosting change or publication performed.**
+## PM-11 publication completed - November 21, 2026
+
+The **static saved demonstration** is now public at:
+[https://fbs-forecasting-lab.github.io/fbs-win-probability-pipeline/public-monitoring/](https://fbs-forecasting-lab.github.io/fbs-win-probability-pipeline/public-monitoring/)
+
+- Publication branch/commit: `gh-pages`,
+  [`212a659ceda0a04b76d8917f6435bb0045d7ccb6`](https://github.com/fbs-forecasting-lab/fbs-win-probability-pipeline/commit/212a659ceda0a04b76d8917f6435bb0045d7ccb6).
+- Exact published HTML SHA-256: `cd128621a8e5ca88b6ab1dac727546549b8845cf7cedca0efe5fda42f710d975`.
+- The isolated root commit contains only `public-monitoring/index.html` and an
+  empty `.nojekyll`, with no parent history, workflow, docs folder or private data.
+- Before publishing, Pages was absent (`has_pages=false`, GET 404 under admin
+  access) and the publication branch was absent. On the authorized first branch
+  push, GitHub automatically enabled legacy branch-root Pages from `gh-pages` `/`.
+  A conservative guard stopped before an explicit create request; read-only
+  verification confirmed the exact authorized configuration and resulting build
+  commit. No configuration was replaced, explicit Pages POST/PUT was sent, or
+  additional build trigger was issued. The first build observation was `built`.
+- Unauthenticated HTTPS returned **200** at the exact URL; downloaded bytes and
+  SHA-256 equaled the candidate. Fresh unauthenticated desktop (1280px) and narrow
+  (375px) browser checks each returned the same matching HTML with no horizontal
+  overflow, script/form/external asset tags or external asset requests. Both
+  rendered screenshots were visually inspected.
+- Privacy/content/attribution checks passed. Main, deployed renderers/producers,
+  PM-09A bindings, source measurements, S3 settings and review states are unchanged.
+  Unchanged application tests were not rerun.
+
+The only authorized HTML changes from the reviewed PM-10 hash
+`c17f2a45e62945ca7011e81b574b073e10e2f57b78142610eaa14a2f02e7f0ad`
+were saved-demonstration labels/title/footer, quarantine 10/65 (15.38%) with TBD
+times and warning above 10%, win-rate PSI 0.253 with warning above 0.20 and
+2,194/53 reference/comparison rows, and the investigation-only explanation.
+CSS, fixed date, 53 pending labels, unavailable rolling metrics and every
+retrospective/unapproved safeguard were preserved. No measurements were refreshed.
+
+**Only the static public-view portion is complete.** This is not a current health
+feed, reviewed incident disposition, live forecast or operational approval.
+Recurrence, delivery, pending outcomes, genuine review and SageMaker/EC2 execution
+remain separate gaps. No paid activation, AWS change, workload, provider request,
+query, schedule activation or monitoring-review transition occurred.
+
+Rollback remains available: disable only this newly created Pages site, preserve
+branches/history/evidence, and verify unavailability after cache propagation.
+No rollback was necessary or executed. Detailed responses/screenshots and exact
+source bindings remain in ignored `data/processed/pm11-publication-20261121T163859Z/`.
+
+## Historical PM-10 preparation (superseded by the authorized PM-11 result above)
+
+**The following records the pre-publication proposal and its original content hash.**
 The review source is [monitoring-review.html](monitoring-review.html). It is a
 presentation-only candidate based on the previously sanitized saved view. The
 original PM-08 HTML/source binding is preserved unchanged; no producer renderer,
@@ -23,7 +70,7 @@ raw report, inference result or operational status was modified.
   narrow widths. Local screenshots/layout evidence remain ignored. No claim
   of public browser availability is made.
 
-## Existing hosting - newly checked read-only
+## Historical PM-10 hosting check - read-only
 
 GitHub repository metadata reports public visibility, default branch `main`,
 `has_pages=false`, and admin access for the authenticated account. GET `/pages`
@@ -32,7 +79,7 @@ not simply an anonymous permission failure. The proposed `gh-pages` branch was
 also absent in a read-only remote-reference check. No Pages POST/PUT/DELETE,
 build trigger, repository-setting change or publication branch creation ran.
 
-## Exact proposed method - requires separate approval
+## Historical proposed method - approved within PM-11
 
 1. Recheck Pages settings/branch absence and the exact approved HTML hash. Stop
    for an existing/new configuration or content drift; do not replace another site.
