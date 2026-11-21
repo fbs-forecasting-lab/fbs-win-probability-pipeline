@@ -177,6 +177,11 @@ later must yield zero aligned rows for that cutoff. Genuine nonzero benchmarking
 needs separately approved, aligned future observations or existing eligible
 capture evidence. Synthetic tests cannot replace genuine external evidence.
 
+The [PM-07B paired-capture procedure](sportsbook-verification-runbook.md) prepares
+a new Week 13 scoring input and current market observation before one new future
+cutoff, with deterministic response-bound event mapping and no outcomes. It is
+not executed; missing free-key/quota confirmation and expiry remain blockers.
+
 Primary references: [Bedrock Converse](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html),
 [Nova Micro](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-amazon-nova-micro.html),
 [AWS Free-plan services](https://docs.aws.amazon.com/accounts/latest/reference/supported-services-sign-up-new.html),

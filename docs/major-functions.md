@@ -212,6 +212,15 @@ by these functions.
 
 ## Stakeholder explanation and moneyline comparison (PM-07A)
 
+PM-07B adds local `market_mapping.build_event_map(predictions, markets,
+bookmaker='draftkings', aliases=None)` for deterministic exact orientation/kickoff
+mapping and explicit rejection evidence. Reviewed literal aliases bind team IDs;
+no fuzzy inference, provider request or model execution occurs. The separate
+`bin/enter_market_secret.py` requires future creation approval, the expected
+account and real hidden Terminal input; it refuses echo fallback and never
+updates an existing secret. See the [paired-capture procedure](sportsbook-verification-runbook.md)
+for fixed cutoff, request tokens, response bindings and unresolved access.
+
 The explanation handler and unconfigured-market guard executed successfully in
 AWS Linux. One genuine Bedrock response, immutable replay and source/conflict
 refusals passed; actual usage was 257 input and 42 output tokens. Real market
