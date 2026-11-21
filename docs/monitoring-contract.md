@@ -1,7 +1,9 @@
 # Private monitoring and human-review contract
 
-PM-06 is implemented and prepared for deployment review. Its handlers have not
-been deployed or verified in AWS. Monitoring does not train, score, refresh data,
+PM-06B deployed the fourteen approved resources and verified one saved-input
+monitor report in AWS. A local HTML-order comparison then stopped the sequence;
+both new functions are disabled at concurrency zero. Review and remaining smoke
+checks have not run. Monitoring does not train, score, refresh data,
 approve forecasts, or alter a predecessor. See the [runbook](cloud-monitoring-runbook.md)
 and [verification summary](cloud-monitoring-verification.md).
 
@@ -94,8 +96,8 @@ increase over 0.10 versus the separate retrospective holdout reference requests
 investigation; different populations and small windows limit that comparison.
 No thresholds are tuned on the rolling outcomes.
 
-The proposed smoke selects no outcomes. Its rolling performance must remain
-pending, while the existing holdout is clearly labeled retrospective. Even a
+The executed report selected no outcomes: all 53 labels remain pending, while
+the existing holdout is clearly labeled retrospective. Even a
 later measured window retains unknown historical availability and unapproved
 status; matching later results alone does not prove prospective forecasting.
 

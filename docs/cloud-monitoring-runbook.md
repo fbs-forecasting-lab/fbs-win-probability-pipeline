@@ -1,8 +1,10 @@
 # PM-06 private monitoring deployment runbook
 
-Status: implementation, offline tests, package and read-only AWS validation
-complete; **deployment and smoke execution require approval**. No new monitor or
-review handler has run in AWS. Use the [contract](monitoring-contract.md) for
+Status: PM-06B deployed all fourteen approved resources. The first monitor call
+completed in AWS, but a local HTML-order comparison stopped verification.
+**Both new functions are disabled at reserved concurrency zero; further smoke
+work is stopped pending recovery review.** Review
+execution and the remaining smoke checks have not run. Use the [contract](monitoring-contract.md) for
 strict fields and the [verification summary](cloud-monitoring-verification.md)
 for completed evidence. This slice does not complete operational forecasting.
 
@@ -25,7 +27,8 @@ Template: `infra/cloud-monitoring.yaml`, SHA-256
 The private baselines also bind all 30 packaged source files, 20 pinned
 dependencies, six-module monitoring identity, request templates and parameters.
 
-Exactly fourteen new resources are proposed:
+Exactly fourteen resources were created by PM-06B. The function table shows
+template settings; both currently have concurrency zero under the failure procedure:
 
 | Logical resource(s) | Exact name / configuration |
 | --- | --- |
@@ -68,7 +71,8 @@ claims. It cannot rewrite an alert; the monitor cannot write review transitions.
 Neither role can write original raw, weekly, preparation or model data, fetch
 secrets, query Athena, invoke training, start workflows or send notifications.
 The saved weekly closure was traced, and all 133 exact IAM simulation contexts
-passed. Actual deployed role enforcement still needs smoke verification.
+passed. PM-06B verified the monitor's saved-report reads/writes under its deployed
+role. Review and execution-history paths still need smoke verification.
 
 ## Checks before a separately approved deployment
 
@@ -107,10 +111,11 @@ all four bucket access blocks remain correct, and the weekly schedule is still
 disabled. Preserve predecessor object hashes/metadata and resource identities.
 Keep private config and command output off screen. Do not retrieve a secret.
 
-## Approved-only upload and creation procedure
+## Approved upload and creation procedure (completed in PM-06B)
 
-The following is a **future procedure, not an action taken in PM-06**. A controller
-must enforce baselines before using these steps; do not paste private values into
+The following records the approved upload/creation procedure, now completed once
+in PM-06B. **Do not repeat it to recover the stopped smoke sequence.** A controller
+must enforce baselines before any separately approved use; do not paste private values into
 tracked files or display them. The CLI parameters file contains no secret values,
 but does contain private resource references.
 
@@ -218,7 +223,34 @@ alert/report identities handle duplicates when an event is delivered.
 
 ## Performance, cost and failure boundaries
 
-No outcomes are selected in this smoke: expected rolling metrics are null/pending,
+### PM-06B stop and proposed recovery
+
+Step 1 returned completed without FunctionError. Its report, completion, two
+warning alerts and sanitized display passed subsequent read-only verification.
+The controller's comparison had rendered canonical JSON's sorted key order
+instead of the producer allowlist's original row order. The private helper now
+compares the allowlisted fields and renders that original order; three offline
+regression checks passed. No application, ZIP, template, dependency, forecast
+reference or run token changed. This correction has not enabled a cloud retry.
+
+The original failure, response and shutdown evidence remain in
+`data/processed/pm06b-deployment-20261120T233040Z/`. Its private recovery proposal
+records the controller hash and remaining bounds. Recovery requires approval to
+recheck the original baselines/deployed state, restore only monitor/review
+concurrency to one and continue **step 2**, using the already published report.
+No new upload, stack update or repetition of step 1 is needed. At most six monitor
+and four review calls remain, preserving the original seven/four cumulative caps.
+Steps 2–11 are NOT RUN, including the negative-test alarm observation. Zero
+predecessor workloads and all disabled delivery settings remain mandatory.
+
+If review steps are later resumed, evidence must describe authorized automated
+**simulated** smoke actions with actual invocation timestamps. The configured
+reviewer name is authorization context, not a claim that Hampton personally
+investigated a real incident. No genuine incident disposition or personal
+investigation attestation may be invented. Pause dependent review steps if the
+interface cannot truthfully express that distinction.
+
+No outcomes were selected in the executed report: rolling metrics are null/pending,
 not zero error. Prior holdout evaluation remains a separate retrospective
 reference. A later, separately approved 2026 Week 13/full-season outcome capture
 after games complete must preserve source identity, teams and kickoff, be later

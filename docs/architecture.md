@@ -163,7 +163,7 @@ Every dataset/model remains retrospective and unapproved for point-in-time
 forecasting. API keys stay outside Git; joblib files must come from trusted
 sources. MIT covers original code, not third-party data or restricted material.
 
-## Prepared private monitoring (PM-06; not deployed)
+## Private monitoring (PM-06B; deployed, verification stopped)
 
 The monitoring adapter verifies an explicit weekly summary, protected model and
 training reference. It measures quality and feature distributions, and joins
@@ -184,8 +184,13 @@ configs, a disabled failure-event rule and permission, and four alarms with no
 actions. Execution-history inspection detects application failure objects even
 when Lambda succeeded. Expected withheld processing stays distinct from failure.
 Automatic rule activation, notifications and public hosting are excluded.
-Offline tests and read-only template/IAM validation have passed; new-handler AWS
-Linux execution, deployed replay and later-outcome performance remain unverified.
+Offline tests and read-only template/IAM validation passed. PM-06B created all
+fourteen resources and one AWS Linux monitor invocation published a verified
+saved-input report with 53 pending labels. A local HTML-order comparison stopped
+the sequence after Lambda completed. Both new functions now have reserved
+concurrency zero. Review execution, replay, historical-failure detection and the
+negative-test alarm check remain unverified in AWS; later-outcome performance is
+still pending. Predecessors and disabled delivery settings remain unchanged.
 See the [contract](monitoring-contract.md), [runbook](cloud-monitoring-runbook.md)
 and [verification summary](cloud-monitoring-verification.md).
 

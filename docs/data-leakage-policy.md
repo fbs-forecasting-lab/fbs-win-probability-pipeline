@@ -49,7 +49,8 @@ silently relabeled. Outcomes never enter feature construction. Missing labels
 remain pending, and rolling windows require sufficient coverage before metrics.
 Neither distribution indicators, measured outcomes nor a human acknowledgment
 change historical-availability or approval flags, or authorize retraining.
-The monitor is prepared but not deployed; no prospective performance is verified.
+One saved-input monitor report ran in AWS during PM-06B; subsequent verification
+stopped and both new functions are disabled. No prospective performance is verified.
 
 - Select source manifests explicitly. Verify versions, raw hash, row count,
   and recomputed coverage before processing. Never automatically choose the
