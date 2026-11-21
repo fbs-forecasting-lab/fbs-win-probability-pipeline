@@ -53,7 +53,7 @@ For a first pass through the model and its call sequence, start with the
 [code-reading guide](code-reading-guide.md), then use this page for detailed
 inputs, outputs, and failure conditions.
 
-## Private monitoring and human review (PM-06B; deployed, verification stopped)
+## Private monitoring and human review (PM-06C; bounded AWS verification complete)
 
 | Function | Inputs → outputs | Validation/failure boundary |
 | --- | --- | --- |
@@ -68,10 +68,12 @@ inputs, outputs, and failure conditions.
 
 See the [monitoring contract](monitoring-contract.md),
 [runbook](cloud-monitoring-runbook.md) and
-[verification summary](cloud-monitoring-verification.md). These handlers have
-one verified AWS Linux monitor execution; review and remaining smoke checks were
-not run after a local HTML-order comparison stopped the sequence. Both new
-functions are disabled at concurrency zero. Missing labels remain pending; retrospective
+[verification summary](cloud-monitoring-verification.md). Seven monitor and four
+review invocations verified both handlers in AWS Linux, including immutable
+replay, historical application-failure detection, simulated review and the
+expected error alarm. The first report was not repeated. Functions are at
+concurrency one, but delivery remains disabled and the display private. No genuine
+incident was closed or personal investigation attested. Missing labels remain pending; retrospective
 holdout evaluation and later outcome windows are distinct.
 
 These are implemented names, not proposed services. Paths are relative to the

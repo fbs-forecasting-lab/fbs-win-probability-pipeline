@@ -1,16 +1,17 @@
 # PM-06 private monitoring deployment runbook
 
-Status: PM-06B deployed all fourteen approved resources. The first monitor call
-completed in AWS, but a local HTML-order comparison stopped verification.
-**Both new functions are disabled at reserved concurrency zero; further smoke
-work is stopped pending recovery review.** Review
-execution and the remaining smoke checks have not run. Use the [contract](monitoring-contract.md) for
+Status: PM-06B deployed all fourteen approved resources; the authorized tested
+PM-06C continuation completed the bounded AWS smoke after the preserved local
+controller stops. **Both functions are at reserved concurrency one; all seven
+monitoring and four review invocations are spent.** No further workload is
+authorized by that allowance. Use the [contract](monitoring-contract.md) for
 strict fields and the [verification summary](cloud-monitoring-verification.md)
 for completed evidence. This slice does not complete operational forecasting.
 
-PM-06C's approved recovery also stopped in read-only preflight, before enablement
-or invocation, due to an incorrect optional-field check in the new private wrapper.
-See the recovery notes below; no cloud retry has run.
+The weekly schedule and monitoring rule remain DISABLED, alarm actions remain
+disabled and the display is private. No upload, redeployment, IAM change or
+predecessor workload occurred during recovery. The failure evidence and local
+corrections are retained in the historical recovery notes below.
 
 ## Concrete candidate
 
@@ -31,8 +32,8 @@ Template: `infra/cloud-monitoring.yaml`, SHA-256
 The private baselines also bind all 30 packaged source files, 20 pinned
 dependencies, six-module monitoring identity, request templates and parameters.
 
-Exactly fourteen resources were created by PM-06B. The function table shows
-template settings; both currently have concurrency zero under the failure procedure:
+Exactly fourteen resources were created by PM-06B. Both functions now match the
+table's template concurrency of one after their authorized restoration:
 
 | Logical resource(s) | Exact name / configuration |
 | --- | --- |
@@ -75,8 +76,8 @@ claims. It cannot rewrite an alert; the monitor cannot write review transitions.
 Neither role can write original raw, weekly, preparation or model data, fetch
 secrets, query Athena, invoke training, start workflows or send notifications.
 The saved weekly closure was traced, and all 133 exact IAM simulation contexts
-passed. PM-06B verified the monitor's saved-report reads/writes under its deployed
-role. Review and execution-history paths still need smoke verification.
+passed. PM-06B/PM-06C verified saved-report, execution-history and simulated-review
+reads/writes under their deployed roles, including immutable replay.
 
 ## Checks before a separately approved deployment
 
@@ -168,6 +169,12 @@ disabled rule, non-delivering alarms and unchanged predecessors before smoke.
 
 ## Bounded smoke: eleven synchronous calls maximum
 
+PM-06C completed this exact sequence. Step 1 was accepted from preserved verified
+PM-06B evidence, never invoked again. Six additional monitor and four review
+calls reached the cumulative seven/four limits. Do not repeat this smoke under
+the spent allowance. The [verification summary](cloud-monitoring-verification.md)
+records each actual outcome, timings, counts, replay checks and remaining gaps.
+
 Create a new ignored evidence directory. Invoke each event once with
 `InvocationType="RequestResponse"`, recording request/response hashes, request ID,
 FunctionError, duration, maximum memory and runtime INIT evidence. Check the
@@ -225,9 +232,33 @@ even a separately enabled rule needs manual explicit-execution reconciliation.
 Lambda async retry configuration does not provide exactly-once delivery; durable
 alert/report identities handle duplicates when an event is delivered.
 
-## Performance, cost and failure boundaries
+## Completed recovery and continuing boundaries
 
-### PM-06B stop and proposed recovery
+The tested continuation verified all original/recovery hashes and packaged-source
+equality, the preserved report, fourteen resource identities, deployed code/IAM/
+runtime and all protections before restoring only monitor/review concurrency.
+Steps 2–11 all passed. Replays preserved bytes and metadata; only the simulated
+informational alert received acknowledgment, investigation and closure. All
+three genuine saved-data/historical alerts remain unreviewed. The selected old
+failed execution produced evidence of one successful Lambda task returning an
+application failure; no new incident or workflow was created.
+
+The final malformed request returned the expected FunctionError without changing
+stored objects. CloudWatch recorded Errors=1 and the monitoring alarm reached
+ALARM after 73.602371 seconds, within the fixed 600 seconds. No state was forced,
+no deadline extended and no alarm action ran. The state may later return to OK
+naturally. All 84 protected objects and predecessor configurations/execution
+lists remained unchanged. The account remained ACTIVE on the Free plan with
+eligible credits and no upgrade or personal-payment action.
+
+Final private evidence is `data/processed/pm06c-recovery-20261121T021113Z/`.
+It contains eleven cumulative REPORT observations, exact request/response and
+artifact hashes, eighteen monitoring objects, review-chain/token/evidence checks,
+CloudWatch counts and the bounded alarm observations. This is completed bounded
+verification, not authorization for another invocation, automatic delivery,
+later outcome capture or operational forecasting.
+
+### Historical PM-06B stop and recovery preparation
 
 Step 1 returned completed without FunctionError. Its report, completion, two
 warning alerts and sanitized display passed subsequent read-only verification.
@@ -235,20 +266,21 @@ The controller's comparison had rendered canonical JSON's sorted key order
 instead of the producer allowlist's original row order. The private helper now
 compares the allowlisted fields and renders that original order; three offline
 regression checks passed. No application, ZIP, template, dependency, forecast
-reference or run token changed. This correction has not enabled a cloud retry.
+reference or run token changed. The later approved continuation used this fix
+without retrying the completed first report.
 
 The original failure, response and shutdown evidence remain in
 `data/processed/pm06b-deployment-20261120T233040Z/`. Its private recovery proposal
 records the controller hash and remaining bounds. PM-06C approved recovery to
 recheck the original baselines/deployed state, restore only monitor/review
 concurrency to one and continue **step 2**, using the already published report;
-that attempt stopped in preflight as described below.
-No new upload, stack update or repetition of step 1 is needed. At most six monitor
-and four review calls remain, preserving the original seven/four cumulative caps.
-Steps 2–11 are NOT RUN, including the negative-test alarm observation. Zero
-predecessor workloads and all disabled delivery settings remain mandatory.
+the initial attempt stopped in preflight as described below. The later tested
+continuation completed all remaining six monitor and four review calls without
+upload, stack update or repetition of step 1. The original seven/four cumulative
+caps were preserved. Zero predecessor workloads and disabled delivery settings
+remained mandatory throughout.
 
-### PM-06C read-only preflight stop
+### Historical initial PM-06C read-only preflight stop
 
 The new wrapper required a manual-mode `RuntimeVersionArn` from
 `GetRuntimeManagementConfig` even though the function uses `FunctionUpdate`.
@@ -267,14 +299,13 @@ broader policy still fail. The original approved controller and application ZIP
 are unchanged. The failed preflight, tested wrapper and continuation baselines
 are retained in `data/processed/pm06c-recovery-20261121T015808Z/`.
 
-Further cloud work remains stopped under the failure rule, with six monitor and
-four review invocations still unused. After review of the local correction,
-continuation would rerun the read-only preflight, restore only those two functions
-and start at step 2. It must not repeat step 1, change tokens or exceed the
-original cumulative limits. Current S3 report/deployed-state re-verification is
-still incomplete; do not treat offline tests as cloud completion.
+The local correction and continuation proposal were then explicitly approved.
+The later continuation reran read-only verification, accepted preserved step 1,
+restored only the two functions and completed steps 2–11. It changed no token,
+deployment scope or runtime identity. Offline tests remain separate evidence
+from those actual cloud results.
 
-If review steps are later resumed, evidence must describe authorized automated
+The completed review steps recorded authorized automated
 **simulated** smoke actions with actual invocation timestamps. The configured
 reviewer name is authorization context, not a claim that Hampton personally
 investigated a real incident. No genuine incident disposition or personal
@@ -300,13 +331,22 @@ Credits and the Free plan must remain valid; do not interpret student status or
 metadata access as unlimited free service coverage. Stop if upgrade/payment is
 required, and leave evidence intact.
 
-On any unexpected failure or ambiguous invocation: stop, preserve all requests,
-logs, receipts and partially published evidence, disable **only the two new
-functions** with `put_function_concurrency(..., ReservedConcurrentExecutions=0)`,
-and retain the disabled rule/no-action alarms. Do not retry, alter thresholds,
-broaden permissions or invoke a predecessor. Do not delete captured data or
-silently complete a failed report. Hard timeouts may leave no S3 failure alert;
-the function-health alarms are the independent backstop.
+On an actual workload failure, ambiguous workload response, integrity/runtime
+drift, broader permission requirement or changed deployment scope: stop, preserve
+all evidence, disable **only the two monitoring/review functions** with
+`put_function_concurrency(..., ReservedConcurrentExecutions=0)`, and retain the
+disabled rule/no-action alarms. Never repeat an ambiguous workload invocation,
+alter thresholds, broaden permissions or invoke a predecessor to force success.
+
+The clarified PM-06C rule permits controller-only assertion/parsing corrections:
+pause cloud actions, preserve the response/evidence, correct and test locally,
+then rerun read-only verification. Continue under the existing authorization only
+if every approved identity, protection, request and execution limit remains
+unchanged. A verified completed response can be accepted without another call;
+an ambiguous or actual failed workload cannot be relabeled as a controller bug.
+The current invocation allowance is exhausted, so it authorizes no further smoke
+calls. Do not delete evidence or silently complete a failed report. Hard timeouts
+may leave no S3 alert; the independent health alarms remain necessary.
 
 Teardown requires separate approval. The non-destructive stop commands are:
 

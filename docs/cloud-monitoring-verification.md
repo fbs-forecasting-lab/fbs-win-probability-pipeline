@@ -1,18 +1,93 @@
-# PM-06 monitoring verification — deployed, smoke sequence stopped
+# PM-06 monitoring verification — bounded AWS smoke complete
 
 On November 20, 2026, PM-06 implemented private monitoring, failure alerts, human
 review and a sanitized stakeholder draft. The original PM-06 round performed only
 local tests and read-only AWS validation. PM-06B then deployed the fourteen
 approved resources and successfully executed **one** saved-report monitoring
-invocation. A local HTML comparison failed after Lambda returned completed;
-the sequence stopped and both new functions were disabled as required.
+invocation. A local HTML comparison initially stopped the controller, followed
+by a separate recovery-wrapper metadata parsing stop. Both failures and shutdown
+evidence remain preserved. The authorized tested PM-06C continuation then passed
+read-only verification, restored only the two functions and completed steps 2–11
+without repeating step 1 or changing the application/deployment.
 
-There were zero review invocations, CFBD requests, outcome captures, Athena
-queries, model fits, inference invocations or weekly executions. No subscriptions,
-notifications or stakeholder publication occurred. Predecessors, protected
-objects, bucket settings and the disabled weekly schedule were preserved.
+Final cumulative counts are **seven monitoring and four review invocations**.
+There were zero CFBD requests, outcome captures, Athena queries, model fits,
+inference invocations or weekly executions. No subscriptions, notifications or
+stakeholder publication occurred. Predecessors, protected objects, bucket settings
+and disabled delivery controls were preserved.
 
-## PM-06B actual AWS results
+## PM-06C completed continuation (November 20, 2026, Eastern time)
+
+The continuation rechecked all original/recovery/continuation hashes, the tested
+controller/wrapper, all thirty packaged source files against the approved commit,
+twenty dependency pins and the preserved report/claim/alerts/completion. The
+fourteen resource identities, deployed code, role policies, runtime ARN, bucket
+protections and predecessor evidence matched. Runtime update mode was verified
+through `GetRuntimeManagementConfig`; the actual reviewed runtime ARN was checked
+through `GetFunctionConfiguration`, without inventing a manual ARN.
+
+Only `fbs-pipeline-monitoring` and `fbs-monitoring-review` were restored to
+reserved concurrency **one**. The stack remains CREATE_COMPLETE. The continuation
+made no artifact upload, redeployment, new resource or permission change. Its
+private evidence is `data/processed/pm06c-recovery-20261121T021113Z/`; the UTC path
+date is November 21 while local execution was November 20.
+
+| Step | Verified outcome |
+| --- | --- |
+| 1: original report | Accepted from verified preserved evidence; **not invoked again** |
+| 2: report replay | Same completion, report, private JSON/HTML and alerts; all seven existing object bytes/metadata unchanged |
+| 3: historical application failure | Read the selected existing failed execution; detected one `state=failed` output from a successful Lambda task and published a critical alert with verified evidence |
+| 4: execution-report replay | Same result, alert and evidence; object bytes/metadata unchanged |
+| 5: simulated alert | Created one informational alert explicitly marked simulated |
+| 6: simulated-alert replay | Same alert bytes/metadata; no duplicate |
+| 7: simulated acknowledgment | Verified numbered review 001, actual timestamp, factual automated-test evidence and token claim |
+| 8: acknowledgment replay | Same review 001 and token; no duplicate transition or metadata change |
+| 9: simulated investigation | Verified review 002 and exact preceding review hash |
+| 10: simulated closure | Verified review 003, explicit simulated disposition and exact preceding hash; no forecast/retraining authorization |
+| 11: invalid request | Expected RuntimeError FunctionError; no report, alert or stored-object mutation |
+
+This continuation used exactly **six additional monitor and four review calls**;
+no allowance remains from the cumulative seven/four bound. CloudWatch corroborated
+seven monitor invocations with **one expected error**, four review invocations
+with zero errors, and zero invocations of all five predecessor functions during
+the evidence window. Eleven REPORT lines independently matched these counts.
+No workload was automatically retried.
+
+The invalid request completed at 03:24:55.925215Z on November 21 UTC. Its Errors
+metric reached one and the monitoring alarm was observed in **ALARM** at
+03:26:09.527586Z, **73.602371 seconds** later, within the unchanged 600-second
+deadline. No alarm state was forced. All four alarms retained disabled actions;
+there was no notification. The alarm can subsequently return to OK naturally.
+
+| Function | AWS execution | REPORT duration range | Maximum memory / configured |
+| --- | --- | ---: | ---: |
+| Monitoring | Seven calls, Python 3.14 / Linux x86_64 | 4.78–5,760.78 ms | 303 / 1,536 MiB |
+| Review | Four calls, Python 3.14 / Linux x86_64 | 244.51–831.43 ms | 98 / 512 MiB |
+
+The protected runtime remains Python 3.14.10 with unchanged pinned libraries.
+The saved report retained 53 pending labels and exactly the quality/distribution
+findings below; holdout values remain historical reference metrics, not new
+evaluation. Report replay did not create a second report or change freshness's
+explicit as-of boundary.
+
+All four alert hashes, both completion bundles, three review records and three
+review-token claims were verified. Exactly **eighteen monitoring objects** remain.
+Only the simulated informational alert has a review chain. Its private evidence
+explicitly records automated smoke actions, not personal participation or genuine
+incident investigation/closure. The configured reviewer name is authorization
+context; invocation timestamps and evidence hashes were independently checked.
+The historical critical alert describes a previously stopped execution, not a
+new failure. All three genuine saved-data/historical alerts remain unreviewed.
+
+All 84 protected predecessor object metadata snapshots and predecessor
+configurations/execution lists remained identical. Both functions remain at
+concurrency one; the weekly schedule and monitoring rule remain DISABLED, all
+alarm actions are disabled, and the allowlisted stakeholder display remains a
+private report-specific draft. It does not imply that genuine alerts were reviewed.
+The account remained ACTIVE on the Free plan with eligible credits; no upgrade,
+purchase, subscription, Organizations enrollment or personal-payment action ran.
+
+## PM-06B first report (historical, before continuation)
 
 The approved proposal, template, ZIP, requirements, implementation and every
 recorded file hash matched before cloud writes. All thirty packaged source files
@@ -31,13 +106,13 @@ disabled delivery settings matched the proposal.
 | 7–10: simulated acknowledgment/replay/investigation/closure | NOT RUN; no review records or personal investigation attestations written |
 | 11: invalid request and metric/alarm observation | NOT RUN; no negative-test alarm transition claimed |
 
-Actual invocation totals are **one monitoring, zero review**. CloudWatch records
+PM-06B invocation totals were **one monitoring, zero review**. CloudWatch recorded
 one monitor invocation, zero monitor Errors, one REPORT line and no review or
 predecessor invocations during the task window. The configured monitor executed
 inside AWS Linux x86_64, with Python 3.14.10 and the protected producer's exact
 numeric-library versions. Its REPORT measured 5,335.87 ms execution, 6,845.48 ms
 initialization, 12,182 ms billed duration, and 301 MiB maximum memory of 1,536 MiB.
-The review function did not execute, so its runtime/memory behavior is unverified.
+The review function had not executed then; its subsequent execution is recorded above.
 
 The published saved-input report measured:
 
@@ -73,14 +148,15 @@ so its coverage is null, not a measured 0% performance result. Historical holdou
 metrics below remain a separate reference, not a new evaluation. All four
 retrospective/unapproved flags persist, with no operational forecast approval.
 
-Seven new immutable objects remain: one claim, three report/display artifacts,
-one completion and two alerts. Hash/readback checks passed; stakeholder JSON is
+PM-06B published seven immutable objects: one claim, three report/display artifacts,
+one completion and two alerts. These are retained within the final eighteen objects.
+Hash/readback checks passed; stakeholder JSON is
 the exact allowlist, and HTML matches the producer's original allowlist order.
 No raw records, private identifiers or source hashes appear in the display.
 All 84 protected predecessor object metadata snapshots remained identical, as
 did predecessor configurations, execution history selection and bucket settings.
 
-## Local controller failure and shutdown
+## Historical local controller failure and shutdown
 
 Canonical JSON sorts object keys. The private controller incorrectly re-rendered
 the parsed `stakeholder.json` in that sorted order and compared it byte-for-byte
@@ -88,9 +164,9 @@ with HTML built in the allowlist's intentional insertion order. The field values
 and original HTML were correct. This was a **local verifier assertion**, not a
 Lambda exception, source/model integrity failure or alert-worthy new incident.
 
-The required failure procedure ran immediately: both new functions now have
-reserved concurrency **zero**. The stack is retained at CREATE_COMPLETE, its
-template concurrency remains one, and this temporary shutdown is intentional.
+The required failure procedure ran immediately: both new functions temporarily
+had reserved concurrency **zero**. The stack was retained at CREATE_COMPLETE,
+with template concurrency one. The later authorized continuation restored that setting.
 The failure-event rule and weekly schedule remain DISABLED; all four alarms have
 actions disabled and no notifications. No invocation was retried or continued.
 Evidence is preserved privately in
@@ -100,17 +176,17 @@ The private controller comparison was corrected locally to validate fields and
 render from the allowlist order. Three offline regression checks passed: sorted
 JSON remains valid, extra fields fail, and altered HTML fails. No packaged
 application, dependency, infrastructure or request identity changed. The original
-approved hashes still apply. Further cloud work is stopped pending recovery
-review; a prepared local recovery proposal would restore only the two new
-functions and continue steps 2–11, with at most six remaining monitor and four
-review invocations. It requires no upload, deployment or repeat of step 1.
+approved hashes still apply. The prepared recovery proposal preserved the two
+functions and original request identities. The completed continuation above used
+the remaining six monitor and four review invocations without upload,
+redeployment or repetition of step 1.
 
 The account remained ACTIVE on the Free plan. No upgrade, purchase, subscription,
 Organizations enrollment or personal payment was requested. Logs had no detected
 credential patterns, and no secret retrieval was needed. Raw reports, detailed
 logs, resource identifiers, packages and private proposals remain excluded from Git.
 
-## PM-06C recovery preflight — stopped before invocation
+## Initial PM-06C recovery preflight stop (historical)
 
 On November 20, 2026 (Eastern time), the approved recovery attempt stopped in its
 read-only preflight. Original approval/recovery hashes, the corrected controller
@@ -123,10 +199,10 @@ manual-mode field is null; the SDK response omitted it. This caused a local
 
 No function was enabled or invoked. The failure procedure reasserted reserved
 concurrency zero for **only** monitor and review, with successful shutdown
-responses. PM-06C added **zero monitor and zero review invocations**; cumulative
-totals remain one monitor and zero review. Original step 1 was not repeated;
-steps 2–11 are still NOT RUN. Full current deployed-state and preserved-S3-report
-verification did not finish, and no automatic cloud retry was attempted.
+responses. That initial attempt added **zero monitor and zero review invocations**;
+cumulative totals then remained one monitor and zero review. Original step 1 was
+not repeated. Full deployed-state/S3 re-verification did not finish in that attempt;
+the later explicitly authorized continuation completed it as reported above.
 
 The private wrapper was corrected locally: require `FunctionUpdate`, accept only
 the documented absent/null manual ARN, and still require the actual runtime ARN
@@ -143,8 +219,8 @@ uploads, deployments, new resources, captures, queries, fits, inference calls or
 weekly executions. There were no upgrades, purchases, subscriptions or
 Organizations enrollment. The private failed preflight and tested continuation
 proposal are preserved under `data/processed/pm06c-recovery-20261121T015808Z/`.
-This path uses UTC; the attempt was on November 20 locally. Both functions remain
-disabled pending review.
+This path uses UTC; the attempt was on November 20 locally. Its failure evidence
+was retained unchanged when the later continuation restored the functions.
 
 ## PM-06 local checks (historical implementation evidence)
 
@@ -176,10 +252,10 @@ It reuses the pinned Linux dependencies of the verified predecessor. Static ELF,
 pin, quota and source checks do **not** establish dynamic compatibility: a local
 compatible Linux execution environment was unavailable (the Docker CLI was
 installed, but its configured local daemon socket was absent). The subsequent
-PM-06B report execution above establishes the monitor's AWS runtime, but not the
-unexecuted review handler or remaining smoke acceptance. The original 281-test
-suite was not rerun for documentation-only PM-06B changes; the three new local
-controller checks are reported separately.
+PM-06B/PM-06C executions establish both handlers' AWS runtime and the bounded
+smoke acceptance above. The original 281-test suite was not rerun for these
+documentation/private-controller-only changes; the thirteen offline private
+controller checks are reported separately from that project suite.
 
 ## PM-06 read-only AWS checks (historical readiness evidence)
 
@@ -232,15 +308,19 @@ The protected model's **previous PM-04C** retrospective holdout reference remain
 Those values are not newly measured rolling performance. Historical availability
 remains unknown; all retrospective/unapproved flags remain unchanged.
 
-## Deployment acceptance still open
+## Bounded acceptance and remaining gaps
 
 The [proposal/runbook](cloud-monitoring-runbook.md) bounded the deployment to 14
-resources and eleven synchronous invocations. Deployment and one monitor call
-completed; report/execution replay, historical application-failure detection,
-simulated-alert/review chains and the invalid-request metric/alarm test remain
-unverified in AWS because the sequence stopped. No further invocation is currently
-enabled. The smoke also does not verify new weekly failure/
-timeout alarm transitions, prospective outcomes, automatic rule delivery, external
-notifications or public hosting. The failure-event rule and weekly schedule stay
-disabled; alarms have no delivery actions. Acknowledgment never approves a model
-or forecast. This slice does not complete operational forecasting.
+resources and eleven synchronous invocations. All those bounded checks completed:
+saved-data reporting, replay preservation, historical application-failure detection,
+simulated review and the expected error metric/alarm. No invocation allowance
+remains; any further workload needs separate authorization.
+
+The smoke does not establish measured rolling/prospective performance: later
+outcomes were not captured, and historical availability remains unknown. It also
+does not verify new weekly failure/timeout alarm transitions, automatic rule
+delivery, external notifications or public hosting. The failure-event rule and
+weekly schedule stay disabled; alarms have no delivery actions. Review automation
+is explicitly simulated, not personal investigation or independent human
+authentication. Acknowledgment never approves a model or forecast. This slice
+does not complete operational forecasting.

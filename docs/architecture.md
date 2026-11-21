@@ -163,7 +163,7 @@ Every dataset/model remains retrospective and unapproved for point-in-time
 forecasting. API keys stay outside Git; joblib files must come from trusted
 sources. MIT covers original code, not third-party data or restricted material.
 
-## Private monitoring (PM-06B; deployed, verification stopped)
+## Private monitoring (PM-06C; bounded AWS verification complete)
 
 The monitoring adapter verifies an explicit weekly summary, protected model and
 training reference. It measures quality and feature distributions, and joins
@@ -179,18 +179,22 @@ attests the configured human identity; this is not independent human login or
 permission to retrain/publish. Report/review roles write only isolated monitoring
 domains and cannot invoke predecessors. Existing retrospective flags persist.
 
-The fourteen-resource candidate includes two functions/roles/log groups/async
+The fourteen-resource deployment includes two functions/roles/log groups/async
 configs, a disabled failure-event rule and permission, and four alarms with no
 actions. Execution-history inspection detects application failure objects even
 when Lambda succeeded. Expected withheld processing stays distinct from failure.
 Automatic rule activation, notifications and public hosting are excluded.
-Offline tests and read-only template/IAM validation passed. PM-06B created all
-fourteen resources and one AWS Linux monitor invocation published a verified
-saved-input report with 53 pending labels. A local HTML-order comparison stopped
-the sequence after Lambda completed. Both new functions now have reserved
-concurrency zero. Review execution, replay, historical-failure detection and the
-negative-test alarm check remain unverified in AWS; later-outcome performance is
-still pending. Predecessors and disabled delivery settings remain unchanged.
+Offline tests and read-only template/IAM validation passed. PM-06B deployed the
+resources; the tested PM-06C continuation completed the bounded AWS Linux smoke
+after preserved controller stops, without repeating the first report. Seven
+monitor and four review calls verified saved-data reporting, replay, historical
+application-failure detection, simulated review and the expected error alarm.
+Only the test alert was reviewed; genuine alerts were untouched. Both functions
+are at concurrency one. The weekly schedule/rule and alarm actions remain
+disabled, and the display remains private. All 84 protected object metadata
+snapshots and predecessors remained unchanged. Later-outcome performance is
+pending: all 53 labels are unavailable, with no measured rolling metrics or
+operational approval. The invocation allowance is exhausted.
 See the [contract](monitoring-contract.md), [runbook](cloud-monitoring-runbook.md)
 and [verification summary](cloud-monitoring-verification.md).
 

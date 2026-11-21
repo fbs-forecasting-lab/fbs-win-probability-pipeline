@@ -49,8 +49,10 @@ silently relabeled. Outcomes never enter feature construction. Missing labels
 remain pending, and rolling windows require sufficient coverage before metrics.
 Neither distribution indicators, measured outcomes nor a human acknowledgment
 change historical-availability or approval flags, or authorize retraining.
-One saved-input monitor report ran in AWS during PM-06B; subsequent verification
-stopped and both new functions are disabled. No prospective performance is verified.
+The PM-06B/PM-06C bounded AWS smoke verified saved-input monitoring, replay and
+explicitly simulated review without another capture, model fit or scoring call.
+All 53 labels remain pending; no prospective performance is verified. Functions
+are at concurrency one, with delivery disabled and the display private.
 
 - Select source manifests explicitly. Verify versions, raw hash, row count,
   and recomputed coverage before processing. Never automatically choose the

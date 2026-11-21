@@ -1,6 +1,6 @@
 # Retrospective Demo Logistic Baseline
 
-## PM-06B monitoring (deployed; verification stopped)
+## PM-06C monitoring (bounded AWS verification complete)
 
 The new private monitoring adapter verifies this protected model's producer,
 runtime and artifact hashes without deserializing or scoring it. It compares
@@ -8,15 +8,18 @@ weekly features with the exact original training CSV and reuses existing
 probability metrics only when explicit later outcomes meet chronological-window,
 identity and coverage checks. Holdout results below remain retrospective reference
 evaluation, not newly measured rolling performance. The one completed AWS monitor
-report selected no later outcomes and recorded 53 pending labels. A local
-HTML-order comparison stopped further smoke calls; both new functions are
-disabled and review/replay acceptance remains unverified. Distribution changes
+report selected no later outcomes and recorded 53 pending labels. The tested
+continuation verified replay, historical application-failure detection, explicitly
+simulated review and the expected error alarm across seven monitor/four review
+calls; it did not repeat the first report, retrain or score the model. Both
+functions are at concurrency one, with automatic delivery disabled and the
+display private. Genuine alerts were not reviewed or closed. Distribution changes
 request investigation, not automatic retraining or model replacement. Human
 review records confer no forecast approval; historical availability stays unknown
 and every unapproved flag remains false. See the
 [monitoring contract](monitoring-contract.md) and
-[verification summary](cloud-monitoring-verification.md) for local evidence and
-unverified cloud behavior. Existing model settings and predecessor sources are
+[verification summary](cloud-monitoring-verification.md) for actual cloud evidence
+and remaining performance/delivery limitations. Existing model settings and predecessor sources are
 unchanged.
 
 ## PM-04 cloud execution path (AWS verified November 20, 2026)

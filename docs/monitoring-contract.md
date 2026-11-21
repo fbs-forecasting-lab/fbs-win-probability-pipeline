@@ -1,9 +1,11 @@
 # Private monitoring and human-review contract
 
-PM-06B deployed the fourteen approved resources and verified one saved-input
-monitor report in AWS. A local HTML-order comparison then stopped the sequence;
-both new functions are disabled at concurrency zero. Review and remaining smoke
-checks have not run. Monitoring does not train, score, refresh data,
+PM-06B deployed the fourteen approved resources; the tested PM-06C continuation
+completed seven monitor/four review invocations in AWS without repeating the
+first report. Replay, historical application-failure detection, simulated review
+and the expected error alarm passed. Both functions are at concurrency one, with
+automatic delivery disabled and the display private. Genuine alerts were not
+reviewed or closed. Monitoring does not train, score, refresh data,
 approve forecasts, or alter a predecessor. See the [runbook](cloud-monitoring-runbook.md)
 and [verification summary](cloud-monitoring-verification.md).
 
