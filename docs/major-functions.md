@@ -210,10 +210,13 @@ November 20 AWS Linux capture, replay and conflict checks.
 Athena, cloud training/inference, scheduling and monitoring are not implemented
 by these functions.
 
-## Stakeholder explanation and moneyline comparison (PM-07; prepared only)
+## Stakeholder explanation and moneyline comparison (PM-07A)
 
-These functions have offline tests and read-only template/IAM checks, not new
-external-integration or deployed-runtime verification. The
+The explanation handler and unconfigured-market guard executed successfully in
+AWS Linux. One genuine Bedrock response, immutable replay and source/conflict
+refusals passed; actual usage was 257 input and 42 output tokens. Real market
+capture/comparison remains unverified and access-disabled. Offline tests and
+template/IAM checks cover the remaining implementation. The
 [contract](stakeholder-insights-contract.md), [runbook](cloud-stakeholder-runbook.md)
 and [verification record](cloud-stakeholder-verification.md) state the access,
 timing, replay and publication limits.

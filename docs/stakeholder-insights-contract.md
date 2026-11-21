@@ -1,7 +1,9 @@
 # Stakeholder explanation and sportsbook benchmark contract
 
-PM-07 adds two private cloud adapters. They are implemented and tested offline,
-but neither external integration has been executed. See the
+PM-07 adds two private cloud adapters. PM-07A deployed the exact candidate and
+verified a genuine Bedrock explanation, replay and source/conflict refusals in
+AWS Linux. The market handler's unconfigured-access guard also ran, but genuine
+market capture/comparison remains unverified. See the
 [verification record](cloud-stakeholder-verification.md) and
 [deployment runbook](cloud-stakeholder-runbook.md). The original predictor,
 training procedure, operational approval controls and deployed predecessors are
@@ -164,14 +166,16 @@ or operational approval.
 Read-only AWS metadata reports the selected first-party model authorized and
 available with positive on-demand quotas under the active Free plan. This is
 readiness evidence, **not a completed model call or a guarantee of future access**.
-Phase A can verify one real explanation, replay and refusals without market access.
+Phase A subsequently verified one real explanation, replay and refusals without
+market access: 257 input and 42 output tokens, with the factual report unchanged.
+The allowance is exhausted; further workloads require separate authorization.
 
 No project market key is configured; the third-party account plan/quota and
 bookmaker/event availability are unverified. Historical odds require paid access
 and are excluded. The saved Week 13 cutoff has passed: current odds retrieved
 later must yield zero aligned rows for that cutoff. Genuine nonzero benchmarking
 needs separately approved, aligned future observations or existing eligible
-capture evidence. Synthetic tests cannot fill either external-evidence gap.
+capture evidence. Synthetic tests cannot replace genuine external evidence.
 
 Primary references: [Bedrock Converse](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html),
 [Nova Micro](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-amazon-nova-micro.html),

@@ -200,14 +200,16 @@ processing completions remained withheld/unapproved; no source publication time
 was invented. The schedule stays disabled. See the
 [dated verification](weekly-cloud-verification.md).
 
-## Explanation and market timing (PM-07; local implementation)
+## Explanation and market timing (PM-07A)
 
 The explanation adapter sends only an allowlisted factual catalog from verified
 monitoring artifacts. Its provider selects exact fact sentences; it cannot
 introduce metrics, replace probabilities, change pending/failed states or approve
 publication. LLM output is not an authoritative measurement or availability
 attestation. Invalid responses leave explanation unavailable without a generated
-fallback claim. No external call has been verified for this new adapter.
+fallback claim. PM-07A verified one genuine extractive explanation, immutable
+replay and source/conflict refusals in AWS. Pending labels and original
+retrospective/unapproved flags remained unchanged; no market capture ran.
 
 Sportsbook observations are benchmarks only, isolated from predictors, labels,
 fitting and model selection. An explicit provider-event/CFBD-game map must preserve

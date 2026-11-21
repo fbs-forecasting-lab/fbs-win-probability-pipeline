@@ -202,7 +202,7 @@ In-season features, weather inputs, operational approval and further automation
 remain future work. See the
 [major-function guide](major-functions.md) for contracts and failure conditions.
 
-## Stakeholder explanation and market adapters (PM-07; prepared only)
+## Stakeholder explanation and market adapters (PM-07A; bounded explanation verified)
 
 `cloud_explanation.handler` verifies a selected immutable monitoring report and
 its producer claim/completion before constructing a scalar-allowlisted fact
@@ -228,11 +228,16 @@ provider work or silent refetch after interruption. Roles write only their own
 predecessors. No schedules, endpoints, notification delivery or approval action
 are added by the eight-resource candidate.
 
-Offline tests and read-only template/IAM validation passed. No new handler or
-external provider has run. Bedrock metadata supports the selected model; the
-market key/account quota is unverified and the saved Week 13 cutoff has passed.
-The [proposal/runbook](cloud-stakeholder-runbook.md) therefore separates one
-future genuine explanation smoke from a blocked market phase. The
+PM-07A deployed the eight-resource candidate unchanged and verified both handlers
+in AWS Linux: four explanation invocations, one unconfigured-market refusal and
+one genuine direct regional Bedrock request. Actual usage was 257 input and 42
+output tokens. The available explanation retained all seven verified facts;
+replay preserved artifacts/metadata, and invalid-source/conflict requests reached
+no provider. All 87 protected objects and predecessors were unchanged. Market
+access has no secret permission; schedules, delivery and public display stay
+disabled. The market key/account quota remains unverified and the saved Week 13
+cutoff has passed. The [runbook](cloud-stakeholder-runbook.md) separates this
+completed bounded explanation smoke from the blocked market phase. The
 [contract](stakeholder-insights-contract.md) and
 [verification record](cloud-stakeholder-verification.md) distinguish implementation
 from external evidence. All retrospective flags and withheld publication persist.

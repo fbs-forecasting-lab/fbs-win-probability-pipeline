@@ -20,10 +20,11 @@ monitoring; schedules, delivery and operational publication remain disabled.
 
 This is a **retrospective demonstration, not an approved live forecast**.
 Historical publication times have not been verified. In-season features remain
-planned. [Stakeholder explanation and sportsbook adapters](docs/stakeholder-insights-contract.md)
-are implemented and tested offline; their external calls are not yet verified.
-Market access and cutoff-aligned comparison evidence remain gaps. See the
-[readiness record](docs/cloud-stakeholder-verification.md) for the exact limits.
+planned. The [stakeholder explanation adapter](docs/stakeholder-insights-contract.md)
+has passed a bounded genuine Bedrock call, replay and refusal checks in AWS.
+Sportsbook adapters are implemented and tested offline; market access and
+cutoff-aligned external evidence remain gaps. See the
+[verification record](docs/cloud-stakeholder-verification.md) for the exact limits.
 
 ## Install
 

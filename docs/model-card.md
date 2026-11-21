@@ -289,7 +289,7 @@ needs that evidence and an operational cutoff policy; see
 [data-leakage-policy.md](data-leakage-policy.md). No live predictive-performance
 or leakage-safe-backtesting claim is made.
 
-## Stakeholder explanation and market comparison (PM-07; not externally verified)
+## Stakeholder explanation and market comparison (PM-07A)
 
 The explanation adapter reads verified monitoring facts; it does not calculate
 authoritative metrics or change the model. A bounded Amazon Nova Micro call can
@@ -305,9 +305,13 @@ cutoff are required. Paired Brier/log-loss results, when supported by later
 labels, use the same eligible bookmaker/game cohort and existing coverage
 thresholds. Missing markets or outcomes do not imply model superiority.
 
-Only synthetic adapter tests and read-only AWS checks have run. No PM-07 provider
-request or real odds capture has occurred. Project market credentials/quota and
-eligible timestamp-aligned evidence remain gaps; newly retrieved current odds
-cannot backfill the saved Week 13 cutoff. All retrospective/unapproved flags
-persist. See the [contract](stakeholder-insights-contract.md) and
+The bounded PM-07A AWS Linux smoke verified one genuine explanation request
+(257 input / 42 output tokens), immutable replay and both source/conflict
+refusals. Its seven selected statements preserved 53 pending labels, historical
+references and withheld approval without changing metrics or predictions. The
+unconfigured-market interface refused without a secret read or HTTP request;
+this is not a genuine odds capture. Project market credentials/quota and eligible
+timestamp-aligned evidence remain gaps; newly retrieved current odds cannot
+backfill the saved Week 13 cutoff. All retrospective/unapproved flags persist.
+See the [contract](stakeholder-insights-contract.md) and
 [verification record](cloud-stakeholder-verification.md).

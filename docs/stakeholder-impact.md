@@ -7,8 +7,9 @@
 > describes the project's intended goals. The current repository is a
 > retrospective demonstration. Bounded cloud ingestion, preparation, modeling,
 > weekly processing and private monitoring have been verified; automatic delivery
-> and operational forecasting remain disabled/unapproved. PM-07 explanation and
-> sportsbook adapters are implemented locally but not externally verified. The
+> and operational forecasting remain disabled/unapproved. PM-07A verified a
+> bounded genuine stakeholder explanation and replay in AWS; sportsbook adapters
+> remain externally unverified and access-disabled. The
 > original assignment text below describes intended benefits, not proven outcomes.
 > See the [README](../README.md) for current status.
 

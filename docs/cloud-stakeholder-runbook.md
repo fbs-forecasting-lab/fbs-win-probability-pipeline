@@ -1,7 +1,9 @@
 # Private stakeholder adapters: deployment and verification runbook
 
-**Prepared, not deployed.** These commands require separate deployment approval.
-The current task authorizes local work and read-only validation only. See the
+**PM-07A deployed and verified Phase A.** The original four explanation/one
+refusal invocation allowance and single provider request are exhausted. The
+commands below preserve the reviewed procedure, not permission to run it again;
+further workloads require separate authorization. See the
 [contract](stakeholder-insights-contract.md) and
 [actual verification record](cloud-stakeholder-verification.md).
 
@@ -259,3 +261,30 @@ reviewed artifact intact. Destructive cleanup needs separate authorization; none
 is granted here. After a successful smoke, report function status/evidence gaps
 before more workloads. Public display, delivery and operational approval remain
 outside this slice.
+
+## Actual PM-07A result
+
+On November 20, 2026 Eastern time (November 21 UTC), the exact approved package
+and template deployed eight resources successfully. Both handlers ran in AWS
+Linux with the reviewed runtime identity. All five smoke outcomes passed: genuine
+available explanation, immutable replay, source-hash and token-conflict rejection,
+and zero-call unconfigured-market refusal. Four explanation calls and one market
+call consumed exactly one Bedrock request, corroborated by CloudWatch. Actual
+usage was 257 input and 42 output tokens; the fact/instruction payload was 1,160
+bytes. Validated output preserved pending labels and retrospective/unapproved
+status without changing authoritative metrics or predictions.
+
+Eighty-seven protected object bytes/metadata and predecessor settings remained
+identical. Both functions remain active at concurrency one. Market secret access,
+schedules, delivery, alarm actions, notifications and public display stay disabled.
+No other workload ran. Free-plan coverage remained active with $119.99 reported
+credits; billing/credit updates can lag consumption. The
+[verification record](cloud-stakeholder-verification.md) contains measured duration,
+memory, provenance and replay evidence. Private evidence is ignored under
+`data/processed/pm07a-deployment-20261121T043424Z/`. The package/template and all
+original approval hashes remain unchanged; only sanitized documentation changed.
+
+This verifies the bounded extractive explanation application. It does not verify
+genuine sportsbook capture, a nonzero paired benchmark, rolling performance,
+public delivery or operational approval. The market prerequisites above still
+require separate authorization; do not reexecute Phase A or use a new token.
