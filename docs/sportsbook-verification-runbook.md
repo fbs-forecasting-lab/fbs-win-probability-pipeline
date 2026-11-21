@@ -1,6 +1,9 @@
 # PM-07B: genuine sportsbook comparison preparation
 
-**Prepared only.** No new capture, secret creation, stack update or workload ran.
+**PM-07C completed the bounded capture/comparison and replay procedure.** See the
+[actual verification record](sportsbook-verification.md): five shared games,
+pending labels and no performance claim. The allowances below are exhausted;
+these commands describe the reviewed procedure, not permission to repeat it.
 The verified PM-07A explanation is unchanged and its allowance is exhausted.
 The current branch starts at `4f530430cb76a92cec7bff3f24c0ca28702cddcc`.
 
@@ -10,7 +13,9 @@ Obtain a **Starter FREE** key from [The Odds API](https://the-odds-api.com/) off
 screen and confirm the account is free with at least **one unused credit**.
 Do not purchase historical access or change an existing subscription. Never send
 the key in chat; retain it for the separately approved hidden Terminal procedure.
-The project secret `fbs/the-odds-api-key` is absent. No secret value was retrieved.
+This was the PM-07B prerequisite. PM-07C subsequently confirmed free access and
+created `fbs/the-odds-api-key` through hidden Terminal input; its value was not
+retrieved locally. It is now bound to the benchmark function only.
 
 The advertised free plan has 500 monthly credits, all sports/markets and most
 bookmakers, without historical odds. Account-specific quota and DraftKings

@@ -224,7 +224,9 @@ for fixed cutoff, request tokens, response bindings and unresolved access.
 The explanation handler and unconfigured-market guard executed successfully in
 AWS Linux. One genuine Bedrock response, immutable replay and source/conflict
 refusals passed; actual usage was 257 input and 42 output tokens. Real market
-capture/comparison remains unverified and access-disabled. Offline tests and
+capture/comparison was later verified in PM-07C on five shared games, with one
+credit consumed and outcomes pending; see the [record](sportsbook-verification.md).
+Access is now scoped to one secret, with no recurring execution approval. Offline tests and
 template/IAM checks cover the remaining implementation. The
 [contract](stakeholder-insights-contract.md), [runbook](cloud-stakeholder-runbook.md)
 and [verification record](cloud-stakeholder-verification.md) state the access,

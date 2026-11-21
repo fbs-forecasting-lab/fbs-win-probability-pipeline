@@ -170,17 +170,21 @@ Phase A subsequently verified one real explanation, replay and refusals without
 market access: 257 input and 42 output tokens, with the factual report unchanged.
 The allowance is exhausted; further workloads require separate authorization.
 
-No project market key is configured; the third-party account plan/quota and
-bookmaker/event availability are unverified. Historical odds require paid access
-and are excluded. The saved Week 13 cutoff has passed: current odds retrieved
-later must yield zero aligned rows for that cutoff. Genuine nonzero benchmarking
-needs separately approved, aligned future observations or existing eligible
-capture evidence. Synthetic tests cannot replace genuine external evidence.
+PM-07C confirmed Starter FREE access, bound one securely entered secret and
+verified one genuine request consuming one credit. Eight DraftKings markets were
+available; five aligned with the fresh cloud-scored input before a new common
+cutoff. This is bounded observed coverage, not a guarantee for future requests.
+Historical odds remain excluded. The original saved November 20 cutoff was not
+reused or changed; later observations cannot certify it retroactively. Synthetic
+tests do not replace this [genuine evidence](sportsbook-verification.md).
 
 The [PM-07B paired-capture procedure](sportsbook-verification-runbook.md) prepares
 a new Week 13 scoring input and current market observation before one new future
 cutoff, with deterministic response-bound event mapping and no outcomes. It is
-not executed; missing free-key/quota confirmation and expiry remain blockers.
+now executed within its fixed limits. Capture/comparison/weekly replay passed;
+five shared outcomes remain pending, performance metrics unavailable, and all
+approval flags unchanged. The allowance is exhausted; new observations need new
+authorization rather than cutoff/token replacement.
 
 Primary references: [Bedrock Converse](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html),
 [Nova Micro](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-amazon-nova-micro.html),

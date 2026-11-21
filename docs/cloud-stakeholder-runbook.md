@@ -1,5 +1,11 @@
 # Private stakeholder adapters: deployment and verification runbook
 
+Subsequent PM-07C market execution is recorded in the
+[sportsbook verification](sportsbook-verification.md) and its
+[paired-capture procedure](sportsbook-verification-runbook.md). It configured
+only the benchmark secret, preserved explanation resources and exhausted its own
+separate allowance. Phase A below remains dated evidence, not a new approval.
+
 **PM-07A deployed and verified Phase A.** The original four explanation/one
 refusal invocation allowance and single provider request are exhausted. The
 commands below preserve the reviewed procedure, not permission to run it again;

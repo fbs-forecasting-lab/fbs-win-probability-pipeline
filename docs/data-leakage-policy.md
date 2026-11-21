@@ -222,11 +222,15 @@ cutoff, which itself precedes scheduled kickoff. Equality is ineligible.
 S3 observation time and market retrieval establish recorded observation, not
 historical public availability. Neither an older quote timestamp nor later
 historical/closing-price API access proves the quote was available at an old
-cutoff. The saved Week 13 cutoff has passed: a fresh current capture yields no
-aligned pre-cutoff evidence for it. Paid historical access, fabricated markets
+cutoff. The original saved November 20 Week 13 cutoff has passed: a fresh current
+capture yields no aligned pre-cutoff evidence for it. Paid historical access, fabricated markets
 and weaker eligibility are excluded. Later outcomes use the existing verified
 evaluation-only path; paired metrics require the exact same eligible games and
 coverage thresholds for model and bookmaker. Unknown labels remain pending.
-All original retrospective flags and withheld publication persist; genuine
-external market evidence remains unverified. See the
+All original retrospective flags and withheld publication persist.
+PM-07C verified genuine market/model observations before a new common cutoff,
+with exact identities and kickoffs: five shared games, pending outcomes and no
+performance claim. It did not certify historical availability or relax any
+cutoff rule. Capture and comparison replay repeated no observation. See the
+[dated sportsbook evidence](sportsbook-verification.md) and the
 [contract](stakeholder-insights-contract.md).

@@ -22,8 +22,10 @@ This is a **retrospective demonstration, not an approved live forecast**.
 Historical publication times have not been verified. In-season features remain
 planned. The [stakeholder explanation adapter](docs/stakeholder-insights-contract.md)
 has passed a bounded genuine Bedrock call, replay and refusal checks in AWS.
-Sportsbook adapters are implemented and tested offline; market access and
-cutoff-aligned external evidence remain gaps. See the
+The [sportsbook adapter](docs/sportsbook-verification.md) has also passed one
+genuine capture, a cutoff-aligned five-game probability comparison and replay.
+Coverage is limited and outcomes remain pending; no outperformance is claimed.
+See the
 [verification record](docs/cloud-stakeholder-verification.md) for the exact limits.
 
 ## Install

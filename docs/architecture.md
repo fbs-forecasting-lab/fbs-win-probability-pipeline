@@ -234,10 +234,15 @@ one genuine direct regional Bedrock request. Actual usage was 257 input and 42
 output tokens. The available explanation retained all seven verified facts;
 replay preserved artifacts/metadata, and invalid-source/conflict requests reached
 no provider. All 87 protected objects and predecessors were unchanged. Market
-access has no secret permission; schedules, delivery and public display stay
-disabled. The market key/account quota remains unverified and the saved Week 13
-cutoff has passed. The [runbook](cloud-stakeholder-runbook.md) separates this
-completed bounded explanation smoke from the blocked market phase. The
+access had no secret permission in PM-07A; schedules, delivery and public display stay
+disabled. Those are the PM-07A results; PM-07C subsequently configured only the
+benchmark secret and ran the [paired-capture procedure](sportsbook-verification-runbook.md).
+One fresh Week 13 cloud scoring input and genuine current odds were observed
+before the new November 21 18:00 UTC cutoff. Five of 53 predictions aligned with
+the fixed bookmaker; outcome metrics remain unavailable. Capture, comparison and
+weekly replay preserved artifacts without refetching or rescoring. The
+[actual record](sportsbook-verification.md) documents exhausted limits, incomplete
+market coverage and unchanged explanation/predecessors. The
 [contract](stakeholder-insights-contract.md) and
 [verification record](cloud-stakeholder-verification.md) distinguish implementation
 from external evidence. All retrospective flags and withheld publication persist.

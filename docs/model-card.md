@@ -310,8 +310,14 @@ The bounded PM-07A AWS Linux smoke verified one genuine explanation request
 refusals. Its seven selected statements preserved 53 pending labels, historical
 references and withheld approval without changing metrics or predictions. The
 unconfigured-market interface refused without a secret read or HTTP request;
-this is not a genuine odds capture. Project market credentials/quota and eligible
-timestamp-aligned evidence remain gaps; newly retrieved current odds cannot
-backfill the saved Week 13 cutoff. All retrospective/unapproved flags persist.
-See the [contract](stakeholder-insights-contract.md) and
+this was not a genuine odds capture. At that stage market credentials/quota and
+eligible timestamp-aligned evidence remained gaps. Newly retrieved current odds
+cannot backfill the original November 20 cutoff. All retrospective/unapproved flags persist.
+PM-07C subsequently verified genuine current-moneyline capture and a separate
+five-game probability comparison against 53 fresh cloud-scored rows before one
+new cutoff, with no fit. Capture/comparison/weekly replay passed. Only 9.434%
+of prediction rows aligned; outcomes remain pending, so this is not evidence of
+market outperformance or forecasting approval. The original holdout metrics,
+predictors and model are unchanged. See the [sportsbook record](sportsbook-verification.md),
+[contract](stakeholder-insights-contract.md) and
 [verification record](cloud-stakeholder-verification.md).

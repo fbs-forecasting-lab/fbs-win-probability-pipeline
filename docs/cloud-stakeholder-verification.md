@@ -6,7 +6,9 @@ Implementation starts from verified monitoring commit
 `9510a56026294d6085611a4a831c9e355c0404aa` on
 `feature/benchmarking-and-explanations`. **PM-07A deployed the eight-resource
 candidate and verified a genuine Bedrock explanation plus replay/refusals.**
-Market capture/comparison remains externally unverified and access-disabled.
+Market capture/comparison was subsequently verified by PM-07C on five aligned
+games; see the [separate dated record](sportsbook-verification.md). Its secret is
+now configured, but outcomes and ongoing/public operation remain unverified.
 Existing PM-02 through PM-06 results remain predecessor evidence. See the
 [contract](stakeholder-insights-contract.md) and
 [runbook](cloud-stakeholder-runbook.md).
@@ -160,7 +162,13 @@ on-demand requests/minute and 4,000,000 tokens/minute. No model was invoked and
 no access agreement was accepted. These observations do not establish actual
 runtime success, future service availability or zero credit consumption.
 
-## External verification gaps
+## Original Phase A gaps and subsequent PM-07C evidence
+
+The market gaps listed below describe Phase A. PM-07C subsequently verified one
+genuine current-odds request, five aligned games and all three replays under a
+new common cutoff. No outcome metrics were measured. Current coverage/access
+limits are recorded [separately](sportsbook-verification.md); PM-07A itself was
+not repeated or changed.
 
 | Integration | Established now | Still required |
 | --- | --- | --- |
