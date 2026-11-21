@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Saved pipeline monitoring demonstration</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5;color:#172c3d;background:#f3f6f8}
+*{box-sizing:border-box}body{margin:0}main{max-width:980px;margin:auto;padding:28px 24px 40px}
+h1{font-size:clamp(1.65rem,4vw,2.3rem);line-height:1.15;margin:12px 0}h2{font-size:1.2rem;margin-top:0}
+p{max-width:76ch}a{color:#164f7b}.eyebrow{font-size:.82rem;letter-spacing:.07em;font-weight:700}
+.banner{border-left:5px solid #896118;padding:14px 18px;background:#fff3d9;margin:22px 0}.banner strong{display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin:20px 0}
+.card,.panel{background:#fff;border:1px solid #b7c8d4;border-radius:8px;padding:18px;min-width:0}
+.number{font-size:2rem;font-weight:750;line-height:1.1;margin:8px 0}.small{font-size:.9rem;color:#344f64}
+.metric{font-size:1.1rem;font-weight:650}.panel{margin:18px 0}.status{display:inline-block;padding:4px 9px;border:1px solid #8a651f;border-radius:4px;background:#fff3d9;font-weight:650}
+dt{font-weight:650}dd{margin:2px 0 13px;overflow-wrap:anywhere}code{font-size:.9em;overflow-wrap:anywhere}
+footer{border-top:1px solid #b7c8d4;padding-top:16px;margin-top:22px}.flags{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:0 20px}
+@media(max-width:480px){main{padding:20px 16px}.grid{grid-template-columns:1fr}.flags{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<div class="eyebrow">FBS FORECASTING LAB / SAVED DEMONSTRATION</div>
+<h1>Saved monitoring demonstration</h1>
+<p>This is a dated retrospective observation. It does not show current pipeline health or an approved live forecast.</p>
+<div class="banner"><strong>Operational approval withheld</strong>Saved retrospective observation; no operational forecast approval. No automatic updates, notifications or retraining occur.</div>
+<section class="panel" aria-labelledby="date-heading"><h2 id="date-heading">Report date</h2>
+<p><time datetime="2026-11-20T22:30:00Z"><strong>November 20, 2026 at 22:30 UTC</strong></time><br><span class="small">5:30 p.m. Eastern. This boundary is fixed; it is not today's freshness.</span></p>
+<p class="small">Saved source age at that boundary: 871.333337 seconds (about 14 minutes, 31 seconds). This age is not updated.</p></section>
+<div class="grid" aria-label="Saved report counts">
+<section class="card"><h2>Raw games</h2><p class="number">65</p><p class="small">55 retained; 10 quarantined before feature eligibility.</p></section>
+<section class="card"><h2>Technical scoring rows</h2><p class="number">53</p><p class="small">Saved retrospective scores, not approved operational forecasts.</p></section>
+<section class="card"><h2>Pending outcomes</h2><p class="number">53</p><p class="small">0 matched outcomes. No later outcome captures were selected.</p></section>
+</div>
+<section class="panel" aria-labelledby="performance-heading"><h2 id="performance-heading">Rolling performance: <span class="status">Pending</span></h2>
+<p>Missing labels mean performance is unavailable. They do not mean zero error or 100% accuracy.</p>
+<div class="grid">
+<div><div>Brier score</div><p class="metric">Unavailable</p></div>
+<div><div>Log loss</div><p class="metric">Unavailable</p></div>
+<div><div>Accuracy</div><p class="metric">Unavailable</p></div>
+</div><p class="small">Rolling calibration is also unavailable. Historical holdout results are a separate reference, not measured rolling performance.</p></section>
+<section class="panel" aria-labelledby="warnings-heading"><h2 id="warnings-heading">Saved warning measurements</h2>
+<h3>Quarantine warning</h3><p><strong>10/65 games (15.38%)</strong> were quarantined; warnings trigger above <strong>10%</strong>. The ten games had TBD kickoff times.</p>
+<h3>Win-rate distribution warning</h3><p><strong>PSI 0.253</strong> (population stability index); warnings trigger above <strong>0.20</strong>. Reference: <strong>2,194 training rows</strong>; comparison: <strong>53 scoring rows</strong>.</p>
+<p>These saved warnings call for investigation. They do not establish concept drift, predictive degradation or a need to retrain.</p></section>
+<section class="panel"><h2>Retrospective safeguards</h2><dl class="flags">
+<div><dt>Dataset mode</dt><dd><code>retrospective_demo</code></dd></div>
+<div><dt>Historical availability verified</dt><dd><code>false</code></dd></div>
+<div><dt>Point-in-time forecasting approved</dt><dd><code>false</code></dd></div>
+<div><dt>Predictor use approved</dt><dd><code>false</code></dd></div>
+<div><dt>Operational forecast approved</dt><dd><code>false</code></dd></div>
+</dl></section>
+<footer><p class="small">Saved demonstration prepared on November 21, 2026 from the preserved monitoring report. This page contains aggregate counts and states only; no raw data, individual predictions, private resource identifiers or review attestations.</p></footer>
+</main></body></html>
