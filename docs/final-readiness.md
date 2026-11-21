@@ -102,6 +102,27 @@ unchanged. Six IAM documents validated without findings; 18 exact-context policy
 simulations matched. None was attached. The smallest remaining access decision is
 whether to authorize a quota-one `ml.m5.large` request/support inquiry while
 retaining Free/zero personal payment; do not submit a job or upgrade. A separate
-native inference bridge is proposed because the new Python 3.14.10 image must not
-weaken the older protected model's exact-version/producer checks. No previous
+native inference bridge is proposed to preserve exact-version/producer checks.
+PM-09B corrected the earlier runtime comparison: the receipt-verified cloud model
+already uses Python 3.14.10; 3.14.2 was local-environment metadata. No previous
 cloud workload, deployment, publication or activation was repeated.
+
+## PM-09B access follow-up — newly executed November 21, 2026
+
+Verified `sagemaker`, `us-east-1`, adjustable training quota `L-611FA074`,
+`ml.m5.large for training job usage`, applied zero, with no equivalent pending,
+open or approved request. Submitted the single authorized request for **one**.
+Latest status: **CASE_OPENED** (awaiting AWS decision), applied quota still zero; account FREE/ACTIVE unchanged.
+AWS opened a related case through the existing quota request; no separate
+support inquiry or paid support/API activation occurred. Request/case
+identifiers and detailed evidence stay ignored/private. Await the existing
+request; do not duplicate it or treat quota approval as workload authorization.
+
+Named-service execution remains **missing**, and the managed path remains blocked
+on applied quota/access plus separate execution approval and real cloud-origin
+verification. Documentation work verified research metadata/selected methods,
+added a [reference audit](research-references.md), improved artifact/evaluation/
+troubleshooting examples, and corrected the cloud/runtime comparison using
+receipt-verified historical metadata. No deployed producer bytes, package, model,
+application test or final published artifact changed; 365 passing tests remain
+historical PM-09A evidence and were not rerun for these documentation edits.

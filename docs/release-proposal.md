@@ -22,8 +22,11 @@ profiling or configured service retries. Five small CPU quotas remain zero.
 Free/Active and $119.99 in remaining credits are independently evidenced; service
 inclusion/credits do not establish quota, job capacity or service execution.
 Do not seek execution approval until a Free-plan-compatible CPU quota/access
-resolution is authorized and established. No quota request, GPU substitution,
-region change or Paid activation was made.
+resolution is established. PM-09B submitted the single authorized quota request
+for zero to one; status is CASE_OPENED, awaiting AWS decision, and the applied
+quota is zero. No GPU
+substitution, region change or Paid activation was made. Quota approval alone
+does not authorize execution.
 
 Exact input/request, scoped training/caller/native-inference policies and trust
 are prepared privately. Six validation documents had no Access Analyzer findings;
@@ -36,11 +39,12 @@ Infrastructure restart/exactly-once behavior remains a cloud observation, not a
 local-test guarantee. SIGTERM grace/upload time means 300 seconds is not a total
 billable wall-clock cap.
 
-The image uses Python 3.14.10 versus the protected model's 3.14.2. The minimum
-native adapter verifies an independently approved SageMaker job/receipt/archive
-before unchanged baseline deserialization/prediction. It requires a separate new
-inference bridge with the same image, not a forged Lambda claim or runtime-check
-relaxation. The proposal bounds this to three synchronous future invocations and
+PM-09B corrected the runtime evidence: both the image and receipt-verified
+protected cloud model record Python 3.14.10; 3.14.2 was a local-environment value.
+The minimum native adapter verifies an independently approved SageMaker
+job/receipt/archive before unchanged baseline deserialization/prediction. A
+separate native bridge is required by the different producer origin, not a
+verified runtime mismatch; no Lambda claim is forged or runtime check relaxed. The proposal bounds this to three synchronous future invocations and
 keeps predecessor deployments/model references unchanged. Its result-bound receipt
 hash can only be populated after the single genuine job. No bridge was deployed.
 

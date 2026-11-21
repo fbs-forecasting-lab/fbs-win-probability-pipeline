@@ -21,9 +21,12 @@ unchanged. Private evidence and exact requests are ignored under
 | Regression | Full network-blocked suite: **365 passed** (342 previous + 23 new). | No historical cloud demonstration was repeated. |
 
 The image contains Python **3.14.10**, scikit-learn 1.9.0, NumPy 2.5.2,
-SciPy 1.18.1, pandas 3.0.5 and joblib 1.6.0. The older protected Lambda model
-records Python 3.14.2. Exact version checks remain intact; do not rewrite model
-metadata or send the new model through the old Lambda-origin receipt contract.
+SciPy 1.18.1, pandas 3.0.5 and joblib 1.6.0. **PM-09B correction:** the actual
+protected cloud model also records Python 3.14.10, verified against its original
+training receipt's metadata hash. The earlier 3.14.2 claim confused local-environment
+metadata with cloud evidence. Exact version checks remain intact. A matching
+runtime does not make SageMaker a Lambda producer: retain the separate native
+receipt/adapter and do not rewrite protected model metadata.
 
 ## Access, credits and the unresolved decision
 
@@ -38,14 +41,23 @@ alone does not establish CreateTrainingJob access/capacity.
 include SageMaker. [AWS's plan comparison](https://aws.amazon.com/free/) separates
 Free-plan access/credits from Paid billing. Neither establishes an instance quota
 or grants a legacy SageMaker free-hours trial. No GPU, alternate region, service
-activation, subscription, upgrade or quota-increase request was selected/made.
+activation, subscription or upgrade was selected/made. No quota increase was
+requested during PM-09A; the separately authorized PM-09B request is recorded below.
 
-**Smallest remaining access decision:** authorize a narrowly scoped request or
-support inquiry for a quota of one `ml.m5.large` training instance in `us-east-1`,
-strictly while retaining the Free plan and zero personal payment. Stop if AWS
-requires a Paid upgrade. Without that decision and an approved quota, do not ask
-for or submit the training job. If unavailable, seek an instructor ruling on the
-verified Lambda alternative; no exemption has been established.
+**PM-09B access request:** Hampton authorized and one Service Quotas request
+was submitted for `L-611FA074` (`ml.m5.large for training job usage`) in `us-east-1`,
+from zero to one. Preflight found no equivalent pending/open/approved request.
+The latest check is **CASE_OPENED** (awaiting AWS decision), with applied quota still zero and FREE/ACTIVE
+unchanged. AWS created a related case through the quota route; no separate inquiry was
+submitted. The API has no justification
+field; the truthful student-project explanation is preserved privately for any
+related support handling. No personal-payment commitment was made.
+
+Await the existing request; do not duplicate it. If unavailable/denied, the approved
+fallback is one Basic account/billing inquiry about retaining Free/zero personal
+payment, not paid technical support or an upgrade. If AWS requires payment, stop
+and prepare an unsent instructor clarification. Approval of quota alone never
+authorizes an image upload, resource deployment or workload execution.
 
 ## Exact execution contract prepared, not authorized
 
@@ -179,3 +191,13 @@ Focused tests also block network directly. Linux checks mount synthetic fixtures
 only and use `--network none`, a read-only container root and fixed paths. Exact
 executed arguments, outputs, policy simulations, request and approval hashes remain
 in ignored evidence; credentials and local proposals/packages are never committed.
+
+## PM-09B documentation-only follow-through
+
+The one quota request has a related case open; identifiers and raw responses remain only in
+ignored evidence. No application or package changed. The final-documentation
+source now links [checked research references](research-references.md), separates
+legacy Lambda and proposed SageMaker receipt contracts, and explains artifact
+inspection, evaluation and stop conditions without suggesting that old cloud
+allowances can be reused. All remaining managed execution gates above persist.
+The historical PM-09A 365-test result was not rerun for documentation changes.

@@ -8,7 +8,7 @@ FBS Win Probability Pipeline is a UNC Charlotte DTSC 3601/3602 project estimatin
 
 Confirmed team members are Hampton Abbott, Dharm Patel, Josh Livengood and Sarah Asianut Okwalinga. These names come from submitted team documents; individual implementation assignments are not verified and are not invented. Contact Hampton Abbott at [habbott1@charlotte.edu](mailto:habbott1@charlotte.edu).
 
-Install Python 3.14.x, clone [the repository](https://github.com/fbs-forecasting-lab/fbs-win-probability-pipeline), create `.venv`, and install `requirements.txt`. Main's offline example is available today; the PM-02–PM-08 cloud work is on the release-candidate branch until reviewed integration. Preview it with `git fetch origin feature/final-readiness` then `git switch --track origin/feature/final-readiness` in a fresh clone.
+Install Python 3.14.x, clone [the repository](https://github.com/fbs-forecasting-lab/fbs-win-probability-pipeline), create `.venv`, and install `requirements.txt`. Main's offline example is available today; the PM-02–PM-09 readiness/cloud work is on the release-candidate branch until reviewed integration. Preview it with `git fetch origin feature/final-readiness` then `git switch --track origin/feature/final-readiness` in a fresh clone.
 
 ```bash
 git clone https://github.com/fbs-forecasting-lab/fbs-win-probability-pipeline.git
@@ -58,12 +58,75 @@ The complete class inventory and actual docstrings are in [class-reference.md](c
 
 ## Step-by-step use and troubleshooting
 
-1. Run the synthetic quickstart, inspect `synthetic_summary.json`, then `model/evaluation.json` and `predictions/predictions.csv`. Confirm complementary finite probabilities and the synthetic notice. The same directory must fail on rerun without changing evidence.
-2. For a new approved cloud training run, first verify the pinned preparation receipt and six S3 files. Use the [existing modeling runbook](cloud-modeling-runbook.md) for the verified Lambda behavior. Its prior invocation allowance is exhausted; do not rerun its commands without a new approval. A request supplied to `aws lambda invoke --invocation-type RequestResponse --payload file://<reviewed-request.json>` initiates computation in AWS, never on the laptop.
-3. The required SageMaker alternative is **not yet cloud verified**. The [release proposal](release-proposal.md) describes a one-job File-channel candidate reusing the same baseline. PM-09A verified the digest-pinned Linux container synthetically; CPU quota/access and genuine job verification remain open before compliance closure. Do not call Lambda training SageMaker training or replace the protected model automatically.
-4. Independent inference pins the trainer claim/completion and all nine model artifacts before trusted deserialization. Use the modeling runbook's saved-sample or hypothetical request; any new invocation needs approval. Saved outputs can be inspected without executing a model. Invalid feature domains and receipt hashes must stop before prediction/deserialization, respectively.
-5. Monitoring consumes explicit verified predictions and separately selected later outcomes. Inspect sample sizes/coverage and pending/insufficient states before interpreting performance. Drift warnings request investigation, not automatic retraining. Use the [monitoring runbook](cloud-monitoring-runbook.md); review only an actual alert with truthful evidence, never claim the simulated smoke was a person's investigation.
-6. On hash mismatch, ambiguous invocation, source/cutoff conflict or access denial, stop and preserve the original evidence. Do not retry a fresh token, refetch, weaken eligibility or expand permissions. Expired fixed schedule inputs cannot become recurring operation by enabling a switch. Secrets stay off screen/out of Git; no old workload allowances remain.
+The following commands distinguish offline onboarding from separately authorized
+cloud work. None of the cloud commands below was executed in PM-09B.
+
+1. **Offline onboarding.** Run the README synthetic quickstart in a fresh ignored
+   directory. Inspect `synthetic_summary.json`, `model/evaluation.json`,
+   `model/calibration.json` and `predictions/predictions.csv`. Counts are 18/6/6;
+   all teams and metrics are fictional. A rerun into the same directory must
+   refuse overwrite. This does not demonstrate cloud training.
+2. **Training source and consent.** Before any separately approved cloud run,
+   verify the selected preparation completion receipt and all six dataset hashes.
+   The verified Lambda trainer is documented in the [modeling runbook](cloud-modeling-runbook.md).
+   Its old workload allowance is exhausted. The SageMaker path is a distinct,
+   locally tested candidate in [managed readiness](managed-training-readiness.md).
+   PM-09B's quota request is pending; even approval would not authorize a job.
+3. **Cloud training after approval only.** Pin request/code/image/runtime and use
+   the reviewed single-attempt controller. Fitting and evaluation run in AWS on
+   2022–2024 training rows and the untouched 2025 holdout. Require actual successful
+   completion, immutable artifacts, counts and measured metrics. Preserve failed
+   or ambiguous evidence; never try a fresh name/token automatically.
+4. **Independent saved-model inference after approval only.** The existing Lambda
+   path verifies its producer claim/completion and nine artifacts before loading.
+   The candidate SageMaker path verifies a native job/receipt/archive and seven
+   baseline artifacts; its new bridge cannot accept a caller-selected model URL
+   or caller-selected trust pin. Matching Python/library versions do not erase
+   this producer distinction. Both paths reuse the existing trusted baseline
+   loader and saved/vector prediction functions. Require saved CSV equality with
+   the training sample and finite complementary hypothetical probabilities.
+5. **Evaluate without another fit.** Inspect `evaluation.json` for model and
+   training-rate constant baseline on exactly the same holdout games. Binary
+   Brier score is mean squared probability error; log loss penalizes confident
+   errors; lower is better for both. Accuracy uses the implemented 0.5 threshold
+   and higher is better, but discards probability detail. `calibration.json` has
+   ten fixed bins with sample counts and observed win rates; empty bins are
+   unavailable, not zero. These bins are descriptive and do not fit a calibration
+   model. The [reference notes](research-references.md) explain the scoring basis.
+6. **Monitoring and stop conditions.** Pending labels mean rolling performance is
+   unavailable; a distribution warning does not prove concept drift or authorize
+   retraining. Review genuine findings truthfully, never present simulated smoke
+   transitions as a person's investigation. On bad hashes, versions, access,
+   cutoff/source conflicts or ambiguous responses, stop and preserve evidence.
+   Do not loosen validation, enable expired schedule inputs or purchase access.
+
+For a later approved private Lambda invocation, use the complete command form
+below with only the reviewed function/request paths. It is a template, not a
+currently executable request or a new allowance:
+
+```bash
+aws lambda invoke --region us-east-1 --invocation-type RequestResponse \
+  --function-name "<reviewed-private-function>" \
+  --cli-binary-format raw-in-base64-out \
+  --payload "file://<reviewed-request.json>" \
+  "<new-ignored-response.json>"
+```
+
+Inspect both the invocation envelope (`FunctionError`, when present) and the
+application result's `state`/`stage`; a successful HTTP response alone is not
+workflow completion. The expected negative-input FunctionError is meaningful
+only within its approved test. Do not deserialize a downloaded `joblib` file on
+the controlling laptop. Existing artifact JSON/CSV can be inspected without a fit
+or model execution, for example after setting `REVIEW` to an existing trusted
+local evidence directory:
+
+```bash
+.venv/bin/python -B -m json.tool "$REVIEW/evaluation.json"
+.venv/bin/python -B -m json.tool "$REVIEW/calibration.json"
+```
+
+No command uses `latest`, prints credentials or creates a second training token.
+Actual private locations/identities remain in reviewed ignored configuration.
 
 ## Evidence, interpretation and limitations
 
@@ -75,7 +138,7 @@ The genuine LLM call used 257 input/42 output tokens to select seven verified fa
 
 ## Source references and final assembly
 
-Authority: DTSC 3602 syllabus pp.2,5–6; Final Documentation p.1; Final Demo Presentation p.1; newest instructor announcement as forwarded in PM-01; team Workplan pp.1–2, Initial Documentation pp.1–2 and Market Research pp.1–2. Primary course files stay private; see [final-readiness.md](final-readiness.md) for exact titles, scope and unavailable original announcement. The submitted market research cites South & Egros (2020), DOI 10.3233/JSA-190314, and Coleman (2025), DOI 10.1177/22150218251365223; these provide background, not evidence that this implementation matches their performance. The papers and final bibliography balance still need final source verification.
+Authority: DTSC 3602 syllabus pp.2,5–6; Final Documentation p.1; Final Demo Presentation p.1; newest instructor announcement as forwarded in PM-01; team Workplan pp.1–2, Initial Documentation pp.1–2 and Market Research pp.1–2. Primary course files stay private; see [final-readiness.md](final-readiness.md) for exact titles, scope and unavailable original announcement. The submitted market research cites South & Egros (2020), DOI 10.3233/JSA-190314, and Coleman (2025), DOI 10.1177/22150218251365223; these provide background, not evidence that this implementation matches their performance. PM-09B checked publisher/author research metadata and selected methods in [research-references.md](research-references.md), with access/version limitations stated. The final assembled bibliography balance and formatting remain pending.
 
 Implementation evidence: [ingestion](cloud-ingestion-verification.md), [preparation](cloud-preparation-verification.md), [modeling](cloud-modeling-verification.md), [weekly](weekly-cloud-verification.md), [monitoring](cloud-monitoring-verification.md), [explanation](cloud-stakeholder-verification.md) and [market](sportsbook-verification.md) records. Service contracts are linked in their runbooks. No cloud demonstration was repeated for this draft.
 
