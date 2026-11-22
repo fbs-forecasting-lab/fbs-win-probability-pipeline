@@ -1,12 +1,28 @@
-# PM-09A managed-training readiness — no cloud execution
+# Managed-training readiness — historical preparation and PM-13B result
 
-November 21, 2026. This closes local preparation gates, not the syllabus's actual
+Historical PM-09A preparation, November 21, 2026. This closed local gates, not the syllabus's actual
 SageMaker/EC2 execution requirement. No real project data was trained locally.
 The verified Lambda system, protected model and original producer bytes remain
 unchanged. Private evidence and exact requests are ignored under
 `data/processed/pm09a-readiness-20261121/`; none is a deployment authorization.
 
-## PM-13 current status — November 21, 2026
+## PM-13B current result — November 22, 2026
+
+The equivalent-scope ECR representation was accepted and read back. The original
+reviewed image was uploaded unchanged; one original SageMaker job completed with
+2,194/740/59 rows and 53 training/billable seconds. Actual six holdout metrics
+match historical Lambda values exactly; seven artifacts/calibration were inspected.
+[Verification and limits](managed-training-verification.md) records the measurements.
+
+Native receipt/inference acceptance is **not complete**: the service archive has
+PAX timestamps rejected by the unchanged image's native parser. A controller-only
+inspector verifies payloads but does not grant native load compatibility. No
+receipt was published, bridge deployed or inference call made. One fit-attempt/
+completion record and Training phase are observed; no CloudWatch job streams or
+service attempt-count field corroborate the exact total. Do not retrain, replace
+the image silently, broaden permissions or claim these gaps passed.
+
+## Historical PM-13 status — November 21, 2026
 
 The PM-09A preparation below is historical. PM-12/13 resolved the applied-quota
 and eligible-credit gates: ml.m5.large quota 15, FREE/ACTIVE and $119.973485

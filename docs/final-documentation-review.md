@@ -13,14 +13,16 @@ difference and home-field status. A standardized logistic regression fits only
 Athena/Python feature parity, Lambda training/inference, weekly scoring, private
 monitoring and bounded explanation/market comparison have historical AWS evidence.
 
-**Still unresolved:** the syllabus names SageMaker or EC2 training. Lambda has
-not been accepted as an exemption. PM-13 verified positive applied quota and
-eligible credits, but ECR rejected the reviewed repository policy before any job
-or fit. [Deployment verification](managed-training-verification.md) records the
-blocker; the professor has been emailed and no response is inferred. A locally
-tested SageMaker candidate is not cloud training execution. Schedules/delivery are disabled. A [public saved monitoring
-demonstration](https://fbs-forecasting-lab.github.io/fbs-win-probability-pipeline/public-monitoring/) is published separately; it is not current health or
-operational approval.
+**New measured training:** PM-13B's original SageMaker job completed in AWS Linux
+with 2,194 training / 740 holdout / 59 saved prediction rows and 53 training/billable
+seconds. Actual holdout metrics match historical Lambda values; calibration and
+seven payloads were checked. [Verification](managed-training-verification.md)
+records limits: the unchanged native loader rejects PAX timestamps, so no native
+receipt was published, bridge deployed or independent call executed; exact fit-count log
+corroboration is unavailable. Do not present these acceptance gaps as passed.
+Schedules/delivery remain disabled. The [public saved monitoring
+demonstration](https://fbs-forecasting-lab.github.io/fbs-win-probability-pipeline/public-monitoring/)
+is dated historical content, not current health or operational approval.
 
 ## Install and use - offline reviewer path
 
@@ -194,7 +196,8 @@ keeps the two-page core and appends required detail. The source audit is in
 [research references](research-references.md): South & Egros (2020),
 Coleman (2025), Gneiting & Raftery (2007), Kapoor & Narayanan (2023; final-text
 access limited) and Pedregosa et al. (2011). Bibliography balance, final layout,
-SageMaker/EC2 acceptance, genuine review, recurring delivery and release integration
+managed receipt/inference compatibility, exact-fit corroboration, genuine review,
+recurring delivery and release integration
 remain open. Earlier coursework/peer reviews remain complete.
 
 Final PDF/code: **December 1, 2026, 10 a.m. Eastern**. Presentation PPTX:

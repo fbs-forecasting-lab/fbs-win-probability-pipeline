@@ -1,16 +1,18 @@
 # Final documentation source draft — unfinished release candidate
 
-Prepared November 21, 2026. This is source for the December 1 PDF, not the final PDF or a claim that every requirement is complete. SageMaker/EC2 training compliance, genuine alert review, recurring delivery and final release verification remain open; see [readiness checklist](final-readiness.md).
+Prepared November 21, 2026. This is source for the December 1 PDF, not the final PDF or a claim that every requirement is complete. Managed-model receipt/inference compatibility, exact-fit corroboration, genuine alert review, recurring delivery and final release verification remain open; see [readiness checklist](final-readiness.md).
 
 A [four-page REVIEW DRAFT](final-documentation-review.md) and [offline build/QA guide](final-review-build.md) now provide a compact two-page core plus required appendices. Generated PDFs remain ignored and are not final submissions. The [genuine monitoring-review packet](monitoring-review-packet.md) awaits actual review; it is not an attestation.
 
 PM-11 published the [static saved monitoring demonstration](https://fbs-forecasting-lab.github.io/fbs-win-probability-pipeline/public-monitoring/). Its date, pending labels and withheld approval remain explicit; this closes only the static public-view portion. [Publication verification](monitoring-publication-review.md) records its hash and two-file branch.
 
-PM-13 resolved the quota/credit/image/input gates but stopped before training:
-ECR rejected the reviewed repository policy after only empty resources were
-created. No SageMaker job, fit, new measured evaluation or native inference ran.
-[Deployment verification](managed-training-verification.md) separates this result
-from historical Lambda metrics. The named-service requirement remains open.
+PM-13B corrected the ECR representation without expanding access. The original
+SageMaker job completed with 2,194/740/59 rows and 53 training/billable seconds;
+actual holdout scores match historical Lambda values and calibration was checked.
+[Verification](managed-training-verification.md) separates this genuine training
+result from remaining gaps: PAX archive compatibility prevents native receipt/
+inference checks, and independent exact-fit corroboration from logs is absent.
+The reviewed image and protected Lambda system remain unchanged.
 
 ## README core (target one-half to one page)
 

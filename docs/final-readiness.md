@@ -1,6 +1,6 @@
 # PM-08 final requirements and release readiness
 
-As of November 21, 2026. **Not a declaration of requirement-complete release.**
+As of November 22, 2026. **Not a declaration of requirement-complete release.**
 All earlier deliverables and peer reviews are complete by Hampton's confirmation;
 submission receipts are not requested and that coursework is not reopened.
 
@@ -36,7 +36,8 @@ Prior cloud evidence below is historical PM-02–PM-07 evidence, not new workloa
 | Earlier deliverables and peer reviews — user confirmation | verified complete | Confirmed by Hampton | None; no receipt audit |
 | API capture and private S3 — S p.5, A | verified complete | [PM-02C](cloud-ingestion-verification.md), [PM-07C](sportsbook-verification.md) | Preserve lineage/secret privacy; old allowances exhausted |
 | Athena or Redshift; joins/aggregation — S p.5 | verified complete | [PM-03D](cloud-preparation-verification.md): actual Athena results passed Python parity | Redshift is an alternative, not another required service; current preparation is recovery-only |
-| Train on SageMaker or EC2 — S p.5 | **missing** | [PM-13](managed-training-verification.md): quota/credit/image/input gates passed; deployment stopped before job submission | ECR rejected the pinned repository policy. No SageMaker job or fit occurred; actual named-service execution and independent native inference remain unverified. No exemption established |
+| Train on SageMaker or EC2 — S p.5 | partially complete — actual service execution verified | [PM-13B](managed-training-verification.md): original real-data SageMaker job Completed; seven artifacts, 2,194/740/59 counts and measured holdout/calibration verified | Full PM-13 acceptance remains incomplete: exact service fit-count corroboration unavailable; this does not establish native receipt/inference or operational approval |
+| Managed-model private receipt and independent native API checks — PM-13 acceptance | needs verification | Original image rejects SageMaker PAX timestamps; 0/3 calls used; no native receipt or bridge published | Review archive/inference compatibility without retraining or rewriting original evidence; preserve image until separately reviewed; investigate absent logs without broadening permissions |
 | Fully cloud/serverless processing — S p.2, A | partially complete | Cloud ingestion/preparation/training/scoring verified; local notebook is optional historical path | Final graded controller/demo and named-service training closure; don't present local synthetic training as cloud execution |
 | Model execution through APIs — S p.2 | verified complete | PM-04C independently invoked private inference, integrity refusals | Public inference endpoint not explicitly required; future SageMaker-artifact promotion must preserve trusted reload if used in final API demo |
 | LLM API application and usefulness/failure assessment — S pp.2,5 | verified complete for bounded scope | [PM-07A](cloud-stakeholder-verification.md): genuine 257/42-token extractive summary, factual validation, offline failure tests | Final narrative distinguishes narrow extractive usefulness from unrestricted generation; failure tests are not invented provider incidents |
@@ -206,3 +207,20 @@ model-object metadata, disabled rules, bucket protections, main and Pages remain
 unchanged. Historical measurements remain separately labeled. The named-service
 requirement remains missing, now blocked on repository-policy service acceptance
 rather than the prior quota. No other requirement is marked complete.
+
+## PM-13B managed-training execution — November 22, 2026
+
+[Actual results](managed-training-verification.md): one equivalent-scope ECR
+policy correction was accepted/read back; retained resources and original pins
+were reconciled. One original submission completed in AWS Linux with 53 training/
+billable seconds, 2,194 train / 740 holdout / 59 saved prediction rows and seven
+verified artifacts. All six metrics equal historical Lambda results, with actual
+calibration checked. FREE/ACTIVE eligible credits cover the retained resources.
+
+Actual named-service training is now verified. **Full PM-13 acceptance is not**:
+PAX timestamp headers block the unchanged native loader; no private native receipt,
+bridge or inference calls occurred. One attempt/completion record and Training
+phase are observed, but exact fit-count log corroboration is missing. No
+application image, predecessor, input, bucket setting, main or Pages change was
+made. No ambiguity was resolved by refitting or relaxing native validation.
+379 network-blocked offline tests and four private controller tests passed.

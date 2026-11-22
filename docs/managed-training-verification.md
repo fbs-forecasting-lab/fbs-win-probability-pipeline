@@ -1,4 +1,155 @@
-# PM-13 managed-training deployment — stopped before training
+# Managed-training verification — PM-13B measured result
+
+## November 22, 2026: job completed; native verification remains incomplete
+
+The original single SageMaker job completed in AWS Linux using the unchanged
+reviewed image, six-file dataset and canonical request. The measured artifacts,
+split counts, holdout scores and calibration passed independent inspection.
+**This verifies actual SageMaker training execution; it does not establish full
+PM-13 acceptance or native inference compatibility.** No historical metrics were
+substituted, no model was trained locally and no predecessor model was retrained.
+
+### Equivalent-scope ECR policy correction
+
+The one corrected candidate omitted only the statement's explicit `Resource`.
+Its attachment request pinned the existing registry and repository; ECR repository
+policies apply only to that attachment repository. The Lambda service principal,
+only `ecr:BatchGetImage` / `ecr:GetDownloadUrlForLayer`, and exact function/account
+source conditions were unchanged. No wildcard principal, public access or new
+object permission was introduced. Original rejected payload/baselines remain intact.
+
+Corrected policy-file SHA-256:
+`847fbb68c689d1835dd706eb254bb1c055a3accffaadd8ad73e80bb894d1aafb`.
+
+Generic Access Analyzer reported `MISSING_RESOURCE`; its validator has no ECR
+resource-type option. That limitation was recorded, not reported as a pass.
+The documented Lambda repository-policy representation supports omission of this
+field. ECR then accepted this **single** candidate and its read-back matched
+exactly. Acceptance after this sole representation change supports the diagnosis;
+AWS did not explicitly identify the original offending field. No successive
+speculative service variants were tried.
+
+Retained repository, role IDs/trust/inline scopes and log groups were reconciled
+rather than recreated. A temporary Docker credential configuration initially
+lost the daemon connection at a local tag step, before any push. Four offline
+controller tests verified the explicit-existing-endpoint correction and no-retry
+behavior. The subsequent single push preserved the reviewed manifest digest:
+`sha256:52832ca633d3cc49864feb5946b34aa9526d327991a874633ecbc0d9d6b3be00`.
+No image rebuild or producer-byte change occurred.
+
+### Training result versus independent inference
+
+| Check | Actual result |
+| --- | --- |
+| Submission / original jobs | **1 / 1**, original name/request; original directory-wide durable journal consumed |
+| Job status | **Completed**; no configured RetryStrategy or replacement submission |
+| Instance / runtime setting | One ml.m5.large; 300-second training-runtime setting |
+| AWS measured training / billable time | **53 / 53 seconds**; not a total wall-clock billing cap |
+| Actual split counts | **2,194 train (2022–2024) / 740 holdout (2025) / 59 saved prediction rows (2026)** |
+| Model files | Seven files; companion hashes, dataset/report/preparation links and immutable image/source pins verified |
+| Probabilities | All saved holdout/sample probabilities finite, in [0,1] and complementary; row identities/order verified |
+| Fit observations | One exclusive fit-attempt record, one completion record and one Training phase; no job attempt-count field or CloudWatch stream available |
+| Private native receipt | **Not published**; the reviewed native archive contract rejects the genuine service archive |
+| Independent bridge | Not deployed; **0 of at most 3** synchronous calls used; hypothetical result not measured |
+| Protected state | Six input ETags/sizes/modification times, protected model objects, predecessor functions, bucket protections and disabled rules unchanged |
+
+The scaler/logistic pipeline's pinned implementation fits only the training
+split. Holdout labels remain evaluation-only. The job's internal serialization
+round-trip gate completed before artifact publication. Independent bridge reload
+and saved-prediction byte equality have **not** been established for this model.
+
+Measured holdout scores, with differences against the historical Lambda result:
+
+| Metric | SageMaker model | Constant training-rate baseline | Maximum absolute difference from historical Lambda |
+| --- | --- | --- | --- |
+| Brier score | 0.21061287148858282 | 0.24163577488303326 | 0 |
+| Log loss | 0.6096025525960278 | 0.6763272181260667 | 0 |
+| Accuracy | 0.6648648648648648 | 0.5918918918918918 | 0 |
+
+Calibration uses the existing ten fixed equal-width bins, with no calibration
+fitting. Values below are rounded to six decimals; empty bins remain unavailable.
+The last bin includes 1.0. Counts sum to the actual 740 holdout rows.
+
+| Model probability bin | Games | Mean prediction | Observed home-win rate |
+| --- | --- | --- | --- |
+| 0.0–0.1 | 2 | 0.080122 | 0.000000 |
+| 0.1–0.2 | 6 | 0.169721 | 0.333333 |
+| 0.2–0.3 | 34 | 0.258127 | 0.235294 |
+| 0.3–0.4 | 72 | 0.359678 | 0.291667 |
+| 0.4–0.5 | 118 | 0.454581 | 0.491525 |
+| 0.5–0.6 | 158 | 0.549126 | 0.506329 |
+| 0.6–0.7 | 154 | 0.649144 | 0.733766 |
+| 0.7–0.8 | 135 | 0.752029 | 0.770370 |
+| 0.8–0.9 | 59 | 0.845292 | 0.847458 |
+| 0.9–1.0 | 2 | 0.934775 | 1.000000 |
+
+The constant baseline has all 740 rows in the 0.5–0.6 bin, mean prediction
+0.5829535095715588 and observed home-win rate
+0.5918918918918918. These are descriptive historical
+holdout results, not rolling performance or proof of operational forecasting.
+
+Runtime metadata from the actual job matches the reviewed image: Python
+3.14.10, scikit-learn 1.9.0, NumPy 2.5.2, SciPy 1.18.1, pandas 3.0.5 and
+joblib 1.6.0. All retrospective/unapproved flags remain unchanged.
+
+### Why native receipt/inference verification stopped
+
+SageMaker packaged the seven files using PAX timestamp headers (`atime`, `ctime`,
+`mtime`, `LIBARCHIVE.creationtime`). The unchanged native loader accepts bounded
+USTAR files and rejects these extension headers. The raw archive and its hashes
+were preserved; it was not repacked or overwritten to force acceptance.
+
+A tested **controller-only inspection** permits only those inert numeric timestamps,
+while refusing path/link/size overrides, unknown metadata, duplicate aliases,
+missing/extra files, symlinks/hardlinks, truncation, trailing data and compressed/
+expanded size overruns. It performs no extraction, model deserialization or fit.
+This enabled artifact/evaluation inspection, **not a bypass of native trust**.
+The reviewed image and its native verifier were not modified. Consequently the
+native completion receipt was not published and an incompatible bridge was not
+invoked. A separately reviewed inference/archive compatibility correction is
+needed; the completed model/job need not be retrained.
+
+Bounded read-only checks also found **zero CloudWatch streams** under the exact
+job prefix, including the final check. CloudTrail inspection did not establish
+a logging failure cause. One fit is observed through diagnostics and the single
+Training phase, but independent corroboration of the exact service fit count is
+unavailable; that acceptance gap is not marked complete. No permissions were
+broadened or workload repeated to manufacture log evidence. No new active job or
+bridge existed to stop/disable at the final check.
+
+### Credits, retained resources and checks
+
+Account remained **FREE / ACTIVE**. Estimated eligible credits before and after
+this task were **$119.963146** and **$119.963146**, covering
+training, Lambda, ECR, S3 and logs. The 50-hour promotion was not relied on.
+At the previously checked $0.115/hour training rate, the 53 billable seconds imply
+approximately **$0.00169306 compute before credits**. This is a rate-based
+estimate, not settled billing; the unchanged account balance may reflect reporting
+lag. No paid Cost Explorer query or plan/subscription change was made.
+
+Retained: one private image (373,404,225 compressed bytes), the two scoped
+roles and two log groups, the Completed job, and its two original S3 archives
+(47,138 bytes combined). No endpoint or native inference function exists.
+Image storage is approximately $0.04/month at $0.10/GB-month before credits;
+S3/log retention and other account resources remain separate. The prior $0.4094
+30-day plan estimate was conservative and is not claimed as actual expenditure.
+No automatic deletion, new recurring work, schedule/delivery activation or public
+publication was configured. Main and Pages remain untouched.
+
+**379 full offline tests passed** with network blocked, including 14 new ECR/policy
+and safe archive-inspection regressions; four additional private upload-controller
+tests passed. Original application/source/dependency/request/private-artifact pins
+remain unchanged. Detailed policy comparison, genuine job/diagnostic/artifact
+bytes, input preservation, calibration, log checks and cost responses are ignored
+under `data/processed/pm13b-execution-20261122T070838Z/`. Private identifiers/model files are excluded from Git.
+
+Only actual named-service training execution and measured artifacts are newly
+verified. Native receipt/inference, exact-fit corroboration, genuine human review,
+recurrence/delivery, pending outcomes and operational approval remain separate gaps.
+
+---
+
+## Historical PM-13 first attempt — stopped before training
 
 November 21, 2026, `us-east-1`. **Training and independent inference remain
 unverified.** Deployment stopped at ECR's validation of the original reviewed

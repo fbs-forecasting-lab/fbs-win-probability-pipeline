@@ -10,9 +10,20 @@ payment; stop if a required service needs paid activation or an upgrade.
 complete; its verification is linked below. This does not authorize training,
 recurrence, delivery, provider work or main integration.
 
-## 1. Named-service training closure — PM-13 stopped at repository-policy validation
+## 1. Named-service training executed — PM-13B native verification gaps
 
-**Current PM-13 result:** applied ml.m5.large quota 15 and FREE/ACTIVE eligible
+**Current PM-13B result:** one corrected equivalent-scope ECR policy was accepted;
+the unchanged reviewed image and original request produced a Completed SageMaker
+job (2,194/740/59 rows, 53 training/billable seconds). Measured scores/calibration
+and seven artifact payloads passed inspection. [Verification](managed-training-verification.md)
+separates actual training from native receipt/inference acceptance: PAX timestamps
+are rejected by the original native parser: no receipt was published, bridge
+deployed or inference call executed.
+Exact fit-count corroboration from logs is also missing. Preserve the completed
+job and raw outputs; no retraining, silent image change or broader IAM is approved
+by this document. Further compatibility work needs a concrete reviewed change.
+
+**Historical PM-13 result:** applied ml.m5.large quota 15 and FREE/ACTIVE eligible
 credits resolved the old access gate. The authorized attempt created only the
 new repository/roles/logs; ECR rejected the original reviewed repository policy
 before any upload or job. [Measured deployment status](managed-training-verification.md)
