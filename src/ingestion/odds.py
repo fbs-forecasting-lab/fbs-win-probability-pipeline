@@ -12,6 +12,7 @@ ENDPOINT='https://api.the-odds-api.com/v4/sports/americanfootball_ncaaf/odds'
 
 @dataclass(frozen=True)
 class OddsResponse:
+    """Carry one observed odds response with its exact bytes, request timing and quota metadata."""
     raw:bytes
     requested_at:str
     retrieved_at:str

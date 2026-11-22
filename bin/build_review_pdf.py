@@ -100,12 +100,12 @@ def build(source, output):
         story.append(Paragraph(inline(' '.join(paragraph)),styles['BodyReview']))
     def page(canvas, doc):
         canvas.saveState();canvas.setFont('Helvetica-Bold',8);canvas.setFillColor(colors.HexColor('#557087'))
-        canvas.drawString(45,766,'FBS FORECASTING LAB  |  REVIEW DRAFT  |  NOVEMBER 21, 2026')
-        canvas.setFont('Helvetica',8);canvas.drawString(45,27,'Unfinished course documentation; saved evidence is not an approved live forecast.')
+        canvas.drawString(45,766,'FBS FORECASTING LAB  |  SUBMISSION CANDIDATE  |  NOVEMBER 22, 2026')
+        canvas.setFont('Helvetica',8);canvas.drawString(45,27,'Saved retrospective demonstration. Operational forecast approval withheld.')
         canvas.drawRightString(567,27,str(doc.page));canvas.restoreState()
     with output.open('xb') as handle:
         doc=BaseDocTemplate(handle,pagesize=(612,792),leftMargin=45,rightMargin=45,topMargin=44,bottomMargin=42,
-                            title='FBS Win Probability Pipeline - REVIEW DRAFT',author='Hampton Abbott',creator='FBS Forecasting Lab')
+                            title='FBS Win Probability Pipeline - SUBMISSION CANDIDATE',author='Hampton Abbott',creator='FBS Forecasting Lab')
         doc.addPageTemplates(PageTemplate(id='review',frames=Frame(45,42,width,706,leftPadding=0,rightPadding=0,topPadding=0,bottomPadding=0),onPage=page))
         doc.build(story)
     return output

@@ -1,3 +1,7 @@
+# Historical working draft
+
+The current [submission candidate](final-documentation-review.md) supersedes the dated draft below. PM-13D verified independent inference.
+
 # Final documentation source draft — unfinished release candidate
 
 Prepared November 21, 2026. This is source for the December 1 PDF, not the final PDF or a claim that every requirement is complete. Managed-model receipt/inference compatibility, exact-fit corroboration, genuine alert review, recurring delivery and final release verification remain open; see [readiness checklist](final-readiness.md).

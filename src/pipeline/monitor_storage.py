@@ -7,6 +7,7 @@ from src.pipeline.run_contract import ContractError, digest, encode
 
 
 class MonitorStore(S3Store):
+    """Read verified monitoring inputs and store private reports, alerts and review records."""
     def _get(self, key, *, optional=False):
         allowed = ('monitoring/', 'weekly/runs/', 'cloud-modeling/', 'cloud-ingestion/runs/', 'raw/cfbd/games/', 'datasets/')
         if not isinstance(key,str) or not key.startswith(tuple(self.prefix+'/'+s for s in allowed)):

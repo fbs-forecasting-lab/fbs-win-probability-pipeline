@@ -5,6 +5,7 @@ from src.pipeline.cloud_ingestion import create_once
 from src.pipeline.run_contract import ContractError,digest,encode
 
 class InsightsStore(MonitorStore):
+    """Preserve source-bound explanation and market claims, response checkpoints and immutable results."""
     def _get(self,key,*,optional=False):
         if not isinstance(key,str) or not key.startswith(self.prefix+'/stakeholder/'):
             return super()._get(key,optional=optional)

@@ -1,6 +1,6 @@
 # FBS Win Probability Pipeline
 
-**REVIEW DRAFT - November 21, 2026.** Two-page core with required tutorial,
+**SUBMISSION CANDIDATE - November 22, 2026.** Two-page core with required tutorial,
 license and docstring appendices. Not a final submission or a declaration that
 all course requirements are complete.
 
@@ -17,9 +17,7 @@ monitoring and bounded explanation/market comparison have historical AWS evidenc
 with 2,194 training / 740 holdout / 59 saved prediction rows and 53 training/billable
 seconds. Actual holdout metrics match historical Lambda values; calibration and
 seven payloads were checked. [Verification](managed-training-verification.md)
-records limits: the unchanged native loader rejects PAX timestamps, so no native
-receipt was published, bridge deployed or independent call executed; exact fit-count log
-corroboration is unavailable. Do not present these acceptance gaps as passed.
+records independent Lambda reload and exact equality of all 59 saved rows. The missing training log limits independent corroboration of the exact fit count.
 Schedules/delivery remain disabled. The [public saved monitoring
 demonstration](https://fbs-forecasting-lab.github.io/fbs-win-probability-pipeline/public-monitoring/)
 is dated historical content, not current health or operational approval.
@@ -33,6 +31,7 @@ no API key, AWS account, private data or project environment file.
 ```bash
 git clone https://github.com/fbs-forecasting-lab/fbs-win-probability-pipeline.git
 cd fbs-win-probability-pipeline
+git switch feature/final-readiness
 python3.14 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python -B bin/synthetic_demo.py \
@@ -105,7 +104,7 @@ work rather than permit silent data repair or token replacement.
 | `predict_saved_sample`, `predict_vector` | Trusted model plus saved rows or valid vector -> complementary probabilities. |
 | `S3Store` upload/download methods | Verified raw/dataset transfers; private bucket, no-overwrite and SHA-256 checks. |
 | Cloud handlers, `checked_stage`, `publish_stage` | Explicit receipts -> next missing stage/completion; immutable replay, no implicit refit. |
-| Managed contract/lineage helpers | Candidate one-job guard and native origin verification; not deployed/compliance proof. |
+| Managed contract/lineage helpers | Single-attempt training submission and receipt-pinned Lambda reload of seven verified files. |
 
 :::pagebreak
 # Tutorial, evaluation and troubleshooting
@@ -125,13 +124,14 @@ model downloaded from an arbitrary source. Inspect existing JSON without a fit:
 
 ## 2. Distinguish the real cloud path
 
-Only after separate workload approval: verify the selected preparation receipt
-and all six S3 files, pin request/code/image/runtime, then submit the approved
-single-attempt controller. The verified Lambda path uses nine artifacts and its
-trainer claim/completion. A future SageMaker result needs its own verified
-job/archive/receipt and seven baseline files; matching libraries do not establish
-producer trust. Reload independently, require saved CSV equality, then validate a
-hypothetical vector. Never retrain during inference or retry an ambiguous fit.
+Follow the saved [managed verification record](managed-training-verification.md).
+The preparation function normalized private S3 captures and verified Athena output
+against Python. SageMaker read the verified dataset and fitted only the training
+split. Its seven model artifacts were bound to the job, image, archive and receipt.
+The independent Lambda verified the receipt before loading the model. Its 59-row
+CSV matched the training sample byte-for-byte. On a separate hypothetical input,
+home and away probabilities were 0.662422 and 0.337578. An incorrect receipt pin
+was rejected before loading. These checks require no new workload to review.
 
 [Cloud modeling runbook](cloud-modeling-runbook.md) and
 [managed-job gates](managed-training-readiness.md) supply detailed contracts.
@@ -154,7 +154,7 @@ Brier is squared probability error; log loss penalizes confident errors. Accurac
 uses P(home win) >= 0.5. Ten fixed calibration bins describe counts/observed rates;
 empty bins are unavailable, and no calibration model is fitted. Coefficients
 are conditional associations, not causal importance. The saved monitoring batch
-has 53 pending outcomes and no rolling metrics; this does not mean zero error.
+covers a separate Week 13 run with 53 scoring rows and 53 pending outcomes and no rolling metrics; this does not mean zero error.
 Five of 53 saved rows had paired market comparisons, with no outcome-based skill
 or profitability conclusion.
 
@@ -165,7 +165,7 @@ or profitability conclusion.
 | Runtime/producer mismatch or unsafe joblib | Stop before deserialization; verify approved native lineage, never rewrite metadata. |
 | Ambiguous response or partial completion | Preserve journal/objects; no automatic refetch/refit/resubmission. |
 | Pending labels, distribution warning | Report unavailable performance; investigate data/coverage, not automatic retraining. |
-| Quota zero or paid-access requirement | Await the existing request/instructor response; no upgrade, substitution or workload. |
+| Quota zero or paid-access requirement | Stop before submitting a job; inspect the applied training quota and eligible coverage. |
 
 :::pagebreak
 # License, docstrings and sources
@@ -196,7 +196,7 @@ keeps the two-page core and appends required detail. The source audit is in
 [research references](research-references.md): South & Egros (2020),
 Coleman (2025), Gneiting & Raftery (2007), Kapoor & Narayanan (2023; final-text
 access limited) and Pedregosa et al. (2011). Bibliography balance, final layout,
-managed receipt/inference compatibility, exact-fit corroboration, genuine review,
+exact-fit corroboration, genuine review,
 recurring delivery and release integration
 remain open. Earlier coursework/peer reviews remain complete.
 

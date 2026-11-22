@@ -20,6 +20,7 @@ CLIENT_CONFIG = Config(connect_timeout=5, read_timeout=250, retries={'mode': 'st
 
 
 class WeeklyStore(cloud_modeling.ModelingStore):
+    """Read pinned source and model evidence and publish immutable weekly stage artifacts."""
     def _get(self, key, *, optional=False):
         allowed = tuple(f'{self.prefix}/{p}/' for p in ('weekly', 'cloud-ingestion/runs', 'raw/cfbd/games',
                                                      'cloud-modeling', 'cloud-preparation/runs', 'datasets'))
@@ -32,6 +33,7 @@ class WeeklyStore(cloud_modeling.ModelingStore):
 
 
 def checked_stage(store, base):
+    """Return the completion receipt after checking every stored artifact hash, or None if absent. Refuse changed bytes."""
     content = store._get(base+'/complete.json', optional=True)
     if content is None: return None
     result = baseline.read_json(content)
@@ -43,6 +45,7 @@ def checked_stage(store, base):
 
 
 def publish_stage(store, base, artifacts, facts):
+    """Write named artifact bytes under the stage prefix and return the receipt published last. Conflicting bytes fail."""
     complete = dict(facts, **STATUS, state='completed', stage=base.rsplit('/', 1)[-1],
                     artifact_sha256={base+'/'+n: digest(b) for n, b in artifacts.items()})
     artifacts = dict(artifacts, **{'complete.json': encode(complete)})
@@ -167,6 +170,7 @@ def score_week(request, prepared, store, root, base):
 
 
 def advance(event, store, invoke_capture):
+    """Validate one weekly event and advance its first unfinished stage using the store and capture callback. Return stage status or a sanitized failure."""
     stage, base = 'request_validation', None
     try:
         request = contract.validate(event)

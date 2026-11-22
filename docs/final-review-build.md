@@ -1,7 +1,7 @@
 # Build and inspect the final documentation review
 
 This is a local documentation-only renderer. It imports no pipeline code, fits no
-model and calls no API. The current four-page REVIEW DRAFT has a two-page core
+model and calls no API. The current four-page submission candidate has a two-page core
 and required tutorial/license/docstring appendices; it is not the final submission.
 
 Sources:
@@ -33,7 +33,7 @@ changes; the renderer output and its refusal/links/content should be checked.
 
 Render each page at readable resolution with an available PDF renderer and open
 **every page**. Check headings, body text, code wrapping, tables, clipping, footer
-and REVIEW DRAFT labels. Inspect PDF link annotations and source-relative targets;
+and candidate labels. Inspect PDF link annotations and source-relative targets;
 relative links resolve to the reviewed feature-branch repository sources. Confirm
 all 22 class names, exact full-license text and actual docstring excerpts survive
 text extraction. A successful renderer exit alone is not visual QA.
@@ -49,3 +49,9 @@ The final preview filename and hashes are recorded in its review manifest; earli
 rendering iterations are preserved. No PDF, screenshots, private report/receipt,
 settings response or runtime/package artifact is committed. No source is copied
 to a publication branch and no hosting setting is changed.
+
+PM-14 build (from repository root, with the documented ReportLab dependency):
+
+```bash
+python -B bin/build_review_pdf.py --output "$PWD/data/processed/pm14-candidate/submission.pdf"
+```

@@ -97,6 +97,7 @@ def interpretation(model):
 
 
 def verify_bundle(artifacts, model_id, request, release):
+    """Check the artifact bundle against its model, request and implementation identities. Return verified evaluation facts or reject conflicting hashes."""
     if set(artifacts) != set(contract.MODEL_FILES) or sum(map(len, artifacts.values())) > MAX_BUNDLE_BYTES:
         raise ContractError('Model bundle filenames or size are invalid.')
     provenance = baseline.read_json(artifacts['training_provenance.json'])
