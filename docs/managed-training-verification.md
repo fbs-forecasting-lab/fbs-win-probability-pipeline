@@ -1,5 +1,7 @@
 # Managed-training verification — PM-13B measured result
 
+**PM-13C update:** [Inference-only recovery preparation](managed-inference-recovery.md) now passes native timestamp-archive verification locally. The original training is complete; a separate consumer image and unpublished candidate receipt are pinned. Cloud inference and independent fit-count corroboration remain unverified. Earlier sections below preserve dated evidence.
+
 ## November 22, 2026: job completed; native verification remains incomplete
 
 The original single SageMaker job completed in AWS Linux using the unchanged

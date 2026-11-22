@@ -7,26 +7,18 @@ authenticate an AWS response or prove service execution without that approval.
 No Lambda origin, training, SDK calls or legacy publication is performed.
 """
 
-import gzip
-import io
 import json
 import math
 from pathlib import Path
 import re
-import tarfile
-import zlib
 
 from src.models import baseline, predict
+from src.pipeline.managed_archive import FILES, MAX_BYTES, MAX_TAR_BYTES, read_archive
 from src.pipeline.managed_contract import validate_request
 from src.pipeline.model_contract import PREDICTORS, hex_id
 from src.pipeline.run_contract import ContractError, STATUS, digest, encode
 
 PRODUCER = 'sagemaker_training'
-FILES = frozenset(('model.joblib', 'evaluation.json', 'calibration.json',
-                   'holdout_predictions.csv', 'sample_predictions.csv',
-                   'exclusions.json', 'model_metadata.json'))
-MAX_BYTES = 32 * 1024 * 1024
-MAX_TAR_BYTES = MAX_BYTES + 64 * 1024
 MAX_JSON_BYTES = 1024 * 1024
 IDENTITY_FIELDS = frozenset(('job_arn', 'image_uri', 'source_sha256',
     'dataset_id', 'dataset_report_sha256', 'dataset_s3_uri',
@@ -162,41 +154,10 @@ def _evidence(content, expected_sha256):
 
 
 def _archive(content):
-    """Read bounded USTAR regular members in memory; never extract paths."""
-    _require(type(content) is bytes and 0 < len(content) <= MAX_BYTES, 'Invalid archive size.')
+    """Use the shared strict USTAR/timestamp-only PAX reader without extraction."""
     try:
-        if content.startswith(b'\x1f\x8b'):
-            with gzip.GzipFile(fileobj=io.BytesIO(content)) as stream:
-                raw = stream.read(MAX_TAR_BYTES + 1)
-        else:
-            raw = content
-        _require(len(raw) <= MAX_TAR_BYTES and len(raw) % 512 == 0, 'Invalid expanded tar size.')
-        artifacts, offset, total, saw_root = {}, 0, 0, False
-        while offset + 512 <= len(raw) and any(raw[offset:offset + 512]):
-            member = tarfile.TarInfo.frombuf(raw[offset:offset + 512], 'utf-8', 'strict')
-            # Standard tar tools may include a root directory and './' prefix.
-            # Canonicalize only this harmless spelling, never traversal/aliases.
-            if member.type == tarfile.DIRTYPE and member.name in ('.', './'):
-                _require(not saw_root and member.size == 0 and not member.linkname,
-                         'Duplicate or invalid archive root.')
-                saw_root = True
-                offset += 512
-                continue
-            name = member.name[2:] if member.name.startswith('./') else member.name
-            _require(member.type in (tarfile.REGTYPE, tarfile.AREGTYPE)
-                     and name in FILES and name not in artifacts
-                     and not member.linkname and 0 <= member.size <= MAX_BYTES,
-                     'Unsafe, duplicate or unexpected tar member.')
-            start = offset + 512
-            end = start + member.size
-            total += member.size
-            _require(total <= MAX_BYTES and end <= len(raw), 'Tar payload exceeds bounds.')
-            artifacts[name] = raw[start:end]
-            offset = start + ((member.size + 511) // 512) * 512
-        _require(set(artifacts) == FILES and len(raw) - offset >= 1024 and not any(raw[offset:]),
-                 'Expected exactly seven files and a valid tar terminator.')
-        return artifacts
-    except (OSError, EOFError, tarfile.TarError, UnicodeError, ValueError, zlib.error):
+        return read_archive(content, max_bytes=MAX_BYTES, max_tar_bytes=MAX_TAR_BYTES)
+    except ValueError:
         raise ContractError('Invalid or unsafe managed archive.') from None
 
 
@@ -277,9 +238,10 @@ def load_verified_model(receipt_bytes, expected_receipt_sha256, archive_bytes, r
 def infer(request, receipt_bytes, expected_receipt_sha256, archive_bytes, root, dataset_dir=None):
     """Native inference with a separately injected, externally approved receipt pin.
 
-    A future *new* Lambda container may use the same pinned training image, with
+    A separately pinned consumer image must retain the producer runtime, with
     ImageConfig.EntryPoint overridden to /lambda-entrypoint.sh and a new handler
-    as Command. That thin service wrapper must obtain this pin from protected
+    as Command. Its digest is distinct from the immutable producer image in the
+    evidence; never rewrite that producer identity. The wrapper obtains its pin from protected
     configuration, read only approved receipt/archive/dataset locations, and
     pass a fresh private root here. This function creates no SDK clients and
     changes no legacy function. Linux image/runtime execution remains separate

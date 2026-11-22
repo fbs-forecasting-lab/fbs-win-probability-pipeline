@@ -1,5 +1,7 @@
 # PM-08 proposed release, training and publication actions
 
+**PM-13C update:** [Inference-only recovery preparation](managed-inference-recovery.md) now passes native timestamp-archive verification locally. The original training is complete; a separate consumer image and unpublished candidate receipt are pinned. Cloud inference and independent fit-count corroboration remain unverified. Earlier sections below preserve dated evidence.
+
 **Nothing below authorizes deployment or publication.** The candidate is locally
 prepared, not requirement-complete. Private exact references and approval hashes
 are in ignored `data/processed/pm08-readiness-20261121/`. No old workload allowance

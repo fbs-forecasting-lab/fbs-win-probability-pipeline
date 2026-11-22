@@ -1,5 +1,7 @@
 # Managed-training readiness — historical preparation and PM-13B result
 
+**PM-13C update:** [Inference-only recovery preparation](managed-inference-recovery.md) now passes native timestamp-archive verification locally. The original training is complete; a separate consumer image and unpublished candidate receipt are pinned. Cloud inference and independent fit-count corroboration remain unverified. Earlier sections below preserve dated evidence.
+
 Historical PM-09A preparation, November 21, 2026. This closed local gates, not the syllabus's actual
 SageMaker/EC2 execution requirement. No real project data was trained locally.
 The verified Lambda system, protected model and original producer bytes remain

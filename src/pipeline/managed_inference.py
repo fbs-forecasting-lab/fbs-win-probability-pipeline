@@ -1,6 +1,7 @@
 """Candidate private inference wrapper for the independently approved managed origin.
 
-Deploy only as a NEW function using the exact training image/runtime. The legacy
+Deploy only as a NEW function using a separately pinned consumer image and the
+exact training runtime. Producer evidence always retains the original image. The legacy
 Lambda model/receipts and all predecessor functions remain untouched. Configuration
 pins the receipt and storage keys; callers cannot select arbitrary artifacts.
 """

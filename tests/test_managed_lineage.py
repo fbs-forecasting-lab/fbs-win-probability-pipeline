@@ -24,13 +24,14 @@ PRODUCERS = ('src/pipeline/model_contract.py', 'src/pipeline/cloud_modeling.py',
              'src/models/baseline.py', 'src/models/predict.py', 'src/features/dataset.py')
 
 
-def archive(files, extra=(), omit=()):
+def archive(files, extra=(), omit=(), pax=None):
     buffer = io.BytesIO()
-    with tarfile.open(fileobj=buffer, mode='w:gz', format=tarfile.USTAR_FORMAT) as tar:
+    with tarfile.open(fileobj=buffer, mode='w:gz', format=tarfile.PAX_FORMAT if pax else tarfile.USTAR_FORMAT) as tar:
         for name, content in sorted(files.items()):
             if name not in omit:
                 member = tarfile.TarInfo(name)
                 member.size = len(content)
+                member.pax_headers = dict(pax or {})
                 tar.addfile(member, io.BytesIO(content))
         for member, content in extra:
             tar.addfile(member, io.BytesIO(content))
@@ -138,6 +139,47 @@ class ManagedLineageTests(unittest.TestCase):
         self.assertFalse(batch['approved_for_point_in_time_forecasting'])
         self.assertFalse(any('cloud-modeling' in str(p) for p in self.scratch.rglob('*')))
         self.fit.assert_not_called()
+
+    def test_pax_native_receipt_synthetic_reload_and_saved_prediction_equality(self):
+        value = archive(self.files, pax={'atime': '1795331812.0896530',
+            'ctime': '1795331812.0896530', 'mtime': '1795331812.0896530',
+            'LIBARCHIVE.creationtime': '1795331812.0896530'})
+        with patch.object(baseline.joblib, 'load', side_effect=AssertionError('Receipt must not load')):
+            receipt = self.build(tar=value)
+        pin = digest(receipt)
+        request = self.request('saved_sample') | {'receipt_sha256': pin,
+            'managed_model_id': json.loads(receipt)['managed_model_id']}
+        result = lineage.infer(request, receipt, pin, value, self.scratch/'saved', self.dataset)
+        self.assertEqual(result['count'], 6)
+        self.assertEqual((self.scratch/'saved/predictions/predictions.csv').read_bytes(),
+                         self.files['sample_predictions.csv'])
+        request = self.request() | {'receipt_sha256': pin,
+            'managed_model_id': json.loads(receipt)['managed_model_id']}
+        vector = lineage.infer(request, receipt, pin, value, self.scratch/'vector')
+        expected = json.loads((self.original/'synthetic_summary.json').read_bytes())['synthetic_hypothetical']
+        self.assertEqual(vector['home_win_probability'], expected['home_win_probability'])
+        self.assertEqual(vector['home_win_probability'] + vector['away_win_probability'], 1)
+        self.fit.assert_not_called()
+
+    def test_pax_evidence_and_companion_corruption_rejected_before_deserialization(self):
+        value = archive(self.files, pax={'mtime': '123.45'})
+        receipt = self.build(tar=value)
+        pin = digest(receipt)
+        self.assert_unloaded(lambda: lineage.load_verified_model(receipt + b' ', pin, value, self.scratch))
+        self.assert_unloaded(lambda: lineage.build_verified_receipt(self.evidence_bytes + b' ',
+            digest(self.evidence_bytes), value))
+        self.assert_unloaded(lambda: lineage.load_verified_model(receipt, pin, value[:-1], self.scratch))
+        changed = dict(self.files, **{'evaluation.json': b'{}'})
+        self.assert_unloaded(lambda: self.build(tar=archive(changed, pax={'mtime': '123.45'})))
+        # Even a newly pinned receipt cannot conceal a companion-hash mismatch.
+        bad = archive(changed, pax={'mtime': '123.45'})
+        altered = json.loads(receipt)
+        altered['archive_sha256'] = digest(bad)
+        altered['artifact_sha256'] = {n: digest(b) for n, b in changed.items()}
+        identity = {k: altered[k] for k in ('producer_kind', 'evidence_sha256', 'archive_sha256')}
+        altered['managed_model_id'] = digest(encode(identity))
+        raw = encode(altered)
+        self.assert_unloaded(lambda: lineage.load_verified_model(raw, digest(raw), bad, self.scratch))
 
     def test_changed_receipt_and_caller_supplied_pin_rejected(self):
         changed = self.receipt + b' '

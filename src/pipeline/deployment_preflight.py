@@ -1,68 +1,23 @@
 """Validation helpers for deployment controllers, separate from Lambda code."""
 
 import copy
-import gzip
-import io
 import json
 import re
-import tarfile
 
 from botocore.exceptions import ClientError
+
+from src.pipeline.managed_archive import read_archive
 
 BLOCK_FLAGS = frozenset(('BlockPublicAcls', 'IgnorePublicAcls', 'BlockPublicPolicy', 'RestrictPublicBuckets'))
 
 
 def inspect_managed_archive(content):
-    """Inspect seven model files, allowing only inert PAX timestamp metadata.
+    """Use the native reader for inspection only; no extraction or deserialization.
 
-    This controller-only verifier does not extract paths, deserialize a model,
-    rewrite the archive, or establish compatibility with a deployed loader.
-    Compressed and expanded sizes are bounded independently. Path/link/size PAX
-    overrides, links, duplicate aliases, extra files and trailing data fail closed.
+    Keep the controller's original 32 MiB expanded bound. Native receipt trust
+    and runtime checks remain separate from this payload-only inspection.
     """
-    limit = 32 * 1024 * 1024
-    names = {'model.joblib', 'evaluation.json', 'calibration.json',
-             'holdout_predictions.csv', 'sample_predictions.csv',
-             'exclusions.json', 'model_metadata.json'}
-    timestamps = {'atime', 'ctime', 'mtime', 'LIBARCHIVE.creationtime'}
-    if type(content) is not bytes or not 0 < len(content) <= limit:
-        raise ValueError('Invalid managed archive size.')
-    try:
-        if content.startswith(b'\x1f\x8b'):
-            with gzip.GzipFile(fileobj=io.BytesIO(content)) as stream:
-                expanded = stream.read(limit + 1)
-        else:
-            expanded = content
-        if len(expanded) > limit or len(expanded) % 512:
-            raise ValueError('Invalid expanded archive size.')
-        artifacts, root_seen = {}, False
-        with tarfile.open(fileobj=io.BytesIO(expanded), mode='r:') as archive:
-            for member in archive:
-                if any(key not in timestamps or not isinstance(value, str)
-                       or re.fullmatch(r'[0-9]{1,20}(?:\.[0-9]{1,12})?', value) is None
-                       for key, value in member.pax_headers.items()):
-                    raise ValueError('Unsupported PAX metadata.')
-                if member.isdir() and member.name in ('.', './'):
-                    if root_seen or member.size or member.linkname:
-                        raise ValueError('Invalid or repeated archive root.')
-                    root_seen = True
-                    continue
-                name = member.name[2:] if member.name.startswith('./') else member.name
-                if (member.type not in (tarfile.REGTYPE, tarfile.AREGTYPE)
-                        or member.linkname or name not in names
-                        or name in artifacts or not 0 <= member.size <= limit):
-                    raise ValueError('Unexpected, duplicate or unsafe archive member.')
-                with archive.extractfile(member) as stream:
-                    value = stream.read(limit + 1)
-                if len(value) != member.size or sum(map(len, artifacts.values())) + len(value) > limit:
-                    raise ValueError('Invalid archive payload size.')
-                artifacts[name] = value
-            tail = expanded[archive.offset:]
-            if set(artifacts) != names or len(tail) < 1024 or any(tail):
-                raise ValueError('Incomplete archive or unexpected trailing content.')
-        return artifacts
-    except (OSError, EOFError, tarfile.TarError, UnicodeError):
-        raise ValueError('Invalid managed archive.') from None
+    return read_archive(content, max_tar_bytes=32 * 1024 * 1024)
 
 
 def ecr_repository_policy_request(policy, repository_arn, function_arn):
