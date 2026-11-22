@@ -1,4 +1,17 @@
-# Managed-training verification — PM-13B measured result
+# Managed training and independent inference verification
+
+## PM-13D cloud inference recovery
+
+The corrected consumer image ran in a separate private Lambda using the existing scoped role. The registry manifest matched the approved digest and the conditionally published receipt read back byte-for-byte. Three synchronous invocations returned HTTP 200 with no Lambda FunctionError, one attempt each.
+
+| Call | Application result |
+| --- | --- |
+| Saved sample | Completed. The handler independently reloaded the SageMaker model and compared the complete 59-row CSV byte-for-byte with the training sample. Both SHA-256 values were `54225972fe13d4ad26db7d6d8e36d41f6c71c6c37293837fe98f722be19a07a9`. |
+| Hypothetical | Completed. Home 0.662422294285731, away 0.33757770571426904. Both finite and in range, with sum within 1e-12 of one. |
+| Incorrect receipt pin | Expected application failure at managed_inference (ContractError). The pinned handler checks this mismatch before client creation or model loading. |
+
+The bridge finished active with reserved concurrency one. Both original archives, six input hashes, protected model object metadata and original producer image were verified after the calls. There were zero training submissions, fits, provider requests, Athena queries or predecessor invocations in recovery. The account preflight showed FREE/ACTIVE with $119.953146 estimated eligible credits. The saved sample remains retrospective with operational approval withheld. The original training log stream is still absent, limiting independent fit-count verification.
+
 
 **PM-13C update:** [Inference-only recovery preparation](managed-inference-recovery.md) now passes native timestamp-archive verification locally. The original training is complete; a separate consumer image and unpublished candidate receipt are pinned. Cloud inference and independent fit-count corroboration remain unverified. Earlier sections below preserve dated evidence.
 
