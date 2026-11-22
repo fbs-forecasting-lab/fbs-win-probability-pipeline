@@ -9,9 +9,9 @@ This is an outline, not slides or a rehearsed final presentation. Resolve the
 | --- | --- | --- |
 | 0:00–0:40 | Stakeholders and need: understandable FBS win probabilities; fans/analysts/data engineers | Submitted stakeholder statement; no betting-profit claim |
 | 0:40–1:10 | Market research and contribution: reproducible cloud lifecycle, monitoring, timestamped benchmark | Submitted research pp.1–2; do not claim superiority over literature |
-| 1:10–2:15 | Method: API → private S3 receipts → normalization → Athena/Python parity → chronological features → training | Architecture and PM-02/03 records; named-service training must be resolved, not relabeled Lambda |
+| 1:10–2:15 | Method: API → private S3 receipts → normalization → Athena/Python parity → chronological features → training | Architecture and PM-02/03 records; [PM-13](managed-training-verification.md) stopped at ECR policy validation before any job. Named-service training remains unresolved; do not relabel Lambda |
 | 2:15–3:15 | Output/evaluation: held-out comparison, calibration and model interpretation; independent API reload | PM-04 measured counts/metrics, three features; reproducible pinned inputs and actual run evidence, no fresh fit required |
-| 3:15–4:15 | Monitoring/explanation/market: pending labels, warnings, constrained factual summary, five/53 overlap | PM-06/07 evidence and prepared scalar view; distinguish private candidate from approved publication, simulations from genuine review |
+| 3:15–4:15 | Monitoring/explanation/market: pending labels, warnings, constrained factual summary, five/53 overlap | PM-06/07 evidence and [published saved scalar view](monitoring-publication-review.md); distinguish dated demonstration from current health, simulations from genuine review |
 | 4:15–4:45 | Limitations: unknown historical availability, pending outcomes, limited coverage, prior-season-only features and disabled recurrence | Keep every retrospective/unapproved flag; no operational forecast claim |
 | 4:45–5:00 | Conclusion: what was verified, release state and next evidence needed | Explicitly name any remaining compliance gap; stop at 5:00 |
 
@@ -28,3 +28,9 @@ presentation computer and fallback video/images, verify links/access, and submit
 the PPTX actually used in class. Do not expose credentials, full resource names,
 raw data or private stakeholder artifacts. Reserve the question minute for named
 service compliance, leakage limitations and pending market outcomes.
+
+PM-13 adds no new model measurement to the presentation: zero SageMaker jobs,
+fits and native inference calls occurred. Explain the resolved quota/credit gates
+and the remaining repository-policy blocker briefly; use historical PM-04 metrics
+only with their original date/origin. Do not imply the final named-service
+requirement is complete or spend another workload allowance for slides.

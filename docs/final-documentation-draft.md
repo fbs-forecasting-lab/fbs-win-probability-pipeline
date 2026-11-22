@@ -6,6 +6,12 @@ A [four-page REVIEW DRAFT](final-documentation-review.md) and [offline build/QA 
 
 PM-11 published the [static saved monitoring demonstration](https://fbs-forecasting-lab.github.io/fbs-win-probability-pipeline/public-monitoring/). Its date, pending labels and withheld approval remain explicit; this closes only the static public-view portion. [Publication verification](monitoring-publication-review.md) records its hash and two-file branch.
 
+PM-13 resolved the quota/credit/image/input gates but stopped before training:
+ECR rejected the reviewed repository policy after only empty resources were
+created. No SageMaker job, fit, new measured evaluation or native inference ran.
+[Deployment verification](managed-training-verification.md) separates this result
+from historical Lambda metrics. The named-service requirement remains open.
+
 ## README core (target one-half to one page)
 
 FBS Win Probability Pipeline is a UNC Charlotte DTSC 3601/3602 project estimating the designated home team's win probability for FBS football. It preserves versioned API captures and SHA-256 receipts in private S3, normalizes/excludes invalid games, constructs prior-season features, and fits a standardized logistic regression on 2022–2024 with an untouched 2025 holdout. Binary classification produces P(home wins), with the away probability equal to one minus it.

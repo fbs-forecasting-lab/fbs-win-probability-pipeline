@@ -14,9 +14,11 @@ Athena/Python feature parity, Lambda training/inference, weekly scoring, private
 monitoring and bounded explanation/market comparison have historical AWS evidence.
 
 **Still unresolved:** the syllabus names SageMaker or EC2 training. Lambda has
-not been accepted as an exemption; the existing quota request is awaiting AWS
-and the professor has been emailed. A locally tested SageMaker candidate is not
-cloud execution. Schedules/delivery are disabled. A [public saved monitoring
+not been accepted as an exemption. PM-13 verified positive applied quota and
+eligible credits, but ECR rejected the reviewed repository policy before any job
+or fit. [Deployment verification](managed-training-verification.md) records the
+blocker; the professor has been emailed and no response is inferred. A locally
+tested SageMaker candidate is not cloud training execution. Schedules/delivery are disabled. A [public saved monitoring
 demonstration](https://fbs-forecasting-lab.github.io/fbs-win-probability-pipeline/public-monitoring/) is published separately; it is not current health or
 operational approval.
 

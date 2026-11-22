@@ -10,7 +10,15 @@ payment; stop if a required service needs paid activation or an upgrade.
 complete; its verification is linked below. This does not authorize training,
 recurrence, delivery, provider work or main integration.
 
-## 1. Named-service training closure — PM-09A local gates verified, CPU quota blocked
+## 1. Named-service training closure — PM-13 stopped at repository-policy validation
+
+**Current PM-13 result:** applied ml.m5.large quota 15 and FREE/ACTIVE eligible
+credits resolved the old access gate. The authorized attempt created only the
+new repository/roles/logs; ECR rejected the original reviewed repository policy
+before any upload or job. [Measured deployment status](managed-training-verification.md)
+records zero jobs/fits/inference calls and the policy blocker. Original pins and
+predecessors remain unchanged. The PM-09A/09B paragraphs below describe the
+historical preparation/access state, not today's applied quota.
 
 Syllabus p.5 explicitly names SageMaker or EC2; Lambda has no established exemption.
 [PM-09A readiness](managed-training-readiness.md) supersedes the earlier unverified

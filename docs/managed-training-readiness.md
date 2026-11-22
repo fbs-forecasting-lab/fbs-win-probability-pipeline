@@ -6,7 +6,20 @@ The verified Lambda system, protected model and original producer bytes remain
 unchanged. Private evidence and exact requests are ignored under
 `data/processed/pm09a-readiness-20261121/`; none is a deployment authorization.
 
-## Newly verified gates
+## PM-13 current status — November 21, 2026
+
+The PM-09A preparation below is historical. PM-12/13 resolved the applied-quota
+and eligible-credit gates: ml.m5.large quota 15, FREE/ACTIVE and $119.973485
+estimated eligible credits. Under the later execution authorization, PM-13 created
+only the reviewed repository, roles and logs, then stopped when ECR rejected the
+original repository policy. No image upload, job, fit, private receipt or inference
+call occurred. [Actual deployment verification](managed-training-verification.md)
+records retained resources, cost assumptions and the unresolved policy gate.
+The original image, request and approval baselines remain unchanged. Actual
+SageMaker training is still missing; waiting on the old quota case is no longer
+the execution blocker.
+
+## Historical PM-09A locally verified gates
 
 | Gate | New evidence | Remaining boundary |
 | --- | --- | --- |

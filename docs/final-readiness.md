@@ -36,7 +36,7 @@ Prior cloud evidence below is historical PM-02–PM-07 evidence, not new workloa
 | Earlier deliverables and peer reviews — user confirmation | verified complete | Confirmed by Hampton | None; no receipt audit |
 | API capture and private S3 — S p.5, A | verified complete | [PM-02C](cloud-ingestion-verification.md), [PM-07C](sportsbook-verification.md) | Preserve lineage/secret privacy; old allowances exhausted |
 | Athena or Redshift; joins/aggregation — S p.5 | verified complete | [PM-03D](cloud-preparation-verification.md): actual Athena results passed Python parity | Redshift is an alternative, not another required service; current preparation is recovery-only |
-| Train on SageMaker or EC2 — S p.5 | **missing** | [PM-04C](cloud-modeling-verification.md) proves Lambda training only | Actual named-service job remains missing. PM-09A Linux image/native lineage verified synthetically; CPU quota/access resolution and genuine cloud verification remain; no exemption established |
+| Train on SageMaker or EC2 — S p.5 | **missing** | [PM-13](managed-training-verification.md): quota/credit/image/input gates passed; deployment stopped before job submission | ECR rejected the pinned repository policy. No SageMaker job or fit occurred; actual named-service execution and independent native inference remain unverified. No exemption established |
 | Fully cloud/serverless processing — S p.2, A | partially complete | Cloud ingestion/preparation/training/scoring verified; local notebook is optional historical path | Final graded controller/demo and named-service training closure; don't present local synthetic training as cloud execution |
 | Model execution through APIs — S p.2 | verified complete | PM-04C independently invoked private inference, integrity refusals | Public inference endpoint not explicitly required; future SageMaker-artifact promotion must preserve trusted reload if used in final API demo |
 | LLM API application and usefulness/failure assessment — S pp.2,5 | verified complete for bounded scope | [PM-07A](cloud-stakeholder-verification.md): genuine 257/42-token extractive summary, factual validation, offline failure tests | Final narrative distinguishes narrow extractive usefulness from unrestricted generation; failure tests are not invented provider incidents |
@@ -188,3 +188,21 @@ No instructor/quotas response was inferred or duplicate request made. No
 application test was rerun; verification was limited to actual content/hosting
 changes. PM-09A image/source/request/proposal bindings and deployed producers
 remain unchanged. See [publication verification](monitoring-publication-review.md).
+
+## PM-13 authorized deployment attempt — November 21, 2026
+
+[Actual verification](managed-training-verification.md): original executable and
+private pins matched; current ml.m5.large training quota was 15; account remained
+FREE/ACTIVE with $119.973485 estimated eligible credits covering all proposed
+services. Six dataset files matched the preparation receipt. A network-disabled
+Linux inspection verified the existing image's source/runtime without fitting.
+
+One empty private repository, two scoped roles and two empty log groups were
+created. ECR rejected the exact reviewed repository policy; deployment stopped
+before image upload, SageMaker submission or bridge creation. **Zero jobs, fits
+and inference calls** occurred; no new metrics/calibration or provenance receipt
+exist. Original submission journal remains unconsumed. Predecessors, protected
+model-object metadata, disabled rules, bucket protections, main and Pages remain
+unchanged. Historical measurements remain separately labeled. The named-service
+requirement remains missing, now blocked on repository-policy service acceptance
+rather than the prior quota. No other requirement is marked complete.
