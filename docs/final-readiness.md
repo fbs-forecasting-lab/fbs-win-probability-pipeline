@@ -8,9 +8,10 @@
 | Professor — documentation and shared code | partially complete | [Candidate source](final-documentation-review.md) and [inline inventory](inline-docstring-review.md). Team must approve and submit the PDF and repository link. |
 | Professor — presentation | needs verification | [Demo outline](final-demo-outline.md). Team must rehearse, check the PPTX and submit it. |
 | Professor — end-to-end cloud demonstration | needs verification | [Demo outline](final-demo-outline.md). Review the saved cloud evidence in the final presentation and distinguish the offline tutorial from graded execution. |
+| Professor — human-or-LLM monitoring review | verified complete | [Supplied review of November 20](week13-monitoring-review.md) assessed reported measurements. The distribution-shift cause and Week 13 performance remained unresolved. |
 | Project commitment — genuine incident investigation | missing | [Review packet](monitoring-review-packet.md). A team member must supply actual findings. |
 | Project commitment — recurring scoring and delivery | partially complete | [Release proposal](release-proposal.md). Saved processing and display are verified. Recurrence and delivery remain disabled pending authorization. |
-| Project commitment — outcome-based monitoring and market comparison | partially complete | [Saved monitoring evidence](monitoring-publication-review.md). Paired outcomes are required for performance evaluation. |
+| Project commitment — outcome-based monitoring and market comparison | partially complete | [Saved monitoring evidence](monitoring-publication-review.md). Paired outcomes are required for performance evaluation. See the [Week 13 pregame and evaluation protocol](week13-update.md). |
 | Optional — additional model features | missing | [Release scope](release-proposal.md). Outside this submission. |
 
 Milestone statements below document the state on their recorded dates. This checklist supersedes earlier status claims.
